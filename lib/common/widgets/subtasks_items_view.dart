@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:implicitly_animated_reorderable_list_2/implicitly_animated_reorderable_list_2.dart';
+import 'package:implicitly_animated_reorderable_list_2/transitions.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
 
 class SubtaskItemsView extends StatelessWidget {
   final List<EditableSubtask> subtasks;
   final void Function(int index)? onToggleComplete;
   final void Function(int index)? onDelete;
-  final void Function(int oldIndex, int newIndex) onReorder;
+  final void Function(List<EditableSubtask> newOrder) onReorder;
   const SubtaskItemsView({
     super.key,
     required this.subtasks,
@@ -17,43 +19,41 @@ class SubtaskItemsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: ReorderableListView.builder(
-        itemCount: subtasks.length,
-        onReorder: onReorder,
-        buildDefaultDragHandles: false,
-        itemBuilder: (context, index) {
-          final editable = subtasks[index];
-          return Dismissible(
-            key: ValueKey(editable),
-            background: Container(color: Colors.red),
-            onDismissed: (_) => onDelete!(index),
-            child: ReorderableDragStartListener(
-              index: index,
+      child: ImplicitlyAnimatedReorderableList<EditableSubtask>(
+        items: subtasks,
+        areItemsTheSame: (oldItem, newItem) => oldItem.id == newItem.id,
+        onReorderFinished: (item, from, to, newItems) {
+          onReorder(newItems);
+        },
+        itemBuilder: (context, animation, item, index) {
+          return Reorderable(
+            key: ValueKey(item.id),
+            child: SizeFadeTransition(
+              animation: animation,
               child: Padding(
                 padding: EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Icon(Icons.drag_handle_outlined),
+                    Handle(child: Icon(Icons.drag_handle_outlined)),
                     Expanded(
                       child: TextFormField(
                         style: TextStyle(
-                          color:
-                              editable.isCompleted ? Colors.grey : Colors.white,
-                          decoration: editable.isCompleted
+                          color: item.isCompleted ? Colors.grey : Colors.white,
+                          decoration: item.isCompleted
                               ? TextDecoration.lineThrough
                               : null,
                           decorationColor: Colors.grey,
                         ),
-                        controller: editable.controller,
+                        controller: item.controller,
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           prefixIcon: IconButton(
                             onPressed: () => onToggleComplete!(index),
                             icon: Icon(
-                              editable.isCompleted
+                              item.isCompleted
                                   ? Icons.check_box
                                   : Icons.check_box_outline_blank,
-                              color: editable.isCompleted
+                              color: item.isCompleted
                                   ? Color.fromARGB(255, 64, 79, 165)
                                   : Colors.grey,
                             ),

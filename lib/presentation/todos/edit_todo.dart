@@ -34,6 +34,12 @@ class _EditTodoState extends State<EditTodo> {
         .toList();
   }
 
+  void _handleReorder(List<EditableSubtask> newOrder) {
+    setState(() {
+      _editableSubtasks = newOrder;
+    });
+  }
+
   void _addSubtask() {
     setState(() {
       _editableSubtasks.add(
@@ -146,13 +152,7 @@ class _EditTodoState extends State<EditTodo> {
                       _editableSubtasks.removeAt(index);
                     });
                   },
-                  onReorder: (oldIndex, newIndex) {
-                    setState(() {
-                      if (newIndex > oldIndex) newIndex -= 1;
-                      final item = _editableSubtasks.removeAt(oldIndex);
-                      _editableSubtasks.insert(newIndex, item);
-                    });
-                  },
+                  onReorder: _handleReorder,
                 ),
               ],
             ),

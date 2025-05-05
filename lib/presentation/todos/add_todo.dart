@@ -28,6 +28,12 @@ class _AddTodoState extends State<AddTodo> {
     });
   }
 
+  void _handleReorder(List<EditableSubtask> newOrder) {
+    setState(() {
+      _editableSubtasks = newOrder;
+    });
+  }
+
   Future<void> _saveTodo() async {
     if (_isAlreadysaved) return;
     if (_formKey.currentState?.validate() ?? false) {
@@ -146,13 +152,7 @@ class _AddTodoState extends State<AddTodo> {
                       _editableSubtasks.removeAt(index);
                     });
                   },
-                  onReorder: (oldIndex, newIndex) {
-                    setState(() {
-                      if (newIndex > oldIndex) newIndex -= 1;
-                      final item = _editableSubtasks.removeAt(oldIndex);
-                      _editableSubtasks.insert(newIndex, item);
-                    });
-                  },
+                  onReorder: _handleReorder,
                 ),
               ],
             ),
