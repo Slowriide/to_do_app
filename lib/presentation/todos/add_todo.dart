@@ -31,6 +31,9 @@ class _AddTodoState extends State<AddTodo> {
   void _handleReorder(List<EditableSubtask> newOrder) {
     setState(() {
       _editableSubtasks = newOrder;
+      for (var i = 0; i < _editableSubtasks.length; i++) {
+        _editableSubtasks[i].order = i;
+      }
     });
   }
 
@@ -39,17 +42,18 @@ class _AddTodoState extends State<AddTodo> {
     if (_formKey.currentState?.validate() ?? false) {
       final title = _titleController.text.trim();
 
-      final subtasks = _editableSubtasks
-          .map(
-            (ctrl) => Todo(
-              id: DateTime.now().microsecondsSinceEpoch + ctrl.hashCode,
-              title: ctrl.controller.text.trim(),
-              isCompleted: ctrl.isCompleted,
-              subTasks: [],
-              isSubtask: true,
-            ),
-          )
-          .toList();
+      final subtasks = _editableSubtasks.asMap().entries.map((entry) {
+        final index = entry.key;
+        final ctrl = entry.value;
+        return Todo(
+          id: DateTime.now().microsecondsSinceEpoch + ctrl.hashCode,
+          title: ctrl.controller.text.trim(),
+          isCompleted: ctrl.isCompleted,
+          subTasks: [],
+          isSubtask: true,
+          order: index,
+        );
+      }).toList();
 
       await context.read<TodoCubit>().addTodo(title, subtasks);
       _isAlreadysaved = true;
@@ -79,11 +83,13 @@ class _AddTodoState extends State<AddTodo> {
               .where((ctrl) => ctrl.controller.text.trim().isEmpty)
               .map(
                 (ctrl) => Todo(
-                    id: DateTime.now().microsecondsSinceEpoch + ctrl.hashCode,
-                    title: title,
-                    isCompleted: false,
-                    subTasks: [],
-                    isSubtask: true),
+                  id: DateTime.now().microsecondsSinceEpoch + ctrl.hashCode,
+                  title: title,
+                  isCompleted: false,
+                  subTasks: [],
+                  isSubtask: true,
+                  order: 0,
+                ),
               )
               .toList();
 

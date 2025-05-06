@@ -34,6 +34,7 @@ class TodoCubit extends Cubit<List<Todo>> {
       isCompleted: false,
       subTasks: subtasks,
       isSubtask: false,
+      order: 0,
     );
     await repository.addTodo(newTodo);
     loadTodos();

@@ -4,6 +4,7 @@ class Todo {
   final bool isCompleted;
   final List<Todo> subTasks;
   final bool isSubtask;
+  final int order;
 
   Todo({
     required this.id,
@@ -11,6 +12,7 @@ class Todo {
     required this.isCompleted,
     required this.subTasks,
     required this.isSubtask,
+    required this.order,
   });
 
   Todo copyWith({
@@ -26,6 +28,7 @@ class Todo {
       isCompleted: isCompleted ?? this.isCompleted,
       subTasks: subTasks ?? this.subTasks,
       isSubtask: isSubtask ?? this.isSubtask,
+      order: order,
     );
   }
 
@@ -36,6 +39,7 @@ class Todo {
       isCompleted: !isCompleted,
       subTasks: subTasks,
       isSubtask: isSubtask,
+      order: order,
     );
   }
 }

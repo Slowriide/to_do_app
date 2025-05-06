@@ -27,8 +27,13 @@ const TodoIsarSchema = CollectionSchema(
       name: r'isSubtask',
       type: IsarType.bool,
     ),
-    r'title': PropertySchema(
+    r'order': PropertySchema(
       id: 2,
+      name: r'order',
+      type: IsarType.long,
+    ),
+    r'title': PropertySchema(
+      id: 3,
       name: r'title',
       type: IsarType.string,
     )
@@ -72,7 +77,8 @@ void _todoIsarSerialize(
 ) {
   writer.writeBool(offsets[0], object.isCompleted);
   writer.writeBool(offsets[1], object.isSubtask);
-  writer.writeString(offsets[2], object.title);
+  writer.writeLong(offsets[2], object.order);
+  writer.writeString(offsets[3], object.title);
 }
 
 TodoIsar _todoIsarDeserialize(
@@ -85,7 +91,8 @@ TodoIsar _todoIsarDeserialize(
   object.id = id;
   object.isCompleted = reader.readBool(offsets[0]);
   object.isSubtask = reader.readBool(offsets[1]);
-  object.title = reader.readString(offsets[2]);
+  object.order = reader.readLong(offsets[2]);
+  object.title = reader.readString(offsets[3]);
   return object;
 }
 
@@ -101,6 +108,8 @@ P _todoIsarDeserializeProp<P>(
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -265,6 +274,59 @@ extension TodoIsarQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isSubtask',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> orderEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> orderGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> orderLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> orderBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'order',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -489,6 +551,18 @@ extension TodoIsarQuerySortBy on QueryBuilder<TodoIsar, TodoIsar, QSortBy> {
     });
   }
 
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -540,6 +614,18 @@ extension TodoIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -564,6 +650,12 @@ extension TodoIsarQueryWhereDistinct
   QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByIsSubtask() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isSubtask');
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'order');
     });
   }
 
@@ -592,6 +684,12 @@ extension TodoIsarQueryProperty
   QueryBuilder<TodoIsar, bool, QQueryOperations> isSubtaskProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isSubtask');
+    });
+  }
+
+  QueryBuilder<TodoIsar, int, QQueryOperations> orderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'order');
     });
   }
 

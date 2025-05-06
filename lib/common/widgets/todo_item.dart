@@ -16,6 +16,11 @@ class TodoItem extends StatelessWidget {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
 
+    final sortedSubtasks = [...todo.subTasks];
+    sortedSubtasks.sort(
+      (a, b) => a.order.compareTo(b.order),
+    );
+
     return Container(
       margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
       padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -36,29 +41,29 @@ class TodoItem extends StatelessWidget {
           ),
           SizedBox(height: 10),
           if (todo.subTasks.isNotEmpty)
-            ...todo.subTasks.map(
-              (subtask) => Row(
-                children: [
-                  Icon(
-                    subtask.isCompleted
-                        ? Icons.check_box_outlined
-                        : Icons.check_box_outline_blank_rounded,
-                    size: 18,
-                    color: subtask.isCompleted
-                        ? const Color.fromARGB(255, 77, 71, 165)
-                        : Colors.grey,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      subtask.title,
-                      style: textStyle.bodyMedium,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            )
+            ...sortedSubtasks
+                .map((subtask) => Row(
+                      children: [
+                        Icon(
+                          subtask.isCompleted
+                              ? Icons.check_box_outlined
+                              : Icons.check_box_outline_blank_rounded,
+                          size: 18,
+                          color: subtask.isCompleted
+                              ? const Color.fromARGB(255, 77, 71, 165)
+                              : Colors.grey,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            subtask.title,
+                            style: textStyle.bodyMedium,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ))
+                .toList()
         ],
       ),
     );

@@ -25,18 +25,27 @@ class _EditTodoState extends State<EditTodo> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.todo.title);
-    _editableSubtasks = widget.todo.subTasks
-        .map((sub) => EditableSubtask(
-              id: sub.id,
-              controller: TextEditingController(text: sub.title),
-              isCompleted: sub.isCompleted,
-            ))
+
+    final sordetSubtasks = [...widget.todo.subTasks]
+      ..sort((a, b) => a.order.compareTo(b.order));
+    _editableSubtasks = sordetSubtasks
+        .map(
+          (sub) => EditableSubtask(
+            id: sub.id,
+            controller: TextEditingController(text: sub.title),
+            isCompleted: sub.isCompleted,
+            order: sub.order,
+          ),
+        )
         .toList();
   }
 
   void _handleReorder(List<EditableSubtask> newOrder) {
     setState(() {
       _editableSubtasks = newOrder;
+      for (var i = 0; i < _editableSubtasks.length; i++) {
+        _editableSubtasks[i].order = i;
+      }
     });
   }
 
@@ -55,17 +64,18 @@ class _EditTodoState extends State<EditTodo> {
     if (_formKey.currentState?.validate() ?? false) {
       final title = _titleController.text.trim();
 
-      final updatedSubtask = _editableSubtasks
-          .map(
-            (e) => Todo(
-              id: DateTime.now().millisecondsSinceEpoch + e.controller.hashCode,
-              title: e.controller.text.trim(),
-              isCompleted: e.isCompleted,
-              subTasks: [],
-              isSubtask: true,
-            ),
-          )
-          .toList();
+      final updatedSubtask = _editableSubtasks.asMap().entries.map((entry) {
+        final index = entry.key;
+        final ctrl = entry.value;
+        return Todo(
+          id: DateTime.now().microsecondsSinceEpoch + ctrl.hashCode,
+          title: ctrl.controller.text.trim(),
+          isCompleted: ctrl.isCompleted,
+          subTasks: [],
+          isSubtask: true,
+          order: index,
+        );
+      }).toList();
 
       final updatedTodo = widget.todo.copyWith(
         title: title,
