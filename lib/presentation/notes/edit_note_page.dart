@@ -33,7 +33,7 @@ class _EditNotePageState extends State<EditNotePage> {
     );
 
     await context.read<NoteCubit>().updateNote(updatedNote);
-    if (mounted) context.go('/home');
+    if (mounted) context.go('/providerPage');
   }
 
   @override
@@ -44,8 +44,12 @@ class _EditNotePageState extends State<EditNotePage> {
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
+          final updatedNote = widget.note.copyWith(
+            title: _titleController.text.trim(),
+            text: _textController.text.trim(),
+          );
           _alreadySaved = true;
-          await _updateNote();
+          await context.read<NoteCubit>().updateNote(updatedNote);
         }
       },
       child: Scaffold(

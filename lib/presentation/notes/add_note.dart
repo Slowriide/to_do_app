@@ -25,7 +25,7 @@ class _AddNoteState extends State<AddNote> {
       await context.read<NoteCubit>().addNote(text, title);
       _alreadySaved = true;
 
-      if (mounted) context.go('/home');
+      if (mounted) context.go('/providerPage');
     }
   }
 

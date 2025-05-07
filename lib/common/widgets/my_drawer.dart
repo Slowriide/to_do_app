@@ -38,7 +38,7 @@ class _MyDrawerState extends State<MyDrawer> {
                 if (!mounted) return;
                 switch (index) {
                   case 0:
-                    context.go('/home');
+                    context.go('/providerPage');
                     break;
                   case 1:
                     context.go('/todos');

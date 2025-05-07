@@ -5,6 +5,7 @@ import 'package:to_do_app/common/widgets/widgets.dart';
 
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
 import 'package:to_do_app/presentation/notes/masonry_view.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,6 +18,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   Set<int> selectedNotes = {};
   bool get isSelectionMode => selectedNotes.isNotEmpty;
+  final _searchController = TextEditingController();
 
   void toggleSelection(int noteId) {
     setState(() {
@@ -69,6 +71,7 @@ class _HomePageState extends State<HomePage> {
           isSelectionMode: isSelectionMode,
           selectedNotesId: selectedNotes,
           toggleSelection: toggleSelection,
+          textController: _searchController,
         ),
       ),
       floatingActionButton: isSelectionMode
@@ -139,28 +142,63 @@ class _Body extends StatelessWidget {
   final Set<int> selectedNotesId;
   final bool isSelectionMode;
   final Function(int id) toggleSelection;
+  final TextEditingController textController;
   const _Body({
     required this.isSelectionMode,
     required this.selectedNotesId,
     required this.toggleSelection,
+    required this.textController,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, 5, 20, 15),
-      child: BlocBuilder<NoteCubit, List<Note>>(
-        builder: (context, notes) {
-          return Expanded(
-            child: MasonryView(
-              notes: notes,
-              isSelectionMode: isSelectionMode,
-              selectedNoteIds: selectedNotesId,
-              onToggleSelect: toggleSelection,
+    final theme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, 5, 20, 0),
+          child: TextField(
+            controller: textController,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: Icon(Icons.search, color: theme.onSurface),
+              hintText: 'Search Notes',
+              filled: true,
+              fillColor: theme.secondary,
+              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              suffix: IconButton(
+                onPressed: () {
+                  textController.clear();
+                  context.read<NoteSearchCubit>().clearSearch();
+                },
+                icon: Icon(Icons.close),
+              ),
             ),
-          );
-        },
-      ),
+            onChanged: (value) {
+              context.read<NoteSearchCubit>().search(value);
+            },
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
+            child: BlocBuilder<NoteSearchCubit, List<Note>>(
+              builder: (context, notes) {
+                return MasonryView(
+                  notes: notes,
+                  isSelectionMode: isSelectionMode,
+                  selectedNoteIds: selectedNotesId,
+                  onToggleSelect: toggleSelection,
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

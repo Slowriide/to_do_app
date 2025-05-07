@@ -10,6 +10,7 @@ class AppTheme {
           surface: surface,
           onSurface: onSurface,
           primary: const Color.fromARGB(255, 29, 29, 29),
+          secondary: const Color.fromARGB(255, 17, 17, 17),
         ),
         textTheme: TextTheme(
           titleLarge: GoogleFonts.roboto().copyWith(

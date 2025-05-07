@@ -11,6 +11,7 @@ import 'package:to_do_app/data/repository/isar_todo_repository_impl.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
 void main() async {
@@ -48,12 +49,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(
-            create: (context) => NoteCubit(noteRepo),
-          ),
-          BlocProvider(
-            create: (context) => TodoCubit(todoRepo),
-          ),
+          BlocProvider(create: (context) => NoteCubit(noteRepo)..loadNotes()),
+          BlocProvider(create: (context) => TodoCubit(todoRepo)..loadTodos()),
+          BlocProvider(create: (context) => NoteSearchCubit([])),
         ],
         child: MaterialApp.router(
           routerConfig: appRouter,
