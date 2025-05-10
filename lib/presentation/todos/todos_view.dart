@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/my_drawer.dart';
 import 'package:to_do_app/domain/models/todo.dart';
+
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 import 'package:to_do_app/presentation/todos/todo_masonry_view.dart';
 
 class TodosView extends StatefulWidget {
@@ -16,6 +18,7 @@ class TodosView extends StatefulWidget {
 class _TodosViewState extends State<TodosView> {
   Set<int> selectedTodos = {};
   bool get isSelectionMode => selectedTodos.isNotEmpty;
+  final _searchController = TextEditingController();
 
   void toggleSelection(int todoId) {
     setState(() {
@@ -67,6 +70,7 @@ class _TodosViewState extends State<TodosView> {
           isSelectionMode: isSelectionMode,
           selectedTodosId: selectedTodos,
           toggleSelection: toggleSelection,
+          textController: _searchController,
         ),
       ),
       floatingActionButton: isSelectionMode
@@ -137,28 +141,65 @@ class _Body extends StatelessWidget {
   final Set<int> selectedTodosId;
   final bool isSelectionMode;
   final Function(int id) toggleSelection;
+  final TextEditingController textController;
   const _Body({
     required this.selectedTodosId,
     required this.isSelectionMode,
     required this.toggleSelection,
+    required this.textController,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, 5, 20, 15),
-      child: BlocBuilder<TodoCubit, List<Todo>>(
-        builder: (context, todos) {
-          return Expanded(
-            child: TodoMasonryView(
-              todos: todos.where((todo) => !todo.isSubtask).toList(),
-              isSelectionMode: isSelectionMode,
-              selectedTodoIds: selectedTodosId,
-              onToggleSelect: toggleSelection,
+    final theme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, 5, 20, 0),
+          child: TextField(
+            controller: textController,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: Icon(Icons.search, color: theme.onSurface),
+              hintText: 'Search Notes',
+              filled: true,
+              fillColor: theme.secondary,
+              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              suffix: IconButton(
+                onPressed: () {
+                  textController.clear();
+                  context.read<TodoSearchCubit>().clearSearch();
+                },
+                icon: Icon(Icons.close),
+              ),
             ),
-          );
-        },
-      ),
+            onChanged: (value) {
+              context.read<TodoSearchCubit>().search(value);
+            },
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
+            child: BlocBuilder<TodoSearchCubit, List<Todo>>(
+              builder: (context, todos) {
+                return Expanded(
+                  child: TodoMasonryView(
+                    todos: todos.where((todo) => !todo.isSubtask).toList(),
+                    isSelectionMode: isSelectionMode,
+                    selectedTodoIds: selectedTodosId,
+                    onToggleSelect: toggleSelection,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

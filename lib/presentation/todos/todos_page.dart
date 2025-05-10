@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 import 'package:to_do_app/presentation/todos/todos_view.dart';
 
 class TodoPage extends StatelessWidget {
@@ -12,8 +14,10 @@ class TodoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => TodoCubit(repository),
+    return BlocListener<TodoCubit, List<Todo>>(
+      listener: (context, todos) {
+        context.read<TodoSearchCubit>().updateTodos(todos);
+      },
       child: const TodosView(),
     );
   }

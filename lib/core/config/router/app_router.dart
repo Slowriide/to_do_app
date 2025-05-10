@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
+import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 import 'package:to_do_app/presentation/settings_screen.dart';
 import 'package:to_do_app/presentation/pages.dart';
@@ -34,12 +35,11 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/todos',
-      builder: (context, state) => BlocProvider.value(
-        value: context.read<TodoCubit>(),
-        child: TodosView(),
-      ),
-    ),
+        path: '/todos',
+        builder: (context, state) {
+          final repo = RepositoryProvider.of<TodoRepository>(context);
+          return TodoPage(repository: repo);
+        }),
     GoRoute(
       path: '/todosview',
       builder: (context, state) => const HomePage(),

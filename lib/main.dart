@@ -13,6 +13,7 @@ import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
           BlocProvider(create: (context) => NoteCubit(noteRepo)..loadNotes()),
           BlocProvider(create: (context) => TodoCubit(todoRepo)..loadTodos()),
           BlocProvider(create: (context) => NoteSearchCubit([])),
+          BlocProvider(create: (context) => TodoSearchCubit([])),
         ],
         child: MaterialApp.router(
           routerConfig: appRouter,

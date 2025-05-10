@@ -188,11 +188,13 @@ class _Body extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
             child: BlocBuilder<NoteSearchCubit, List<Note>>(
               builder: (context, notes) {
-                return MasonryView(
-                  notes: notes,
-                  isSelectionMode: isSelectionMode,
-                  selectedNoteIds: selectedNotesId,
-                  onToggleSelect: toggleSelection,
+                return Expanded(
+                  child: MasonryView(
+                    notes: notes,
+                    isSelectionMode: isSelectionMode,
+                    selectedNoteIds: selectedNotesId,
+                    onToggleSelect: toggleSelection,
+                  ),
                 );
               },
             ),
