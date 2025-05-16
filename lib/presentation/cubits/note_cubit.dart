@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 
@@ -15,11 +16,14 @@ class NoteCubit extends Cubit<List<Note>> {
     emit(notesList);
   }
 
-  Future<void> addNote(String text, String title) async {
+  Future<void> addNote(String text, String title,
+      {DateTime? reminder, required int id}) async {
+    print("Reminder recibido en addNote: $reminder");
     final newNote = Note(
-      id: DateTime.now().millisecondsSinceEpoch,
+      id: id,
       title: title,
       text: text,
+      reminder: reminder,
     );
 
     await repository.addNote(newNote);
@@ -31,6 +35,9 @@ class NoteCubit extends Cubit<List<Note>> {
     await repository.deleteNote(note);
 
     loadNotes();
+
+    NotificationService().cancelNotification(note.id);
+    print(note.id);
   }
 
   Future<void> toggleCompletion(Note note) async {
@@ -44,5 +51,14 @@ class NoteCubit extends Cubit<List<Note>> {
   Future<void> updateNote(Note updateNote) async {
     await repository.updateNote(updateNote);
     loadNotes();
+
+    if (updateNote.reminder != null) {
+      NotificationService().showNotification(
+        id: updateNote.id,
+        title: updateNote.title,
+        body: updateNote.text,
+        scheduledDate: updateNote.reminder!,
+      );
+    }
   }
 }

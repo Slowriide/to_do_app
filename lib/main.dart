@@ -4,6 +4,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:to_do_app/core/config/router/app_router.dart';
 import 'package:to_do_app/core/config/theme/app_theme.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/data/models/isar_note.dart';
 import 'package:to_do_app/data/models/isar_todo.dart';
 import 'package:to_do_app/data/repository/isar_note_repository_impl.dart';
@@ -17,6 +18,8 @@ import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService().init();
 
 //get dir path for storage data
   final dir = await getApplicationDocumentsDirectory();

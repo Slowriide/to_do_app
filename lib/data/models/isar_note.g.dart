@@ -22,13 +22,18 @@ const NoteIsarSchema = CollectionSchema(
       name: r'isCompleted',
       type: IsarType.bool,
     ),
-    r'text': PropertySchema(
+    r'reminder': PropertySchema(
       id: 1,
+      name: r'reminder',
+      type: IsarType.dateTime,
+    ),
+    r'text': PropertySchema(
+      id: 2,
       name: r'text',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'title',
       type: IsarType.string,
     )
@@ -65,8 +70,9 @@ void _noteIsarSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeBool(offsets[0], object.isCompleted);
-  writer.writeString(offsets[1], object.text);
-  writer.writeString(offsets[2], object.title);
+  writer.writeDateTime(offsets[1], object.reminder);
+  writer.writeString(offsets[2], object.text);
+  writer.writeString(offsets[3], object.title);
 }
 
 NoteIsar _noteIsarDeserialize(
@@ -78,8 +84,9 @@ NoteIsar _noteIsarDeserialize(
   final object = NoteIsar();
   object.id = id;
   object.isCompleted = reader.readBool(offsets[0]);
-  object.text = reader.readString(offsets[1]);
-  object.title = reader.readString(offsets[2]);
+  object.reminder = reader.readDateTimeOrNull(offsets[1]);
+  object.text = reader.readString(offsets[2]);
+  object.title = reader.readString(offsets[3]);
   return object;
 }
 
@@ -93,8 +100,10 @@ P _noteIsarDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -248,6 +257,75 @@ extension NoteIsarQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isCompleted',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> reminderIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'reminder',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> reminderIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'reminder',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> reminderEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'reminder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> reminderGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'reminder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> reminderLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'reminder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> reminderBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'reminder',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -532,6 +610,18 @@ extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByReminder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByReminderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.asc);
@@ -583,6 +673,18 @@ extension NoteIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByReminder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByReminderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.asc);
@@ -616,6 +718,12 @@ extension NoteIsarQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByReminder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'reminder');
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByText(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -642,6 +750,12 @@ extension NoteIsarQueryProperty
   QueryBuilder<NoteIsar, bool, QQueryOperations> isCompletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isCompleted');
+    });
+  }
+
+  QueryBuilder<NoteIsar, DateTime?, QQueryOperations> reminderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reminder');
     });
   }
 

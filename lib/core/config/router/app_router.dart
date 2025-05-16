@@ -4,7 +4,7 @@ import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
-import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
+
 import 'package:to_do_app/presentation/settings_screen.dart';
 import 'package:to_do_app/presentation/pages.dart';
 

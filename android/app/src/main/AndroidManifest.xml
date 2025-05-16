@@ -1,8 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:label="to_do_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+</receiver>
+    <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -31,6 +43,8 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+            android:usesCleartextTraffic="true"
+            android:exported="true"
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 
 class AddNote extends StatefulWidget {
@@ -15,17 +16,71 @@ class _AddNoteState extends State<AddNote> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _textController = TextEditingController();
+  DateTime? _reminderDate;
+
+  Future<void> pickReminderDateTime() async {
+    final now = DateTime.now();
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 6),
+    );
+
+    if (date == null) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.inputOnly,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+
+    if (time == null) return;
+
+    setState(() {
+      _reminderDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
 
   Future<void> _saveNote() async {
+    final noteCubit = context.read<NoteCubit>();
     if (_alreadySaved) return;
     if (_formKey.currentState?.validate() ?? false) {
       final title = _titleController.text.trim();
       final text = _textController.text.trim();
 
-      await context.read<NoteCubit>().addNote(text, title);
-      _alreadySaved = true;
+      final uniqueId = DateTime.now().millisecondsSinceEpoch.remainder(1000000);
+      if (_reminderDate != null) {
+        await NotificationService().showNotification(
+          id: uniqueId,
+          title: title,
+          body: text,
+          scheduledDate: _reminderDate!,
+        );
+      }
 
-      if (mounted) context.go('/providerPage');
+      if (mounted) {
+        if (_reminderDate != null) {
+          await noteCubit.addNote(text, title,
+              reminder: _reminderDate, id: uniqueId);
+        } else {
+          await noteCubit.addNote(text, title, id: uniqueId);
+        }
+      }
+      _alreadySaved = true;
     }
   }
 
@@ -44,11 +99,7 @@ class _AddNoteState extends State<AddNote> {
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
-          final title = _titleController.text.trim();
-          final text = _textController.text.trim();
-
-          await context.read<NoteCubit>().addNote(text, title);
-          _alreadySaved = true;
+          _saveNote();
         }
       },
       child: Scaffold(
@@ -67,6 +118,17 @@ class _AddNoteState extends State<AddNote> {
               color: theme.primary,
             ),
           ),
+          actions: [
+            IconButton(
+              onPressed: pickReminderDateTime,
+              icon: Icon(
+                _reminderDate != null
+                    ? Icons.alarm_on
+                    : Icons.alarm_add_rounded,
+                color: _reminderDate != null ? Colors.green : null,
+              ),
+            ),
+          ],
         ),
 
         //Body
@@ -111,7 +173,10 @@ class _AddNoteState extends State<AddNote> {
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: _saveNote,
+            onPressed: () {
+              _saveNote();
+              if (mounted) context.go('/providerPage');
+            },
             icon: const Icon(Icons.save),
             label: const Text('Guardar'),
             style: ElevatedButton.styleFrom(

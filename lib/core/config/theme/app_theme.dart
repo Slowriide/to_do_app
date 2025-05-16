@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   final Color surface = Color.fromARGB(255, 5, 5, 5);
   final Color onSurface = Color(0xffE3E3E3);
+  final Color purple = Color.fromARGB(255, 64, 79, 165);
   ThemeData getTheme() => ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.dark(
@@ -34,6 +35,58 @@ class AppTheme {
               GoogleFonts.roboto().copyWith(color: Colors.white, fontSize: 15),
           labelMedium: GoogleFonts.roboto().copyWith(
               color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+
+        //DATE PICKER
+        datePickerTheme: DatePickerThemeData(
+          cancelButtonStyle:
+              TextButton.styleFrom(foregroundColor: Colors.white),
+          confirmButtonStyle:
+              TextButton.styleFrom(foregroundColor: Colors.white),
+          dividerColor: Colors.transparent,
+          headerHelpStyle: TextStyle(color: Colors.white),
+          headerForegroundColor: Colors.white,
+          backgroundColor: Color.fromARGB(255, 17, 17, 17),
+          todayBorder: BorderSide(
+            color: const Color.fromARGB(255, 64, 79, 165),
+          ),
+          todayBackgroundColor: WidgetStateProperty.all(purple),
+          yearStyle: TextStyle(color: Colors.white),
+          inputDecorationTheme: InputDecorationTheme(
+            hintStyle: TextStyle(color: Colors.white),
+            labelStyle: TextStyle(color: purple),
+            focusColor: Colors.white,
+            enabledBorder:
+                UnderlineInputBorder(borderSide: BorderSide(color: purple)),
+            focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: purple, width: 2)),
+          ),
+        ),
+
+        //TIME PICKER
+        timePickerTheme: TimePickerThemeData(
+          cancelButtonStyle:
+              TextButton.styleFrom(foregroundColor: Colors.white),
+          confirmButtonStyle:
+              TextButton.styleFrom(foregroundColor: Colors.white),
+          backgroundColor: Color.fromARGB(255, 17, 17, 17),
+          dialBackgroundColor: Color.fromARGB(255, 17, 17, 17),
+          hourMinuteColor: Color.fromARGB(210, 27, 27, 27),
+          hourMinuteTextColor: Colors.white,
+          inputDecorationTheme: InputDecorationTheme(
+            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: purple, width: 2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.transparent, width: 2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          backgroundColor: Color.fromARGB(255, 17, 17, 17),
         ),
       );
 }

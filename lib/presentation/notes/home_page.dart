@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
@@ -200,6 +201,10 @@ class _Body extends StatelessWidget {
             ),
           ),
         ),
+        TextButton(
+          onPressed: NotificationService().checkPendingNotifications,
+          child: Text('data'),
+        )
       ],
     );
   }

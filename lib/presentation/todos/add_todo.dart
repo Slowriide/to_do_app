@@ -22,7 +22,7 @@ class _AddTodoState extends State<AddTodo> {
   void _addSubtask() {
     setState(() {
       _editableSubtasks.add(EditableSubtask(
-        id: DateTime.now().microsecondsSinceEpoch,
+        id: DateTime.now().millisecondsSinceEpoch,
         controller: TextEditingController(),
       ));
     });
@@ -46,7 +46,7 @@ class _AddTodoState extends State<AddTodo> {
         final index = entry.key;
         final ctrl = entry.value;
         return Todo(
-          id: DateTime.now().microsecondsSinceEpoch + ctrl.hashCode,
+          id: DateTime.now().millisecondsSinceEpoch + ctrl.hashCode,
           title: ctrl.controller.text.trim(),
           isCompleted: ctrl.isCompleted,
           subTasks: [],
@@ -83,7 +83,8 @@ class _AddTodoState extends State<AddTodo> {
               .where((ctrl) => ctrl.controller.text.trim().isEmpty)
               .map(
                 (ctrl) => Todo(
-                  id: DateTime.now().microsecondsSinceEpoch + ctrl.hashCode,
+                  id: DateTime.now().millisecondsSinceEpoch.remainder(1000000) +
+                      ctrl.hashCode,
                   title: title,
                   isCompleted: false,
                   subTasks: [],

@@ -9,6 +9,7 @@ class NoteIsar {
   late String title;
   late String text;
   late bool isCompleted;
+  DateTime? reminder;
 
 //isar object to pure object
   Note toDomain() {
@@ -17,6 +18,7 @@ class NoteIsar {
       title: title,
       text: text,
       isCompleted: isCompleted,
+      reminder: reminder,
     );
   }
 
@@ -26,6 +28,7 @@ class NoteIsar {
       ..id = note.id
       ..text = note.text
       ..title = note.title
-      ..isCompleted = note.isCompleted;
+      ..isCompleted = note.isCompleted
+      ..reminder = note.reminder;
   }
 }

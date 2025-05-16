@@ -29,7 +29,7 @@ class TodoCubit extends Cubit<List<Todo>> {
 
   Future<void> addTodo(String title, List<Todo> subtasks) async {
     final newTodo = Todo(
-      id: DateTime.now().microsecondsSinceEpoch,
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1000000),
       title: title,
       isCompleted: false,
       subTasks: subtasks,
