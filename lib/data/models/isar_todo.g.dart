@@ -32,8 +32,13 @@ const TodoIsarSchema = CollectionSchema(
       name: r'order',
       type: IsarType.long,
     ),
-    r'title': PropertySchema(
+    r'reminder': PropertySchema(
       id: 3,
+      name: r'reminder',
+      type: IsarType.dateTime,
+    ),
+    r'title': PropertySchema(
+      id: 4,
       name: r'title',
       type: IsarType.string,
     )
@@ -78,7 +83,8 @@ void _todoIsarSerialize(
   writer.writeBool(offsets[0], object.isCompleted);
   writer.writeBool(offsets[1], object.isSubtask);
   writer.writeLong(offsets[2], object.order);
-  writer.writeString(offsets[3], object.title);
+  writer.writeDateTime(offsets[3], object.reminder);
+  writer.writeString(offsets[4], object.title);
 }
 
 TodoIsar _todoIsarDeserialize(
@@ -92,7 +98,8 @@ TodoIsar _todoIsarDeserialize(
   object.isCompleted = reader.readBool(offsets[0]);
   object.isSubtask = reader.readBool(offsets[1]);
   object.order = reader.readLong(offsets[2]);
-  object.title = reader.readString(offsets[3]);
+  object.reminder = reader.readDateTimeOrNull(offsets[3]);
+  object.title = reader.readString(offsets[4]);
   return object;
 }
 
@@ -110,6 +117,8 @@ P _todoIsarDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 4:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -323,6 +332,75 @@ extension TodoIsarQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'order',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> reminderIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'reminder',
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> reminderIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'reminder',
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> reminderEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'reminder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> reminderGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'reminder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> reminderLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'reminder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> reminderBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'reminder',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -563,6 +641,18 @@ extension TodoIsarQuerySortBy on QueryBuilder<TodoIsar, TodoIsar, QSortBy> {
     });
   }
 
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByReminder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByReminderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -626,6 +716,18 @@ extension TodoIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByReminder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByReminderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reminder', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -656,6 +758,12 @@ extension TodoIsarQueryWhereDistinct
   QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'order');
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByReminder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'reminder');
     });
   }
 
@@ -690,6 +798,12 @@ extension TodoIsarQueryProperty
   QueryBuilder<TodoIsar, int, QQueryOperations> orderProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'order');
+    });
+  }
+
+  QueryBuilder<TodoIsar, DateTime?, QQueryOperations> reminderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reminder');
     });
   }
 

@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/todo.dart';
+import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
 class EditTodo extends StatefulWidget {
@@ -18,6 +20,7 @@ class _EditTodoState extends State<EditTodo> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
+  DateTime? _selectedReminder;
 
   late List<EditableSubtask> _editableSubtasks = [];
 
@@ -25,6 +28,7 @@ class _EditTodoState extends State<EditTodo> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.todo.title);
+    _selectedReminder = widget.todo.reminder;
 
     final sordetSubtasks = [...widget.todo.subTasks]
       ..sort((a, b) => a.order.compareTo(b.order));
@@ -38,6 +42,78 @@ class _EditTodoState extends State<EditTodo> {
           ),
         )
         .toList();
+  }
+
+  Future<void> _showEditOrDeleteDialog() async {
+    if (_selectedReminder == null) return;
+
+    final formattedDate =
+        '${MaterialLocalizations.of(context).formatFullDate(_selectedReminder!)} \n ${TimeOfDay.fromDateTime(_selectedReminder!).format(context)}';
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Programed reminder:'),
+          content: Text(formattedDate),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.pop();
+                pickDateReminderDate();
+              },
+              child: Text('Edit', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _selectedReminder = null;
+                });
+                context.pop();
+              },
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> pickDateReminderDate() async {
+    final now = DateTime.now();
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 6),
+    );
+
+    if (!mounted || date == null) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.inputOnly,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+
+    if (time == null) return;
+
+    setState(() {
+      _selectedReminder = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
   }
 
   void _handleReorder(List<EditableSubtask> newOrder) {
@@ -61,8 +137,13 @@ class _EditTodoState extends State<EditTodo> {
   }
 
   Future<void> _updateTodo() async {
+    final todoCubit = context.read<TodoCubit>();
     if (_formKey.currentState?.validate() ?? false) {
       final title = _titleController.text.trim();
+      final reminderToSave = (_selectedReminder != null &&
+              _selectedReminder!.isAfter(DateTime.now()))
+          ? _selectedReminder
+          : null;
 
       final updatedSubtask = _editableSubtasks.asMap().entries.map((entry) {
         final index = entry.key;
@@ -81,12 +162,21 @@ class _EditTodoState extends State<EditTodo> {
       final updatedTodo = widget.todo.copyWith(
         title: title,
         subTasks: updatedSubtask,
+        reminder: reminderToSave,
       );
-
-      await context.read<TodoCubit>().updateTodo(updatedTodo);
-      if (mounted) {
-        context.go('/todos');
+      if (widget.todo.reminder != null) {
+        await NotificationService().cancelNotification(widget.todo.id);
       }
+
+      if (reminderToSave != null) {
+        await NotificationService().showNotification(
+          id: widget.todo.id,
+          title: updatedTodo.title,
+          scheduledDate: reminderToSave,
+        );
+      }
+
+      await todoCubit.updateTodo(updatedTodo);
     }
   }
 
@@ -106,12 +196,32 @@ class _EditTodoState extends State<EditTodo> {
         //appbar
         appBar: AppBar(
           leading: IconButton(
-            onPressed: _updateTodo,
+            onPressed: () {
+              _updateTodo();
+              context.go('/todos');
+            },
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
               color: theme.primary,
             ),
           ),
+          actions: [
+            IconButton(
+              onPressed: () {
+                if (_selectedReminder != null) {
+                  _showEditOrDeleteDialog();
+                } else {
+                  pickDateReminderDate();
+                }
+              },
+              icon: Icon(
+                _selectedReminder != null
+                    ? Icons.alarm_on
+                    : Icons.alarm_add_rounded,
+                color: _selectedReminder != null ? Colors.green : null,
+              ),
+            ),
+          ],
         ),
         //body
         body: Padding(
@@ -172,7 +282,10 @@ class _EditTodoState extends State<EditTodo> {
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: _updateTodo,
+            onPressed: () {
+              _updateTodo();
+              context.go('/todos');
+            },
             icon: const Icon(Icons.save),
             label: const Text('Guardar cambios'),
             style: ElevatedButton.styleFrom(

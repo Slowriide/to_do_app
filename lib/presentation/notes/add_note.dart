@@ -28,7 +28,7 @@ class _AddNoteState extends State<AddNote> {
       lastDate: DateTime(now.year + 6),
     );
 
-    if (date == null) return;
+    if (!mounted || date == null) return;
 
     final time = await showTimePicker(
       context: context,
@@ -72,14 +72,13 @@ class _AddNoteState extends State<AddNote> {
         );
       }
 
-      if (mounted) {
-        if (_reminderDate != null) {
-          await noteCubit.addNote(text, title,
-              reminder: _reminderDate, id: uniqueId);
-        } else {
-          await noteCubit.addNote(text, title, id: uniqueId);
-        }
+      if (_reminderDate != null) {
+        await noteCubit.addNote(text, title,
+            reminder: _reminderDate, id: uniqueId);
+      } else {
+        await noteCubit.addNote(text, title, id: uniqueId);
       }
+
       _alreadySaved = true;
     }
   }

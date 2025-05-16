@@ -11,6 +11,7 @@ class TodoIsar {
   bool isSubtask = false;
   final subtasks = IsarLinks<TodoIsar>();
   late int order;
+  DateTime? reminder;
 
   Todo toDomain() {
     return Todo(
@@ -20,6 +21,7 @@ class TodoIsar {
       subTasks: subtasks.map((subtask) => subtask.toDomain()).toList(),
       isSubtask: isSubtask,
       order: order,
+      reminder: reminder,
     );
   }
 
@@ -29,7 +31,8 @@ class TodoIsar {
       ..title = todo.title
       ..isSubtask = todo.isSubtask
       ..isCompleted = todo.isCompleted
-      ..order = todo.order;
+      ..order = todo.order
+      ..reminder = todo.reminder;
     for (var subtask in todo.subTasks) {
       todoIsar.subtasks.add(TodoIsar.fromDomain(subtask));
     }

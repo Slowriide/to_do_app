@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 
@@ -27,14 +28,16 @@ class TodoCubit extends Cubit<List<Todo>> {
     emit(todosList);
   }
 
-  Future<void> addTodo(String title, List<Todo> subtasks) async {
+  Future<void> addTodo(String title, List<Todo> subtasks,
+      {DateTime? reminder, required int id}) async {
     final newTodo = Todo(
-      id: DateTime.now().millisecondsSinceEpoch.remainder(1000000),
+      id: id,
       title: title,
       isCompleted: false,
       subTasks: subtasks,
       isSubtask: false,
       order: 0,
+      reminder: reminder,
     );
     await repository.addTodo(newTodo);
     loadTodos();
@@ -43,11 +46,19 @@ class TodoCubit extends Cubit<List<Todo>> {
   Future<void> deleteTodo(Todo todo) async {
     await repository.deleteTodo(todo);
     loadTodos();
+    NotificationService().cancelNotification(todo.id);
   }
 
   Future<void> updateTodo(Todo todo) async {
     await repository.updateTodo(todo);
     loadTodos();
+    if (todo.reminder != null) {
+      NotificationService().showNotification(
+        id: todo.id,
+        title: todo.title,
+        scheduledDate: todo.reminder!,
+      );
+    }
   }
 
   Future<void> toggleCompletion(Todo todo) async {

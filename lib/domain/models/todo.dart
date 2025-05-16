@@ -5,15 +5,16 @@ class Todo {
   final List<Todo> subTasks;
   final bool isSubtask;
   final int order;
+  final DateTime? reminder;
 
-  Todo({
-    required this.id,
-    required this.title,
-    required this.isCompleted,
-    required this.subTasks,
-    required this.isSubtask,
-    required this.order,
-  });
+  Todo(
+      {required this.id,
+      required this.title,
+      required this.isCompleted,
+      required this.subTasks,
+      required this.isSubtask,
+      required this.order,
+      this.reminder});
 
   Todo copyWith({
     int? id,
@@ -21,15 +22,17 @@ class Todo {
     bool? isCompleted,
     List<Todo>? subTasks,
     bool? isSubtask,
+    int? order,
+    DateTime? reminder,
   }) {
     return Todo(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      isCompleted: isCompleted ?? this.isCompleted,
-      subTasks: subTasks ?? this.subTasks,
-      isSubtask: isSubtask ?? this.isSubtask,
-      order: order,
-    );
+        id: id ?? this.id,
+        title: title ?? this.title,
+        isCompleted: isCompleted ?? this.isCompleted,
+        subTasks: subTasks ?? this.subTasks,
+        isSubtask: isSubtask ?? this.isSubtask,
+        order: order ?? this.order,
+        reminder: reminder ?? this.reminder);
   }
 
   Todo toggleCompletition() {
@@ -40,6 +43,7 @@ class Todo {
       subTasks: subTasks,
       isSubtask: isSubtask,
       order: order,
+      reminder: reminder,
     );
   }
 }
