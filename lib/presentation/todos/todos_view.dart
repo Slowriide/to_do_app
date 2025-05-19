@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:to_do_app/common/widgets/my_drawer.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
@@ -57,6 +56,21 @@ class _TodosViewState extends State<TodosView> {
     clearSelection();
   }
 
+  void togglePin() {
+    final todos = context.read<TodoCubit>().state;
+    final selected =
+        todos.where((todo) => selectedTodos.contains(todo.id)).toList();
+
+    final anyUnpinned = selected.any((todo) => !todo.isPinned);
+    final pinValue = anyUnpinned;
+
+    for (final todo in selected) {
+      final updated = todo.copyWith(isPinned: pinValue);
+      context.read<TodoCubit>().updateTodo(updated);
+    }
+    clearSelection();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +106,12 @@ class _TodosViewState extends State<TodosView> {
 
   SliverAppBar _buildAppbar(ColorScheme theme) {
     final textStyle = Theme.of(context).textTheme;
+    final todos = context.read<TodoCubit>().state;
+    final selected =
+        todos.where((todo) => selectedTodos.contains(todo.id)).toList();
+    final areAllPinned =
+        selected.isNotEmpty && selected.every((n) => n.isPinned);
+
     return SliverAppBar(
       foregroundColor: theme.onSurface,
       backgroundColor: Colors.black,
@@ -133,6 +153,14 @@ class _TodosViewState extends State<TodosView> {
           child: isSelectionMode
               ? Row(
                   children: [
+                    MyTooltip(
+                      message: areAllPinned ? 'Unpin Todos' : 'Pin Todos',
+                      icon: areAllPinned
+                          ? Icons.push_pin
+                          : Icons.push_pin_outlined,
+                      onPressed: togglePin,
+                      valueKey: ValueKey('SelectAll'),
+                    ),
                     MyTooltip(
                       message: 'Select All',
                       icon: Icons.select_all_outlined,

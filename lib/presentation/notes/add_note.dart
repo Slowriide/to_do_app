@@ -58,11 +58,14 @@ class _AddNoteState extends State<AddNote> {
   Future<void> _saveNote() async {
     final noteCubit = context.read<NoteCubit>();
     if (_alreadySaved) return;
+
+    _alreadySaved = true;
+
     if (_formKey.currentState?.validate() ?? false) {
       final title = _titleController.text.trim();
       final text = _textController.text.trim();
-
       final uniqueId = DateTime.now().millisecondsSinceEpoch.remainder(1000000);
+
       if (_reminderDate != null) {
         await NotificationService().showNotification(
           id: uniqueId,
@@ -79,7 +82,7 @@ class _AddNoteState extends State<AddNote> {
         await noteCubit.addNote(text, title, id: uniqueId);
       }
 
-      _alreadySaved = true;
+      if (mounted) context.go('/providerPage');
     }
   }
 
@@ -172,10 +175,7 @@ class _AddNoteState extends State<AddNote> {
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: () {
-              _saveNote();
-              if (mounted) context.go('/providerPage');
-            },
+            onPressed: _saveNote,
             icon: const Icon(Icons.save),
             label: const Text('Guardar'),
             style: ElevatedButton.styleFrom(

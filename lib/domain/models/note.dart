@@ -4,6 +4,7 @@ class Note {
   final String text;
   final bool isCompleted;
   final DateTime? reminder;
+  final bool isPinned;
 
   Note({
     required this.id,
@@ -11,6 +12,7 @@ class Note {
     required this.text,
     this.isCompleted = false,
     this.reminder,
+    this.isPinned = false,
   });
 
   Note toggleCompletion() {
@@ -20,6 +22,7 @@ class Note {
       text: text,
       isCompleted: !isCompleted,
       reminder: reminder,
+      isPinned: isPinned,
     );
   }
 
@@ -28,6 +31,7 @@ class Note {
     String? text,
     bool? isCompleted,
     DateTime? reminder,
+    bool? isPinned,
   }) {
     return Note(
       id: id,
@@ -35,6 +39,7 @@ class Note {
       text: text ?? this.text,
       isCompleted: isCompleted ?? this.isCompleted,
       reminder: reminder ?? this.reminder,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 }

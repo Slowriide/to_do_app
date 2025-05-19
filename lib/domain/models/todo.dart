@@ -6,15 +6,18 @@ class Todo {
   final bool isSubtask;
   final int order;
   final DateTime? reminder;
+  final bool isPinned;
 
-  Todo(
-      {required this.id,
-      required this.title,
-      required this.isCompleted,
-      required this.subTasks,
-      required this.isSubtask,
-      required this.order,
-      this.reminder});
+  Todo({
+    required this.id,
+    required this.title,
+    required this.isCompleted,
+    required this.subTasks,
+    required this.isSubtask,
+    required this.order,
+    this.reminder,
+    this.isPinned = false,
+  });
 
   Todo copyWith({
     int? id,
@@ -24,15 +27,18 @@ class Todo {
     bool? isSubtask,
     int? order,
     DateTime? reminder,
+    bool? isPinned,
   }) {
     return Todo(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        isCompleted: isCompleted ?? this.isCompleted,
-        subTasks: subTasks ?? this.subTasks,
-        isSubtask: isSubtask ?? this.isSubtask,
-        order: order ?? this.order,
-        reminder: reminder ?? this.reminder);
+      id: id ?? this.id,
+      title: title ?? this.title,
+      isCompleted: isCompleted ?? this.isCompleted,
+      subTasks: subTasks ?? this.subTasks,
+      isSubtask: isSubtask ?? this.isSubtask,
+      order: order ?? this.order,
+      reminder: reminder ?? this.reminder,
+      isPinned: isPinned ?? this.isPinned,
+    );
   }
 
   Todo toggleCompletition() {
@@ -44,6 +50,7 @@ class Todo {
       isSubtask: isSubtask,
       order: order,
       reminder: reminder,
+      isPinned: isPinned,
     );
   }
 }

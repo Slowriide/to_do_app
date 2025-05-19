@@ -22,18 +22,23 @@ const NoteIsarSchema = CollectionSchema(
       name: r'isCompleted',
       type: IsarType.bool,
     ),
-    r'reminder': PropertySchema(
+    r'isPinned': PropertySchema(
       id: 1,
+      name: r'isPinned',
+      type: IsarType.bool,
+    ),
+    r'reminder': PropertySchema(
+      id: 2,
       name: r'reminder',
       type: IsarType.dateTime,
     ),
     r'text': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'text',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'title',
       type: IsarType.string,
     )
@@ -70,9 +75,10 @@ void _noteIsarSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeBool(offsets[0], object.isCompleted);
-  writer.writeDateTime(offsets[1], object.reminder);
-  writer.writeString(offsets[2], object.text);
-  writer.writeString(offsets[3], object.title);
+  writer.writeBool(offsets[1], object.isPinned);
+  writer.writeDateTime(offsets[2], object.reminder);
+  writer.writeString(offsets[3], object.text);
+  writer.writeString(offsets[4], object.title);
 }
 
 NoteIsar _noteIsarDeserialize(
@@ -84,9 +90,10 @@ NoteIsar _noteIsarDeserialize(
   final object = NoteIsar();
   object.id = id;
   object.isCompleted = reader.readBool(offsets[0]);
-  object.reminder = reader.readDateTimeOrNull(offsets[1]);
-  object.text = reader.readString(offsets[2]);
-  object.title = reader.readString(offsets[3]);
+  object.isPinned = reader.readBool(offsets[1]);
+  object.reminder = reader.readDateTimeOrNull(offsets[2]);
+  object.text = reader.readString(offsets[3]);
+  object.title = reader.readString(offsets[4]);
   return object;
 }
 
@@ -100,10 +107,12 @@ P _noteIsarDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -256,6 +265,16 @@ extension NoteIsarQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isCompleted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> isPinnedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isPinned',
         value: value,
       ));
     });
@@ -610,6 +629,18 @@ extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByIsPinnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByReminder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminder', Sort.asc);
@@ -673,6 +704,18 @@ extension NoteIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByIsPinnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByReminder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminder', Sort.asc);
@@ -718,6 +761,12 @@ extension NoteIsarQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isPinned');
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByReminder() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'reminder');
@@ -750,6 +799,12 @@ extension NoteIsarQueryProperty
   QueryBuilder<NoteIsar, bool, QQueryOperations> isCompletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isCompleted');
+    });
+  }
+
+  QueryBuilder<NoteIsar, bool, QQueryOperations> isPinnedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isPinned');
     });
   }
 

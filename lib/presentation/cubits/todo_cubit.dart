@@ -25,7 +25,14 @@ class TodoCubit extends Cubit<List<Todo>> {
   Future<void> loadTodos() async {
     final todosList = await repository.getTodos();
 
-    emit(todosList);
+    final sortedTodos = [...todosList]..sort(
+        (a, b) {
+          if (a.isPinned == b.isPinned) return 0;
+          return a.isPinned ? -1 : 1;
+        },
+      );
+
+    emit(sortedTodos);
   }
 
   Future<void> addTodo(String title, List<Todo> subtasks,

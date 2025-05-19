@@ -78,6 +78,9 @@ class _AddTodoState extends State<AddTodo> {
 
   Future<void> _saveTodo() async {
     if (_isAlreadysaved) return;
+
+    _isAlreadysaved = true;
+
     if (_formKey.currentState?.validate() ?? false) {
       final todoCubit = context.read<TodoCubit>();
       final title = _titleController.text.trim();
@@ -109,7 +112,7 @@ class _AddTodoState extends State<AddTodo> {
       } else {
         await todoCubit.addTodo(title, subtasks, id: uniqueId);
       }
-      _isAlreadysaved = true;
+      if (mounted) context.go('/todos');
     }
   }
 
@@ -167,7 +170,6 @@ class _AddTodoState extends State<AddTodo> {
           appBar: AppBar(
             leading: IconButton(
               onPressed: () {
-                _saveTodo();
                 context.go('/todos');
               },
               icon: Icon(
@@ -245,10 +247,7 @@ class _AddTodoState extends State<AddTodo> {
           bottomNavigationBar: Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
-              onPressed: () {
-                _saveTodo();
-                context.go('/todos');
-              },
+              onPressed: _saveTodo,
               icon: const Icon(Icons.save),
               label: const Text('Guardar'),
               style: ElevatedButton.styleFrom(

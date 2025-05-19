@@ -56,6 +56,21 @@ class _HomePageState extends State<HomePage> {
     clearSelection();
   }
 
+  void togglePin() {
+    final notes = context.read<NoteCubit>().state;
+    final selected = notes.where((n) => selectedNotes.contains(n.id)).toList();
+
+    final anyUnpinned = selected.any((n) => !n.isPinned);
+    final pinValue =
+        anyUnpinned; //si alguna esta sin pinnear pinea todas, si estan todas pinneadas las despinea
+
+    for (final note in selected) {
+      final updated = note.copyWith(isPinned: pinValue);
+      context.read<NoteCubit>().updateNote(updated);
+    }
+    clearSelection();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +107,12 @@ class _HomePageState extends State<HomePage> {
 
   SliverAppBar _buildAppbar(ColorScheme theme) {
     final textStyle = Theme.of(context).textTheme;
+    final notes = context.read<NoteCubit>().state;
+    final selected =
+        notes.where((note) => selectedNotes.contains(note.id)).toList();
+    final areAllPinned =
+        selected.isNotEmpty && selected.every((n) => n.isPinned);
+
     return SliverAppBar(
       foregroundColor: theme.onSurface,
       backgroundColor: Colors.black,
@@ -133,6 +154,14 @@ class _HomePageState extends State<HomePage> {
           child: isSelectionMode
               ? Row(
                   children: [
+                    MyTooltip(
+                      message: areAllPinned ? 'Unpin Notes' : 'Pin Notes',
+                      icon: areAllPinned
+                          ? Icons.push_pin
+                          : Icons.push_pin_outlined,
+                      onPressed: togglePin,
+                      valueKey: ValueKey('SelectAll'),
+                    ),
                     MyTooltip(
                       message: 'Select All',
                       icon: Icons.select_all_outlined,

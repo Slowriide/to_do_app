@@ -22,23 +22,28 @@ const TodoIsarSchema = CollectionSchema(
       name: r'isCompleted',
       type: IsarType.bool,
     ),
-    r'isSubtask': PropertySchema(
+    r'isPinned': PropertySchema(
       id: 1,
+      name: r'isPinned',
+      type: IsarType.bool,
+    ),
+    r'isSubtask': PropertySchema(
+      id: 2,
       name: r'isSubtask',
       type: IsarType.bool,
     ),
     r'order': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'order',
       type: IsarType.long,
     ),
     r'reminder': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'reminder',
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'title',
       type: IsarType.string,
     )
@@ -81,10 +86,11 @@ void _todoIsarSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeBool(offsets[0], object.isCompleted);
-  writer.writeBool(offsets[1], object.isSubtask);
-  writer.writeLong(offsets[2], object.order);
-  writer.writeDateTime(offsets[3], object.reminder);
-  writer.writeString(offsets[4], object.title);
+  writer.writeBool(offsets[1], object.isPinned);
+  writer.writeBool(offsets[2], object.isSubtask);
+  writer.writeLong(offsets[3], object.order);
+  writer.writeDateTime(offsets[4], object.reminder);
+  writer.writeString(offsets[5], object.title);
 }
 
 TodoIsar _todoIsarDeserialize(
@@ -96,10 +102,11 @@ TodoIsar _todoIsarDeserialize(
   final object = TodoIsar();
   object.id = id;
   object.isCompleted = reader.readBool(offsets[0]);
-  object.isSubtask = reader.readBool(offsets[1]);
-  object.order = reader.readLong(offsets[2]);
-  object.reminder = reader.readDateTimeOrNull(offsets[3]);
-  object.title = reader.readString(offsets[4]);
+  object.isPinned = reader.readBool(offsets[1]);
+  object.isSubtask = reader.readBool(offsets[2]);
+  object.order = reader.readLong(offsets[3]);
+  object.reminder = reader.readDateTimeOrNull(offsets[4]);
+  object.title = reader.readString(offsets[5]);
   return object;
 }
 
@@ -115,10 +122,12 @@ P _todoIsarDeserializeProp<P>(
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 4:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 5:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -272,6 +281,16 @@ extension TodoIsarQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isCompleted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> isPinnedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isPinned',
         value: value,
       ));
     });
@@ -617,6 +636,18 @@ extension TodoIsarQuerySortBy on QueryBuilder<TodoIsar, TodoIsar, QSortBy> {
     });
   }
 
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByIsPinnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByIsSubtask() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isSubtask', Sort.asc);
@@ -692,6 +723,18 @@ extension TodoIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByIsPinnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByIsSubtask() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isSubtask', Sort.asc);
@@ -749,6 +792,12 @@ extension TodoIsarQueryWhereDistinct
     });
   }
 
+  QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isPinned');
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByIsSubtask() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isSubtask');
@@ -786,6 +835,12 @@ extension TodoIsarQueryProperty
   QueryBuilder<TodoIsar, bool, QQueryOperations> isCompletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isCompleted');
+    });
+  }
+
+  QueryBuilder<TodoIsar, bool, QQueryOperations> isPinnedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isPinned');
     });
   }
 

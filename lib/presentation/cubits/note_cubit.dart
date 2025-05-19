@@ -13,12 +13,19 @@ class NoteCubit extends Cubit<List<Note>> {
   Future<void> loadNotes() async {
     final notesList = await repository.getNotes();
 
-    emit(notesList);
+    //order pinned
+    final sortedNotes = [...notesList]..sort(
+        (a, b) {
+          if (a.isPinned == b.isPinned) return 0;
+          return a.isPinned ? -1 : 1;
+        },
+      );
+
+    emit(sortedNotes);
   }
 
   Future<void> addNote(String text, String title,
       {DateTime? reminder, required int id}) async {
-    print("Reminder recibido en addNote: $reminder");
     final newNote = Note(
       id: id,
       title: title,
@@ -33,11 +40,8 @@ class NoteCubit extends Cubit<List<Note>> {
 
   Future<void> deleteNote(Note note) async {
     await repository.deleteNote(note);
-
-    loadNotes();
-
     NotificationService().cancelNotification(note.id);
-    print(note.id);
+    loadNotes();
   }
 
   Future<void> toggleCompletion(Note note) async {

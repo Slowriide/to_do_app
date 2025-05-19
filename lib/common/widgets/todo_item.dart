@@ -35,10 +35,15 @@ class TodoItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(todo.title,
-                    style: textStyle.bodyMedium!.copyWith(fontSize: 21)),
+              Text(
+                todo.title,
+                style: textStyle.bodyMedium!.copyWith(fontSize: 21),
               ),
+              Spacer(),
+              Icon(
+                todo.isPinned ? Icons.push_pin_rounded : null,
+                color: const Color.fromARGB(213, 158, 158, 158),
+              )
             ],
           ),
           SizedBox(height: 10),
