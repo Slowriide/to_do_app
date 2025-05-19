@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/my_drawer.dart';
+import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
@@ -27,6 +28,13 @@ class _TodosViewState extends State<TodosView> {
       } else {
         selectedTodos.add(todoId);
       }
+    });
+  }
+
+  void selectAll() {
+    final allTodos = context.read<TodoCubit>().state;
+    setState(() {
+      selectedTodos.addAll(allTodos.map((todo) => todo.id));
     });
   }
 
@@ -77,7 +85,7 @@ class _TodosViewState extends State<TodosView> {
           ? null
           : FloatingActionButton(
               onPressed: () => context.push('/addtodo'),
-              child: Icon(Icons.add),
+              child: Icon(Icons.add, color: Colors.white, size: 25),
             ),
     );
   }
@@ -91,9 +99,11 @@ class _TodosViewState extends State<TodosView> {
       elevation: 0,
       centerTitle: true,
       leading: isSelectionMode
-          ? IconButton(
-              icon: Icon(Icons.close),
+          ? MyTooltip(
+              message: 'Clear Selection',
+              icon: Icons.close_rounded,
               onPressed: clearSelection,
+              valueKey: ValueKey('clear'),
             )
           : null,
       title: AnimatedSwitcher(
@@ -121,10 +131,21 @@ class _TodosViewState extends State<TodosView> {
             child: ScaleTransition(scale: animation, child: child),
           ),
           child: isSelectionMode
-              ? IconButton(
-                  key: ValueKey('delete'),
-                  onPressed: deleteSelectedTodos,
-                  icon: Icon(Icons.delete_outline_outlined),
+              ? Row(
+                  children: [
+                    MyTooltip(
+                      message: 'Select All',
+                      icon: Icons.select_all_outlined,
+                      onPressed: selectAll,
+                      valueKey: ValueKey('SelectAll'),
+                    ),
+                    MyTooltip(
+                      message: 'Delete',
+                      icon: Icons.delete_outline_outlined,
+                      onPressed: deleteSelectedTodos,
+                      valueKey: ValueKey('Delete'),
+                    ),
+                  ],
                 )
               : IconButton(
                   key: ValueKey('fav'),
@@ -165,11 +186,12 @@ class _Body extends StatelessWidget {
                 borderSide: BorderSide.none,
               ),
               prefixIcon: Icon(Icons.search, color: theme.onSurface),
-              hintText: 'Search Notes',
+              hintText: 'Search Todos',
               filled: true,
               fillColor: theme.secondary,
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              suffix: IconButton(
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              suffixIcon: IconButton(
                 onPressed: () {
                   textController.clear();
                   context.read<TodoSearchCubit>().clearSearch();

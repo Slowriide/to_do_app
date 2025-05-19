@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
-import 'package:to_do_app/core/notifications/notifications_service.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
@@ -28,6 +27,13 @@ class _HomePageState extends State<HomePage> {
       } else {
         selectedNotes.add(noteId);
       }
+    });
+  }
+
+  void selectAll() {
+    final allNotes = context.read<NoteCubit>().state;
+    setState(() {
+      selectedNotes.addAll(allNotes.map((note) => note.id));
     });
   }
 
@@ -79,7 +85,7 @@ class _HomePageState extends State<HomePage> {
           ? null
           : FloatingActionButton(
               onPressed: () => context.push('/addNote'),
-              child: Icon(Icons.add),
+              child: Icon(Icons.add, color: Colors.white, size: 25),
             ),
     );
   }
@@ -93,9 +99,11 @@ class _HomePageState extends State<HomePage> {
       elevation: 0,
       centerTitle: true,
       leading: isSelectionMode
-          ? IconButton(
-              icon: Icon(Icons.close),
+          ? MyTooltip(
+              message: 'Clear Selection',
+              icon: Icons.close_rounded,
               onPressed: clearSelection,
+              valueKey: ValueKey('clear'),
             )
           : null,
       title: AnimatedSwitcher(
@@ -123,10 +131,20 @@ class _HomePageState extends State<HomePage> {
             child: ScaleTransition(scale: animation, child: child),
           ),
           child: isSelectionMode
-              ? IconButton(
-                  key: ValueKey('delete'),
-                  onPressed: deleteSelectedNotes,
-                  icon: Icon(Icons.delete_outline_outlined),
+              ? Row(
+                  children: [
+                    MyTooltip(
+                      message: 'Select All',
+                      icon: Icons.select_all_outlined,
+                      onPressed: selectAll,
+                      valueKey: ValueKey('SelectAll'),
+                    ),
+                    MyTooltip(
+                        message: 'Delete',
+                        icon: Icons.delete_outline_outlined,
+                        onPressed: deleteSelectedNotes,
+                        valueKey: ValueKey('Delete')),
+                  ],
                 )
               : IconButton(
                   key: ValueKey('fav'),
@@ -170,8 +188,9 @@ class _Body extends StatelessWidget {
               hintText: 'Search Notes',
               filled: true,
               fillColor: theme.secondary,
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              suffix: IconButton(
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              suffixIcon: IconButton(
                 onPressed: () {
                   textController.clear();
                   context.read<NoteSearchCubit>().clearSearch();
@@ -201,10 +220,6 @@ class _Body extends StatelessWidget {
             ),
           ),
         ),
-        TextButton(
-          onPressed: NotificationService().checkPendingNotifications,
-          child: Text('data'),
-        )
       ],
     );
   }

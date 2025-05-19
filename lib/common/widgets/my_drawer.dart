@@ -29,6 +29,7 @@ class _MyDrawerState extends State<MyDrawer> {
           ),
           Expanded(
             child: NavigationDrawer(
+              tilePadding: EdgeInsets.symmetric(horizontal: 12),
               indicatorColor: const Color.fromARGB(255, 64, 79, 165),
               selectedIndex: _getSelectedIndex(location),
               onDestinationSelected: (index) async {
@@ -51,7 +52,7 @@ class _MyDrawerState extends State<MyDrawer> {
               children: const [
                 NavigationDrawerDestination(
                   icon: Icon(Icons.note_alt_outlined),
-                  selectedIcon: Icon(Icons.note_alt),
+                  selectedIcon: Icon(Icons.note_alt_outlined),
                   label: Text('Notes'),
                 ),
                 NavigationDrawerDestination(
@@ -59,9 +60,14 @@ class _MyDrawerState extends State<MyDrawer> {
                   selectedIcon: Icon(Icons.check_box),
                   label: Text("ToDo's"),
                 ),
+                Divider(indent: 27, endIndent: 27),
                 NavigationDrawerDestination(
                   icon: Icon(Icons.settings),
                   label: Text('Ajustes'),
+                ),
+                NavigationDrawerDestination(
+                  icon: Icon(Icons.question_mark_rounded),
+                  label: Text('Help'),
                 ),
               ],
             ),

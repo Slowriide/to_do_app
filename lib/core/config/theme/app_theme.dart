@@ -5,12 +5,18 @@ class AppTheme {
   final Color surface = Color.fromARGB(255, 5, 5, 5);
   final Color onSurface = Color(0xffE3E3E3);
   final Color purple = Color.fromARGB(255, 64, 79, 165);
+  final Color primary = const Color.fromARGB(255, 29, 29, 29);
+  final bodySmall = GoogleFonts.roboto()
+      .copyWith(color: const Color.fromARGB(255, 236, 236, 236), fontSize: 18);
+  final titleSmall = GoogleFonts.roboto().copyWith(fontSize: 20);
+
   ThemeData getTheme() => ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.dark(
           surface: surface,
           onSurface: onSurface,
-          primary: const Color.fromARGB(255, 29, 29, 29),
+          primary: primary,
+          onPrimary: purple,
           secondary: const Color.fromARGB(255, 17, 17, 17),
         ),
         textTheme: TextTheme(
@@ -29,8 +35,7 @@ class AppTheme {
               color: Colors.white, fontSize: 25, fontWeight: FontWeight.w500),
           bodyMedium: GoogleFonts.roboto().copyWith(
               color: Colors.white, fontSize: 19, fontWeight: FontWeight.w500),
-          bodySmall: GoogleFonts.roboto().copyWith(
-              color: const Color.fromARGB(255, 236, 236, 236), fontSize: 18),
+          bodySmall: bodySmall,
           labelSmall:
               GoogleFonts.roboto().copyWith(color: Colors.white, fontSize: 15),
           labelMedium: GoogleFonts.roboto().copyWith(
@@ -87,6 +92,21 @@ class AppTheme {
         ),
         dialogTheme: DialogThemeData(
           backgroundColor: Color.fromARGB(255, 17, 17, 17),
+        ),
+
+        //Tool tip
+        tooltipTheme: TooltipThemeData(
+          textStyle: bodySmall.copyWith(color: Colors.white),
+          decoration: BoxDecoration(
+            color: primary,
+            borderRadius: BorderRadius.circular(5),
+          ),
+        ),
+
+        navigationDrawerTheme: NavigationDrawerThemeData(
+          iconTheme: WidgetStatePropertyAll(IconThemeData(color: Colors.white)),
+          labelTextStyle:
+              WidgetStatePropertyAll(titleSmall.copyWith(color: Colors.white)),
         ),
       );
 }

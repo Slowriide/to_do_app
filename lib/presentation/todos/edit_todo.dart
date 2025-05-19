@@ -5,7 +5,6 @@ import 'package:to_do_app/common/utils/editablesubtask.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/todo.dart';
-import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
 class EditTodo extends StatefulWidget {
