@@ -167,6 +167,7 @@ class _AddTodoState extends State<AddTodo> {
           }
         },
         child: Scaffold(
+          backgroundColor: theme.surface,
           appBar: AppBar(
             leading: IconButton(
               onPressed: () {
@@ -174,7 +175,7 @@ class _AddTodoState extends State<AddTodo> {
               },
               icon: Icon(
                 Icons.arrow_back_ios_new_rounded,
-                color: theme.primary,
+                color: theme.onSurface,
               ),
             ),
             actions: [
@@ -248,10 +249,12 @@ class _AddTodoState extends State<AddTodo> {
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
               onPressed: _saveTodo,
-              icon: const Icon(Icons.save),
+              icon: Icon(Icons.save),
               label: const Text('Guardar'),
               style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50)),
+                minimumSize: const Size.fromHeight(50),
+                foregroundColor: theme.onSurface,
+              ),
             ),
           ),
         ),

@@ -138,6 +138,7 @@ class _EditNotePageState extends State<EditNotePage> {
         }
       },
       child: Scaffold(
+        backgroundColor: theme.surface,
         //Appbar
         appBar: AppBar(
           leading: IconButton(
@@ -147,7 +148,7 @@ class _EditNotePageState extends State<EditNotePage> {
             },
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: theme.primary,
+              color: theme.onSurface,
             ),
           ),
           actions: [
@@ -218,7 +219,9 @@ class _EditNotePageState extends State<EditNotePage> {
             icon: const Icon(Icons.save),
             label: const Text('Guardar'),
             style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50)),
+              minimumSize: const Size.fromHeight(50),
+              foregroundColor: theme.onSurface,
+            ),
           ),
         ),
       ),

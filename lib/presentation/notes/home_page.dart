@@ -50,9 +50,9 @@ class _HomePageState extends State<HomePage> {
         .toList();
 
     // Eliminar todas las notas seleccionadas de una vez
-    for (final note in notesToDelete) {
-      noteCubit.deleteNote(note);
-    }
+
+    noteCubit.deleteMultiples(notesToDelete);
+
     clearSelection();
   }
 
@@ -64,10 +64,9 @@ class _HomePageState extends State<HomePage> {
     final pinValue =
         anyUnpinned; //si alguna esta sin pinnear pinea todas, si estan todas pinneadas las despinea
 
-    for (final note in selected) {
-      final updated = note.copyWith(isPinned: pinValue);
-      context.read<NoteCubit>().updateNote(updated);
-    }
+    final updated =
+        selected.map((note) => note.copyWith(isPinned: pinValue)).toList();
+    context.read<NoteCubit>().updateNotes(updated);
     clearSelection();
   }
 
@@ -83,6 +82,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: theme.surface,
       drawer: MyDrawer(),
       body: NestedScrollView(
         physics: const BouncingScrollPhysics(),
@@ -114,6 +114,7 @@ class _HomePageState extends State<HomePage> {
         selected.isNotEmpty && selected.every((n) => n.isPinned);
 
     return SliverAppBar(
+      toolbarHeight: 60,
       foregroundColor: theme.onSurface,
       backgroundColor: Colors.black,
       pinned: true,
@@ -140,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                 key: ValueKey('selected'),
               )
             : Text(
-                'Notas',
+                'Notes',
                 key: ValueKey('normal'),
               ),
       ),
@@ -175,11 +176,7 @@ class _HomePageState extends State<HomePage> {
                         valueKey: ValueKey('Delete')),
                   ],
                 )
-              : IconButton(
-                  key: ValueKey('fav'),
-                  onPressed: () {},
-                  icon: Icon(Icons.favorite),
-                ),
+              : null,
         )
       ],
     );

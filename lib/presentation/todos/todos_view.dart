@@ -50,13 +50,12 @@ class _TodosViewState extends State<TodosView> {
         .toList();
 
     // Eliminar todas las notas seleccionadas de una vez
-    for (final todo in todosToDelete) {
-      todoCubit.deleteTodo(todo);
-    }
+    todoCubit.deleteMultiples(todosToDelete);
+
     clearSelection();
   }
 
-  void togglePin() {
+  void togglePin() async {
     final todos = context.read<TodoCubit>().state;
     final selected =
         todos.where((todo) => selectedTodos.contains(todo.id)).toList();
@@ -64,10 +63,10 @@ class _TodosViewState extends State<TodosView> {
     final anyUnpinned = selected.any((todo) => !todo.isPinned);
     final pinValue = anyUnpinned;
 
-    for (final todo in selected) {
-      final updated = todo.copyWith(isPinned: pinValue);
-      context.read<TodoCubit>().updateTodo(updated);
-    }
+    final updated =
+        selected.map((todo) => todo.copyWith(isPinned: pinValue)).toList();
+
+    await context.read<TodoCubit>().updateTodos(updated);
     clearSelection();
   }
 
@@ -83,6 +82,7 @@ class _TodosViewState extends State<TodosView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: theme.surface,
       drawer: MyDrawer(),
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -113,6 +113,7 @@ class _TodosViewState extends State<TodosView> {
         selected.isNotEmpty && selected.every((n) => n.isPinned);
 
     return SliverAppBar(
+      toolbarHeight: 60,
       foregroundColor: theme.onSurface,
       backgroundColor: Colors.black,
       pinned: true,
@@ -145,42 +146,37 @@ class _TodosViewState extends State<TodosView> {
       ),
       actions: [
         AnimatedSwitcher(
-          duration: Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: ScaleTransition(scale: animation, child: child),
-          ),
-          child: isSelectionMode
-              ? Row(
-                  children: [
-                    MyTooltip(
-                      message: areAllPinned ? 'Unpin Todos' : 'Pin Todos',
-                      icon: areAllPinned
-                          ? Icons.push_pin
-                          : Icons.push_pin_outlined,
-                      onPressed: togglePin,
-                      valueKey: ValueKey('SelectAll'),
-                    ),
-                    MyTooltip(
-                      message: 'Select All',
-                      icon: Icons.select_all_outlined,
-                      onPressed: selectAll,
-                      valueKey: ValueKey('SelectAll'),
-                    ),
-                    MyTooltip(
-                      message: 'Delete',
-                      icon: Icons.delete_outline_outlined,
-                      onPressed: deleteSelectedTodos,
-                      valueKey: ValueKey('Delete'),
-                    ),
-                  ],
-                )
-              : IconButton(
-                  key: ValueKey('fav'),
-                  onPressed: () {},
-                  icon: Icon(Icons.favorite),
+            duration: Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(scale: animation, child: child),
                 ),
-        )
+            child: isSelectionMode
+                ? Row(
+                    children: [
+                      MyTooltip(
+                        message: areAllPinned ? 'Unpin Todos' : 'Pin Todos',
+                        icon: areAllPinned
+                            ? Icons.push_pin
+                            : Icons.push_pin_outlined,
+                        onPressed: togglePin,
+                        valueKey: ValueKey('SelectAll'),
+                      ),
+                      MyTooltip(
+                        message: 'Select All',
+                        icon: Icons.select_all_outlined,
+                        onPressed: selectAll,
+                        valueKey: ValueKey('SelectAll'),
+                      ),
+                      MyTooltip(
+                        message: 'Delete',
+                        icon: Icons.delete_outline_outlined,
+                        onPressed: deleteSelectedTodos,
+                        valueKey: ValueKey('Delete'),
+                      ),
+                    ],
+                  )
+                : null)
       ],
     );
   }

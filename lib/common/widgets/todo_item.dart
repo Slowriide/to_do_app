@@ -35,42 +35,44 @@ class TodoItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                todo.title,
-                style: textStyle.bodyMedium!.copyWith(fontSize: 21),
+              Expanded(
+                child: Text(
+                  todo.title,
+                  style: textStyle.bodyMedium!.copyWith(fontSize: 21),
+                  maxLines: 1,
+                ),
               ),
-              Spacer(),
-              Icon(
-                todo.isPinned ? Icons.push_pin_rounded : null,
-                color: const Color.fromARGB(213, 158, 158, 158),
-              )
+              todo.isPinned
+                  ? Icon(
+                      Icons.push_pin_rounded,
+                      color: const Color.fromARGB(213, 158, 158, 158),
+                    )
+                  : SizedBox(height: 0, width: 0),
             ],
           ),
           SizedBox(height: 10),
           if (todo.subTasks.isNotEmpty)
-            ...sortedSubtasks
-                .map((subtask) => Row(
-                      children: [
-                        Icon(
-                          subtask.isCompleted
-                              ? Icons.check_box_outlined
-                              : Icons.check_box_outline_blank_rounded,
-                          size: 18,
-                          color: subtask.isCompleted
-                              ? const Color.fromARGB(255, 77, 71, 165)
-                              : Colors.grey,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            subtask.title,
-                            style: textStyle.bodyMedium,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ))
-                .toList()
+            ...sortedSubtasks.map((subtask) => Row(
+                  children: [
+                    Icon(
+                      subtask.isCompleted
+                          ? Icons.check_box_outlined
+                          : Icons.check_box_outline_blank_rounded,
+                      size: 18,
+                      color: subtask.isCompleted
+                          ? const Color.fromARGB(255, 77, 71, 165)
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        subtask.title,
+                        style: textStyle.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ))
         ],
       ),
     );

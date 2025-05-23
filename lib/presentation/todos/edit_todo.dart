@@ -192,6 +192,7 @@ class _EditTodoState extends State<EditTodo> {
         }
       },
       child: Scaffold(
+        backgroundColor: theme.surface,
         //appbar
         appBar: AppBar(
           leading: IconButton(
@@ -201,7 +202,7 @@ class _EditTodoState extends State<EditTodo> {
             },
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: theme.primary,
+              color: theme.onSurface,
             ),
           ),
           actions: [
@@ -288,7 +289,9 @@ class _EditTodoState extends State<EditTodo> {
             icon: const Icon(Icons.save),
             label: const Text('Guardar cambios'),
             style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50)),
+              minimumSize: const Size.fromHeight(50),
+              foregroundColor: theme.onSurface,
+            ),
           ),
         ),
       ),

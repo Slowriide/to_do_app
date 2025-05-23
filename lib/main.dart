@@ -13,6 +13,7 @@ import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 
@@ -57,13 +58,23 @@ class MyApp extends StatelessWidget {
           BlocProvider(create: (context) => TodoCubit(todoRepo)..loadTodos()),
           BlocProvider(create: (context) => NoteSearchCubit([])),
           BlocProvider(create: (context) => TodoSearchCubit([])),
+          BlocProvider(create: (context) => ThemeCubit()),
         ],
-        child: MaterialApp.router(
-          routerConfig: appRouter,
-          theme: AppTheme().getTheme(),
-          title: 'ToDo App',
-          debugShowCheckedModeBanner: false,
-        ),
+        child: BlocBuilder<ThemeCubit, ThemeState>(builder: (context, state) {
+          final themeData = AppTheme(isDarkMode: state.isDarkmode).getTheme();
+
+          return AnimatedTheme(
+            data: themeData,
+            duration: Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            child: MaterialApp.router(
+              routerConfig: appRouter,
+              theme: themeData,
+              title: 'ToDo App',
+              debugShowCheckedModeBanner: false,
+            ),
+          );
+        }),
       ),
     );
   }

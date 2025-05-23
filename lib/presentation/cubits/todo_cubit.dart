@@ -68,6 +68,20 @@ class TodoCubit extends Cubit<List<Todo>> {
     }
   }
 
+  Future<void> updateTodos(List<Todo> todos) async {
+    for (final todo in todos) {
+      await repository.updateTodo(todo);
+      if (todo.reminder != null) {
+        NotificationService().showNotification(
+          id: todo.id,
+          title: todo.title,
+          scheduledDate: todo.reminder!,
+        );
+      }
+    }
+    await loadTodos();
+  }
+
   Future<void> toggleCompletion(Todo todo) async {
     final updatedTodo = todo.toggleCompletition();
     await repository.updateTodo(updatedTodo);
@@ -81,6 +95,14 @@ class TodoCubit extends Cubit<List<Todo>> {
 
   Future<void> deleteSubtask(Todo subtasks) async {
     await repository.deleteSubTask(subtasks);
+    loadTodos();
+  }
+
+  Future<void> deleteMultiples(List<Todo> todosToDelete) async {
+    for (final todo in todosToDelete) {
+      await repository.deleteTodo(todo);
+      NotificationService().cancelNotification(todo.id);
+    }
     loadTodos();
   }
 

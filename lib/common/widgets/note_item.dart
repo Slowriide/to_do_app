@@ -33,12 +33,19 @@ class NoteItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(note.title, style: textStyle.bodyMedium),
-              Spacer(),
-              Icon(
-                note.isPinned ? Icons.push_pin_rounded : null,
-                color: const Color.fromARGB(213, 158, 158, 158),
-              )
+              Expanded(
+                child: Text(
+                  note.title,
+                  style: textStyle.bodyMedium,
+                  maxLines: 1,
+                ),
+              ),
+              note.isPinned
+                  ? Icon(
+                      Icons.push_pin_rounded,
+                      color: const Color.fromARGB(213, 158, 158, 158),
+                    )
+                  : SizedBox(height: 0, width: 0),
             ],
           ),
           SizedBox(height: 10),

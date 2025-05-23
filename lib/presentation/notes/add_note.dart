@@ -105,6 +105,7 @@ class _AddNoteState extends State<AddNote> {
         }
       },
       child: Scaffold(
+        backgroundColor: theme.surface,
         //Appbar
         appBar: AppBar(
           title: Text(
@@ -117,7 +118,7 @@ class _AddNoteState extends State<AddNote> {
             },
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: theme.primary,
+              color: theme.onSurface,
             ),
           ),
           actions: [
@@ -141,13 +142,14 @@ class _AddNoteState extends State<AddNote> {
             child: Column(
               children: [
                 TextFormField(
+                  minLines: 1,
                   maxLines: 3,
                   controller: _titleController,
                   decoration: InputDecoration(
-                    labelText: 'Título',
+                    labelText: 'Title',
                     labelStyle: textStyle.bodyLarge,
                     alignLabelWithHint: true,
-                    hintText: 'title',
+                    hintText: 'Title',
                     border: InputBorder.none,
                   ),
                 ),
@@ -179,7 +181,9 @@ class _AddNoteState extends State<AddNote> {
             icon: const Icon(Icons.save),
             label: const Text('Guardar'),
             style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50)),
+              minimumSize: const Size.fromHeight(50),
+              foregroundColor: theme.onSurface,
+            ),
           ),
         ),
       ),

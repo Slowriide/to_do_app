@@ -44,6 +44,14 @@ class NoteCubit extends Cubit<List<Note>> {
     loadNotes();
   }
 
+  Future<void> deleteMultiples(List<Note> notesToDelete) async {
+    for (final note in notesToDelete) {
+      await repository.deleteNote(note);
+      NotificationService().cancelNotification(note.id);
+    }
+    loadNotes();
+  }
+
   Future<void> toggleCompletion(Note note) async {
     final updatedNote = note.toggleCompletion();
 
@@ -64,5 +72,20 @@ class NoteCubit extends Cubit<List<Note>> {
         scheduledDate: updateNote.reminder!,
       );
     }
+  }
+
+  Future<void> updateNotes(List<Note> notes) async {
+    for (final note in notes) {
+      await repository.updateNote(note);
+      if (note.reminder != null) {
+        NotificationService().showNotification(
+          id: note.id,
+          title: note.title,
+          body: note.text,
+          scheduledDate: note.reminder!,
+        );
+      }
+    }
+    loadNotes();
   }
 }
