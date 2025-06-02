@@ -61,8 +61,6 @@ class NotificationService {
     }
     await _notificationsPlugin.cancel(id);
 
-    print('Programando notificación id: ${scheduledDate}');
-
     await _notificationsPlugin.zonedSchedule(
       id,
       title,
@@ -74,16 +72,16 @@ class NotificationService {
     );
   }
 
-  Future<void> checkPendingNotifications() async {
-    final List<PendingNotificationRequest> pendingNotifications =
-        await _notificationsPlugin.pendingNotificationRequests();
+  // Future<void> checkPendingNotifications() async {
+  //   final List<PendingNotificationRequest> pendingNotifications =
+  //       await _notificationsPlugin.pendingNotificationRequests();
 
-    for (var notification in pendingNotifications) {
-      print(
-        'Pending Notification: ${notification.id}, hora: ${notification.title}',
-      );
-    }
-  }
+  //   for (var notification in pendingNotifications) {
+  //     print(
+  //       'Pending Notification: ${notification.id}, hora: ${notification.title}',
+  //     );
+  //   }
+  // }
 
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);

@@ -30,6 +30,7 @@ environment:
 dependencies:
   android_intent_plus: ^5.3.0
   animate_do: ^4.2.0
+  bloc: ^9.0.0
   collection: ^1.15.0
   cupertino_icons: ^1.0.8
   equatable: ^2.0.7
@@ -45,6 +46,7 @@ dependencies:
   implicitly_animated_reorderable_list_2: ^0.6.0
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
+  meta: ^1.16.0
   package_info_plus: ^8.3.0
   path_provider: ^2.1.5
   permission_handler: ^12.0.0+1

@@ -14,7 +14,7 @@ class EditNotePage extends StatefulWidget {
 }
 
 class _EditNotePageState extends State<EditNotePage> {
-  bool _alreadySaved = false;
+  final bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _textController;
