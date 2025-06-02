@@ -281,14 +281,16 @@ class _EditTodoState extends State<EditTodo> {
         ),
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
-          child: ElevatedButton.icon(
+          child: FilledButton.icon(
             onPressed: () {
               _updateTodo();
               context.go('/todos');
             },
             icon: const Icon(Icons.save),
             label: const Text('Guardar cambios'),
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
+              elevation: 0,
+              backgroundColor: theme.surface,
               minimumSize: const Size.fromHeight(50),
               foregroundColor: theme.onSurface,
             ),

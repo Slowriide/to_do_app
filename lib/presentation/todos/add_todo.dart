@@ -247,11 +247,13 @@ class _AddTodoState extends State<AddTodo> {
           ),
           bottomNavigationBar: Padding(
             padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
+            child: FilledButton.icon(
               onPressed: _saveTodo,
               icon: Icon(Icons.save),
               label: const Text('Guardar'),
-              style: ElevatedButton.styleFrom(
+              style: FilledButton.styleFrom(
+                elevation: 0,
+                backgroundColor: theme.surface,
                 minimumSize: const Size.fromHeight(50),
                 foregroundColor: theme.onSurface,
               ),

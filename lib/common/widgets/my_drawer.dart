@@ -16,7 +16,7 @@ class MyDrawer extends StatefulWidget {
 class _MyDrawerState extends State<MyDrawer> {
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textTheme;
 
     final location = GoRouterState.of(context).uri.toString();
@@ -26,7 +26,7 @@ class _MyDrawerState extends State<MyDrawer> {
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(15, 28, 0, 0),
-            decoration: BoxDecoration(color: Colors.black),
+            decoration: BoxDecoration(color: theme.surface),
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Text("My ToDo App", style: textStyles.titleMedium),
@@ -35,7 +35,7 @@ class _MyDrawerState extends State<MyDrawer> {
           Expanded(
             child: NavigationDrawer(
               tilePadding: EdgeInsets.symmetric(horizontal: 12),
-              indicatorColor: const Color.fromARGB(255, 64, 79, 165),
+              indicatorColor: theme.onPrimary,
               selectedIndex: _getSelectedIndex(location),
               onDestinationSelected: (index) async {
                 Navigator.of(context).pop(); // Cierra el drawer

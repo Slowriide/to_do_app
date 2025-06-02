@@ -26,6 +26,7 @@ class SubtaskItemsView extends StatelessWidget {
           onReorder(newItems);
         },
         itemBuilder: (context, animation, item, index) {
+          final theme = Theme.of(context).colorScheme;
           return Reorderable(
             key: ValueKey(item.id),
             child: SizeFadeTransition(
@@ -38,11 +39,13 @@ class SubtaskItemsView extends StatelessWidget {
                     Expanded(
                       child: TextFormField(
                         style: TextStyle(
-                          color: item.isCompleted ? Colors.grey : Colors.white,
+                          color: item.isCompleted
+                              ? theme.tertiary
+                              : theme.onTertiary,
                           decoration: item.isCompleted
                               ? TextDecoration.lineThrough
                               : null,
-                          decorationColor: Colors.grey,
+                          decorationColor: theme.tertiary,
                         ),
                         controller: item.controller,
                         decoration: InputDecoration(
@@ -54,8 +57,8 @@ class SubtaskItemsView extends StatelessWidget {
                                   ? Icons.check_box
                                   : Icons.check_box_outline_blank,
                               color: item.isCompleted
-                                  ? Color.fromARGB(255, 64, 79, 165)
-                                  : Colors.grey,
+                                  ? theme.onPrimary
+                                  : theme.tertiary,
                             ),
                           ),
                           suffixIcon: IconButton(

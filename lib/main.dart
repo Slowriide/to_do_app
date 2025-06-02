@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:to_do_app/core/config/local_storage/local_storage.dart';
 import 'package:to_do_app/core/config/router/app_router.dart';
 import 'package:to_do_app/core/config/theme/app_theme.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
@@ -19,6 +20,8 @@ import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await LocalStorage.configurePrefs();
 
   await NotificationService().init();
 

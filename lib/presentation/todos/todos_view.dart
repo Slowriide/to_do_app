@@ -32,8 +32,13 @@ class _TodosViewState extends State<TodosView> {
 
   void selectAll() {
     final allTodos = context.read<TodoCubit>().state;
+    final allTodosIds = allTodos.map((todo) => todo.id).toSet();
     setState(() {
-      selectedTodos.addAll(allTodos.map((todo) => todo.id));
+      if (selectedTodos.containsAll(allTodosIds)) {
+        selectedTodos.clear();
+      } else {
+        selectedTodos.addAll(allTodosIds);
+      }
     });
   }
 
@@ -115,7 +120,7 @@ class _TodosViewState extends State<TodosView> {
     return SliverAppBar(
       toolbarHeight: 60,
       foregroundColor: theme.onSurface,
-      backgroundColor: Colors.black,
+      backgroundColor: theme.surface,
       pinned: true,
       elevation: 0,
       centerTitle: true,
@@ -142,6 +147,10 @@ class _TodosViewState extends State<TodosView> {
             : Text(
                 'ToDo\'s',
                 key: ValueKey('normal'),
+                style: textStyle.titleMedium?.copyWith(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
       ),
       actions: [

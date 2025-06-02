@@ -45,7 +45,7 @@ class TodoItem extends StatelessWidget {
               todo.isPinned
                   ? Icon(
                       Icons.push_pin_rounded,
-                      color: const Color.fromARGB(213, 158, 158, 158),
+                      color: theme.tertiary,
                     )
                   : SizedBox(height: 0, width: 0),
             ],
@@ -60,8 +60,8 @@ class TodoItem extends StatelessWidget {
                           : Icons.check_box_outline_blank_rounded,
                       size: 18,
                       color: subtask.isCompleted
-                          ? const Color.fromARGB(255, 77, 71, 165)
-                          : Colors.grey,
+                          ? theme.onPrimary
+                          : theme.tertiary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(

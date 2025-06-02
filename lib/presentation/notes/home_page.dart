@@ -32,8 +32,14 @@ class _HomePageState extends State<HomePage> {
 
   void selectAll() {
     final allNotes = context.read<NoteCubit>().state;
+    final allNotesIds = allNotes.map((note) => note.id).toSet();
+
     setState(() {
-      selectedNotes.addAll(allNotes.map((note) => note.id));
+      if (selectedNotes.containsAll(allNotesIds)) {
+        selectedNotes.clear();
+      } else {
+        selectedNotes.addAll(allNotesIds);
+      }
     });
   }
 
@@ -116,7 +122,7 @@ class _HomePageState extends State<HomePage> {
     return SliverAppBar(
       toolbarHeight: 60,
       foregroundColor: theme.onSurface,
-      backgroundColor: Colors.black,
+      backgroundColor: theme.surface,
       pinned: true,
       elevation: 0,
       centerTitle: true,
@@ -140,10 +146,12 @@ class _HomePageState extends State<HomePage> {
                 style: textStyle.titleMedium,
                 key: ValueKey('selected'),
               )
-            : Text(
-                'Notes',
+            : Text('Notes',
                 key: ValueKey('normal'),
-              ),
+                style: textStyle.titleMedium?.copyWith(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                )),
       ),
       actions: [
         AnimatedSwitcher(

@@ -211,14 +211,16 @@ class _EditNotePageState extends State<EditNotePage> {
         ),
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
-          child: ElevatedButton.icon(
+          child: FilledButton.icon(
             onPressed: () {
               _updateNote();
               if (mounted) context.go('/providerPage');
             },
             icon: const Icon(Icons.save),
             label: const Text('Guardar'),
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
+              elevation: 0,
+              backgroundColor: theme.surface,
               minimumSize: const Size.fromHeight(50),
               foregroundColor: theme.onSurface,
             ),

@@ -43,7 +43,7 @@ class NoteItem extends StatelessWidget {
               note.isPinned
                   ? Icon(
                       Icons.push_pin_rounded,
-                      color: const Color.fromARGB(213, 158, 158, 158),
+                      color: theme.tertiary,
                     )
                   : SizedBox(height: 0, width: 0),
             ],
