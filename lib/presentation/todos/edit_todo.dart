@@ -328,7 +328,7 @@ class _EditTodoState extends State<EditTodo> {
               context.go('/todos');
             },
             icon: const Icon(Icons.save),
-            label: const Text('Guardar cambios'),
+            label: const Text('Save Todo'),
             style: FilledButton.styleFrom(
               elevation: 0,
               backgroundColor: theme.surface,

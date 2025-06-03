@@ -72,7 +72,11 @@ class _MyDrawerState extends State<MyDrawer> {
                   selectedIcon: Icon(Icons.check_box),
                   label: Text("ToDo's"),
                 ),
-                Divider(indent: 27, endIndent: 27),
+                Divider(
+                  indent: 27,
+                  endIndent: 27,
+                  color: theme.primary,
+                ),
                 NavigationDrawerDestination(
                   icon: Icon(Icons.settings),
                   label: Text('Ajustes'),
@@ -81,7 +85,11 @@ class _MyDrawerState extends State<MyDrawer> {
                   icon: Icon(Icons.question_mark_rounded),
                   label: Text('Help'),
                 ),
-                Divider(indent: 27, endIndent: 27),
+                Divider(
+                  indent: 27,
+                  endIndent: 27,
+                  color: theme.primary,
+                ),
                 ListTile(
                   leading: Icon(Icons.dark_mode_outlined),
                   title:

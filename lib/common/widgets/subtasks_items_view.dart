@@ -45,7 +45,11 @@ class SubtaskItemsView extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Handle(child: Icon(Icons.drag_handle_outlined)),
+                    Handle(
+                        child: Icon(
+                      Icons.drag_handle_outlined,
+                      color: theme.primary,
+                    )),
                     Expanded(
                       child: TextFormField(
                         style: TextStyle(

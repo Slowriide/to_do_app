@@ -15,14 +15,14 @@ import 'package:to_do_app/presentation/notes/masonry_view.dart';
 ///
 /// Uses NoteCubit to load and manage notes and NoteSearchCubit to filter notes by search query.
 /// Contains a floating action button to add new notes when not in selection mode.
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class NotesView extends StatefulWidget {
+  const NotesView({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<NotesView> createState() => _NotesViewState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _NotesViewState extends State<NotesView> {
   /// Stores the set of selected note IDs.
   Set<int> selectedNotes = {};
 

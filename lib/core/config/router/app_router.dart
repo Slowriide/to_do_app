@@ -14,7 +14,7 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/home',
-      builder: (context, state) => const HomePage(),
+      builder: (context, state) => const NotesView(),
     ),
     GoRoute(
       path: '/providerPage',
@@ -43,7 +43,7 @@ final appRouter = GoRouter(
         }),
     GoRoute(
       path: '/todosview',
-      builder: (context, state) => const HomePage(),
+      builder: (context, state) => const NotesView(),
     ),
     GoRoute(
       path: '/addtodo',

@@ -164,7 +164,7 @@ class AppTheme {
           dividerColor: Colors.transparent,
           headerHelpStyle: TextStyle(color: colors.text),
           headerForegroundColor: colors.text,
-          backgroundColor: Color(0xFFE6CCB2),
+          backgroundColor: colors.surface,
           todayBorder: BorderSide(
             color: Color(0xff7F5539),
           ),
@@ -186,7 +186,7 @@ class AppTheme {
           cancelButtonStyle: TextButton.styleFrom(foregroundColor: colors.text),
           confirmButtonStyle:
               TextButton.styleFrom(foregroundColor: colors.text),
-          backgroundColor: Color(0xFFE6CCB2),
+          backgroundColor: colors.surface,
           dialBackgroundColor: Color(0xFFE6CCB2),
           hourMinuteColor: Color.fromARGB(210, 27, 27, 27),
           hourMinuteTextColor: colors.text,

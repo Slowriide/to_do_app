@@ -19,7 +19,33 @@ A Flutter application for managing notes and todos with reminders, subtasks, and
 
 ## Screenshots
 
-_Add screenshots here if available_
+### 📝 Notes View
+![Notes List]
+(assets/screenshots/todos_view.png)
+(assets/screenshots/notes_view_selection.png)
+
+### ➕ Add Note / ✏️ Edit Note
+![Add Note](assets/screenshots/add-edit_note.png)
+
+### ✅ To-Do List
+![To-Do List](assets/screenshots/todos_view.png)
+
+### ➕ Add Todo / ✏️ Edit Todo
+![Add Todo](assets/screenshots/add-edit_todo.png)
+
+### ⏰ Active Reminder
+![Active Reminder]
+(assets/screenshots/reminder.png)
+(assets/screenshots/reminder_2.png)
+
+### 🌙 Dark Mode (optional)
+![Dark Mode]
+(assets/screenshots/dark_mode.png) 
+(assets/screenshots/dark_mode_selection.png)
+
+### 📂 Navigation Drawer
+![Navigation Drawer]
+(assets/screenshots/drawer.png)
 
 ---
 

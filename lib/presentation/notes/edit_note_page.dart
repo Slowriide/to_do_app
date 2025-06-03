@@ -255,7 +255,7 @@ class _EditNotePageState extends State<EditNotePage> {
               if (mounted) context.go('/providerPage');
             },
             icon: const Icon(Icons.save),
-            label: const Text('Guardar'),
+            label: const Text('Save Note'),
             style: FilledButton.styleFrom(
               elevation: 0,
               backgroundColor: theme.surface,

@@ -1,5 +1,5 @@
 export 'notes/add_note.dart';
-export 'notes/home_page.dart';
+export 'notes/notes_view.dart';
 export 'notes/edit_note_page.dart';
 export 'notes/masonry_view.dart';
 export 'notes/note_page.dart';
