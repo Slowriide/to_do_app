@@ -8,6 +8,13 @@ import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 import 'package:to_do_app/presentation/todos/todo_masonry_view.dart';
 
+/// TodosView is the main screen that displays a list of ToDo items.
+///
+/// It supports viewing, searching, selecting, pinning/unpinning, and deleting ToDos.
+/// Selection mode enables multi-selection to perform batch actions like delete or pin.
+///
+/// Uses TodoCubit to load and manage ToDos, and TodoSearchCubit to filter them by search query.
+/// A floating action button is available to add new ToDos when not in selection mode.
 class TodosView extends StatefulWidget {
   const TodosView({super.key});
 
@@ -16,10 +23,16 @@ class TodosView extends StatefulWidget {
 }
 
 class _TodosViewState extends State<TodosView> {
+  /// Set of currently selected ToDo IDs.
   Set<int> selectedTodos = {};
+
+  /// Whether selection mode is active (at least one ToDo is selected).
   bool get isSelectionMode => selectedTodos.isNotEmpty;
+
+  /// Controller for the search text input.
   final _searchController = TextEditingController();
 
+  /// Toggles selection for a specific ToDo by its [todoId].
   void toggleSelection(int todoId) {
     setState(() {
       if (selectedTodos.contains(todoId)) {
@@ -30,6 +43,7 @@ class _TodosViewState extends State<TodosView> {
     });
   }
 
+  /// Selects all ToDos, or clears selection if all are already selected.
   void selectAll() {
     final allTodos = context.read<TodoCubit>().state;
     final allTodosIds = allTodos.map((todo) => todo.id).toSet();
@@ -42,10 +56,12 @@ class _TodosViewState extends State<TodosView> {
     });
   }
 
+  /// Clears all current selections.
   void clearSelection() {
     setState(() => selectedTodos.clear());
   }
 
+  /// Deletes all currently selected ToDos.
   void deleteSelectedTodos() {
     final todoCubit = context.read<TodoCubit>();
 
@@ -60,6 +76,10 @@ class _TodosViewState extends State<TodosView> {
     clearSelection();
   }
 
+  /// Toggles pin status of selected notes.
+  ///
+  /// If any selected note is unpinned, all are pinned.
+  /// Otherwise, all selected notes are unpinned.
   void togglePin() async {
     final todos = context.read<TodoCubit>().state;
     final selected =
@@ -109,6 +129,19 @@ class _TodosViewState extends State<TodosView> {
     );
   }
 
+  /// Builds the app bar for the notes screen.
+  ///
+  /// The app bar changes its content and actions dynamically based on whether
+  /// the user is in selection mode or not:
+  /// - When notes are selected (selection mode):
+  ///   - Shows the number of selected notes as the title.
+  ///   - Displays action buttons for clearing selection, pinning/unpinning,
+  ///     selecting all notes, and deleting selected notes.
+  /// - When no notes are selected (normal mode):
+  ///   - Displays the default title "Notes".
+  ///   - No leading or action buttons are shown.
+  ///
+  /// Animations are used to smoothly transition between the different states.
   SliverAppBar _buildAppbar(ColorScheme theme) {
     final textStyle = Theme.of(context).textTheme;
     final todos = context.read<TodoCubit>().state;
@@ -191,6 +224,10 @@ class _TodosViewState extends State<TodosView> {
   }
 }
 
+/// Internal widget that builds the ToDo list and search input.
+///
+/// Displays a search field and a masonry grid of ToDos
+/// filtered by search input from [TodoSearchCubit].
 class _Body extends StatelessWidget {
   final Set<int> selectedTodosId;
   final bool isSelectionMode;

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:to_do_app/core/config/theme/app_colors.dart';
 
+/// A class that defines the application's theme based on the current mode (dark or light).
+///
+/// It provides methods to get the appropriate [ThemeData] for the application,
+/// and defines text styles for various text elements in the app.
 class AppTheme {
   final bool isDarkMode;
   late final AppColors colors;

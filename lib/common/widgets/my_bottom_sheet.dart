@@ -3,6 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 
+/// A custom bottom sheet widget that allows users to select a theme (light or dark).
+///
+/// This widget uses the [ThemeCubit] to manage the current theme state.
+///  When a user selects a theme, the bottom sheet closes and the selected theme is applied.
+
 class MyBottomSheet extends StatelessWidget {
   const MyBottomSheet({super.key});
 
@@ -48,6 +53,11 @@ class MyBottomSheet extends StatelessWidget {
     );
   }
 }
+
+/// A private widget that represents a tile in the bottom sheet for selecting a theme option.
+///
+/// It displays the title of the theme option and an icon indicating whether it is selected.
+/// When tapped, it calls the provided [onTap] function and closes the bottom sheet.
 
 class _ThemeOptionTile extends StatelessWidget {
   final String title;

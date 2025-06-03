@@ -4,6 +4,14 @@ import 'package:flutter/material.dart';
 // import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/domain/models/note.dart';
 
+/// A widget that displays a single note item with its title and text.
+///
+/// Used to represent a note inside a list or grid. It shows the note's title,
+/// text, and an optional pinned icon. If [isSelected] is true, the note's border
+/// is highlighted.
+///
+/// This widget does not handle interaction logic; it is purely presentational.
+
 class NoteItem extends StatelessWidget {
   final Note note;
   final bool isSelected;
@@ -45,7 +53,7 @@ class NoteItem extends StatelessWidget {
                       Icons.push_pin_rounded,
                       color: theme.tertiary,
                     )
-                  : SizedBox(height: 0, width: 0),
+                  : const SizedBox.shrink(),
             ],
           ),
           SizedBox(height: 10),

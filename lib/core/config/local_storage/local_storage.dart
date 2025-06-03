@@ -1,5 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// A utility class for managing persistent key-value storage using SharedPreferences.
+///
+/// This class exposes static getters and setters for app preferences, such as theme mode.
+///
+/// Call [configurePrefs] once during app initialization to load the SharedPreferences instance.
 class LocalStorage {
   static late SharedPreferences prefs;
 

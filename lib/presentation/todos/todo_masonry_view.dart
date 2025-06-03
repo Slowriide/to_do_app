@@ -4,6 +4,19 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/todo_item.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
+/// Displays a staggered grid view of todos.
+///
+/// Supports multi-selection mode: tapping a note either toggles selection
+/// (if in selection mode) or navigates to the edit page (otherwise).
+/// Long pressing a note also toggles its selection.
+///
+/// The grid uses 2 columns and displays notes in a masonry (Pinterest-like) style.
+///
+/// Parameters:
+/// - [todos]: the list of ToDos to display.
+/// - [selectedTodoIds]: the set of currently selected ToDo IDs.
+/// - [isSelectionMode]: whether the view is in selection mode.
+/// - [onToggleSelect]: callback for toggling the selection of a ToDo.
 class TodoMasonryView extends StatelessWidget {
   final List<Todo> todos;
   final Set<int> selectedTodoIds;

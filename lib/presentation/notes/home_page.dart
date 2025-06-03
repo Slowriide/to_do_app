@@ -8,6 +8,13 @@ import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
 import 'package:to_do_app/presentation/notes/masonry_view.dart';
 
+/// HomePage is the main screen that displays a list of notes.
+///
+/// It supports viewing, searching, selecting, pinning/unpinning, and deleting notes.
+/// Selection mode allows multi-selection of notes to perform batch actions.
+///
+/// Uses NoteCubit to load and manage notes and NoteSearchCubit to filter notes by search query.
+/// Contains a floating action button to add new notes when not in selection mode.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -16,10 +23,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  /// Stores the set of selected note IDs.
   Set<int> selectedNotes = {};
+
+  /// Returns true if any note is selected.
   bool get isSelectionMode => selectedNotes.isNotEmpty;
+
+  /// Controller for the search text input.
   final _searchController = TextEditingController();
 
+  /// Toggles selection for a note by its ID.
   void toggleSelection(int noteId) {
     setState(() {
       if (selectedNotes.contains(noteId)) {
@@ -30,6 +43,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  /// Selects all notes if not all are selected, otherwise clears selection.
   void selectAll() {
     final allNotes = context.read<NoteCubit>().state;
     final allNotesIds = allNotes.map((note) => note.id).toSet();
@@ -43,10 +57,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  /// Clears all selections.
   void clearSelection() {
     setState(() => selectedNotes.clear());
   }
 
+  /// Deletes all currently selected notes using the NoteCubit.
   void deleteSelectedNotes() {
     final noteCubit = context.read<NoteCubit>();
 
@@ -57,11 +73,15 @@ class _HomePageState extends State<HomePage> {
 
     // Eliminar todas las notas seleccionadas de una vez
 
-    noteCubit.deleteMultiples(notesToDelete);
+    noteCubit.deleteNotes(notesToDelete);
 
     clearSelection();
   }
 
+  /// Toggles pin status of selected notes.
+  ///
+  /// If any selected note is unpinned, all are pinned.
+  /// Otherwise, all selected notes are unpinned.
   void togglePin() {
     final notes = context.read<NoteCubit>().state;
     final selected = notes.where((n) => selectedNotes.contains(n.id)).toList();
@@ -111,6 +131,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// Builds the app bar for the notes screen.
+  ///
+  /// The app bar changes its content and actions dynamically based on whether
+  /// the user is in selection mode or not:
+  /// - When notes are selected (selection mode):
+  ///   - Shows the number of selected notes as the title.
+  ///   - Displays action buttons for clearing selection, pinning/unpinning,
+  ///     selecting all notes, and deleting selected notes.
+  /// - When no notes are selected (normal mode):
+  ///   - Displays the default title "Notes".
+  ///   - No leading or action buttons are shown.
+  ///
+  /// Animations are used to smoothly transition between the different states.
   SliverAppBar _buildAppbar(ColorScheme theme) {
     final textStyle = Theme.of(context).textTheme;
     final notes = context.read<NoteCubit>().state;
@@ -191,6 +224,8 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+/// Displays the search bar and the list of notes filtered by the search query.
+/// Handles selection mode and note toggling via callbacks.
 class _Body extends StatelessWidget {
   final Set<int> selectedNotesId;
   final bool isSelectionMode;

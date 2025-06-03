@@ -3,6 +3,9 @@ import 'package:to_do_app/data/models/isar_note.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 
+/// Concrete implementation of [NoteRepository] using Isar for persistence.
+///
+/// This class converts between domain entities and Isar models to store and retrieve notes.
 class IsarNoteRepositoryImpl implements NoteRepository {
   final Isar db;
   IsarNoteRepositoryImpl(this.db);

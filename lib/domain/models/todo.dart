@@ -1,3 +1,10 @@
+/// A domain model representing a task (todo) in the application.
+///
+/// The [Todo] class models a task which can optionally contain subtasks.
+/// It includes properties such as title, completion status, ordering,
+/// reminder, pin status, and whether the task itself is a subtask.
+///
+/// This class is immutable. To modify a task, use [copyWith] or [toggleCompletition].
 class Todo {
   final int id;
   final String title;

@@ -3,6 +3,23 @@ import 'package:to_do_app/domain/models/todo.dart';
 
 part 'isar_todo.g.dart';
 
+/// A data model representing a Todo item in the Isar local database.
+///
+/// This class belongs to the data layer and is used for persistent storage.
+/// It mirrors the structure of the domain-level [Todo] entity and includes:
+///
+/// - [id]: Auto-incremented unique identifier
+/// - [title]: Title of the todo
+/// - [isCompleted]: Completion status of the todo
+/// - [isSubtask]: Whether this todo is a subtask of another
+/// - [order]: Used to maintain subtask ordering
+/// - [reminder]: Optional reminder date and time
+/// - [isPinned]: Whether the todo is pinned
+/// - [subtasks]: List of linked subtasks stored as [IsarLinks]
+///
+/// Includes conversion methods:
+/// - [toDomain]: Converts this Isar model into the domain [Todo] entity
+/// - [fromDomain]: Creates a [TodoIsar] from a domain [Todo], including its subtasks
 @Collection()
 class TodoIsar {
   Id id = Isar.autoIncrement;

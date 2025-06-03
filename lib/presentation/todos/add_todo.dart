@@ -7,6 +7,16 @@ import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
+/// Screen for adding a new ToDo with optional subtasks and a reminder.
+///
+/// Allows the user to input a title, add/edit/reorder subtasks, and optionally
+/// pick a reminder date and time to schedule a notification.
+///
+/// Generates a unique ID for the ToDo, and uses [TodoCubit] to save it.
+/// Also intercepts back navigation to auto-save if not already saved.
+///
+/// Subtasks are created using [EditableSubtask] and displayed in a reorderable list.
+/// Notifications are scheduled using [NotificationService].
 class AddTodo extends StatefulWidget {
   const AddTodo({super.key});
 
@@ -15,12 +25,20 @@ class AddTodo extends StatefulWidget {
 }
 
 class _AddTodoState extends State<AddTodo> {
+  /// Tracks whether the note has already been saved to avoid duplicate saves.
   bool _isAlreadysaved = false;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+
+  /// List of editable subtasks created by the user.
   late List<EditableSubtask> _editableSubtasks = [];
+
+  /// Stores the currently selected reminder date and time.
   DateTime? _reminderDate;
 
+  /// Opens a date picker and a time picker sequentially to select
+  /// the reminder date and time.
+  /// Updates [_reminderDate] state if both are selected.
   Future<void> pickReminderDateTime() async {
     final now = DateTime.now();
 
@@ -58,6 +76,9 @@ class _AddTodoState extends State<AddTodo> {
     });
   }
 
+  /// Adds a new editable subtask to the list with a unique temporary ID.
+  ///
+  /// Uses [DateTime.now().millisecondsSinceEpoch] to generate the ID.
   void _addSubtask() {
     setState(() {
       _editableSubtasks.add(EditableSubtask(
@@ -67,6 +88,9 @@ class _AddTodoState extends State<AddTodo> {
     });
   }
 
+  /// Updates the order of subtasks after a reorder event in the UI.
+  ///
+  /// Sets the order property of each [EditableSubtask] accordingly.
   void _handleReorder(List<EditableSubtask> newOrder) {
     setState(() {
       _editableSubtasks = newOrder;
@@ -76,6 +100,12 @@ class _AddTodoState extends State<AddTodo> {
     });
   }
 
+  /// Saves the new ToDo with its title, optional subtasks, and reminder.
+  ///
+  /// - Validates the form before saving.
+  /// - Generates unique ID for main ToDo and each subtask.
+  /// - Schedules a notification via [NotificationService] if reminder is set.
+  /// - Navigates back to ToDo list screen after saving.
   Future<void> _saveTodo() async {
     if (_isAlreadysaved) return;
 
@@ -130,6 +160,9 @@ class _AddTodoState extends State<AddTodo> {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     return PopScope(
+      /// Intercepts back navigation to auto-save unsaved ToDo.
+      ///
+      /// Prevents data loss if the user exits without manually saving.
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_isAlreadysaved) {
@@ -190,6 +223,8 @@ class _AddTodoState extends State<AddTodo> {
               ),
             ],
           ),
+
+          /// Form containing the title and todo subtasks.
           body: Padding(
             padding: EdgeInsets.all(16),
             child: Form(
@@ -245,6 +280,8 @@ class _AddTodoState extends State<AddTodo> {
               ),
             ),
           ),
+
+          /// Bottom save button that commits changes and navigates back.
           bottomNavigationBar: Padding(
             padding: const EdgeInsets.all(16),
             child: FilledButton.icon(

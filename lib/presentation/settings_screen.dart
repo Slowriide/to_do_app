@@ -6,11 +6,20 @@ class Settings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      drawer: MyDrawer(),
-      appBar: AppBar(),
+      drawer: const MyDrawer(),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('Settings'),
+        elevation: 2,
+      ),
       body: Center(
-        child: Text('Omg Settings Hi!'),
+        child: Text(
+          'Settings page coming soon!',
+          style: theme.textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

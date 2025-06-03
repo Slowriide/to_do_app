@@ -8,6 +8,7 @@ import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/settings_screen.dart';
 import 'package:to_do_app/presentation/pages.dart';
 
+/// The app router configuration for the ToDo application using GoRouter.
 final appRouter = GoRouter(
   initialLocation: '/providerPage',
   routes: [

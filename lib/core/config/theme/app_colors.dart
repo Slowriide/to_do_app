@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// A class that defines the color scheme for the application based on the current theme (dark or light).
 class AppColors {
   final bool isDark;
 

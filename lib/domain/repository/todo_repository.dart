@@ -1,5 +1,9 @@
 import 'package:to_do_app/domain/models/todo.dart';
 
+/// Abstract repository contract for managing [Todo] entities.
+///
+/// Defines the operations related to retrieving, adding,
+/// updating, and deleting todos and their subtasks in the data source.
 abstract class TodoRepository {
   Future<List<Todo>> getTodos();
   Future<void> addTodo(Todo newTodo);

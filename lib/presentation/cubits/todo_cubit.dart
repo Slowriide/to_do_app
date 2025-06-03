@@ -9,6 +9,12 @@ enum TodoFilter {
   incomplete,
 }
 
+/// Cubit responsible for managing the state of the Todo list.
+///
+/// Handles loading, adding, updating, deleting todos and subtasks,
+/// toggling completion status, and scheduling notifications when reminders exist.
+///
+/// The state is a list of Todo objects, automatically sorted by pinned status.
 class TodoCubit extends Cubit<List<Todo>> {
   final TodoRepository repository;
   // TodoFilter _currentFilter = TodoFilter.all;
@@ -17,11 +23,8 @@ class TodoCubit extends Cubit<List<Todo>> {
     loadTodos();
   }
 
-  // void setFilter(TodoFilter filter) {
-  //   _currentFilter = filter;
-  //   loadTodos();
-  // }
-
+  /// Loads the list of todos from the repository and emits
+  /// the list sorted by pinned status.
   Future<void> loadTodos() async {
     final todosList = await repository.getTodos();
 
@@ -35,6 +38,9 @@ class TodoCubit extends Cubit<List<Todo>> {
     emit(sortedTodos);
   }
 
+  /// Adds a new todo with given title, subtasks, optional reminder, and id.
+  ///
+  /// Then reloads the todos list.
   Future<void> addTodo(String title, List<Todo> subtasks,
       {DateTime? reminder, required int id}) async {
     final newTodo = Todo(
@@ -50,12 +56,18 @@ class TodoCubit extends Cubit<List<Todo>> {
     loadTodos();
   }
 
+  /// Deletes the given todo and cancels its notification.
+  ///
+  /// Then reloads the todos list.
   Future<void> deleteTodo(Todo todo) async {
     await repository.deleteTodo(todo);
     loadTodos();
     NotificationService().cancelNotification(todo.id);
   }
 
+  /// Updates the given todo and reloads the list.
+  ///
+  /// If the todo has a reminder, schedules a notification.
   Future<void> updateTodo(Todo todo) async {
     await repository.updateTodo(todo);
     loadTodos();
@@ -68,6 +80,9 @@ class TodoCubit extends Cubit<List<Todo>> {
     }
   }
 
+  /// Updates a list of todos and reloads the list.
+  ///
+  /// Also schedules notifications for todos with reminders.
   Future<void> updateTodos(List<Todo> todos) async {
     for (final todo in todos) {
       await repository.updateTodo(todo);
@@ -82,22 +97,14 @@ class TodoCubit extends Cubit<List<Todo>> {
     await loadTodos();
   }
 
+  /// Toggles completion state of a todo, updates it, and reloads the list.
   Future<void> toggleCompletion(Todo todo) async {
     final updatedTodo = todo.toggleCompletition();
     await repository.updateTodo(updatedTodo);
     loadTodos();
   }
 
-  Future<void> addSubtask(Todo subtasks, int todoId) async {
-    await repository.addSubTask(subtasks, todoId);
-    loadTodos();
-  }
-
-  Future<void> deleteSubtask(Todo subtasks) async {
-    await repository.deleteSubTask(subtasks);
-    loadTodos();
-  }
-
+  /// Deletes multiple todos and cancels their notifications.
   Future<void> deleteMultiples(List<Todo> todosToDelete) async {
     for (final todo in todosToDelete) {
       await repository.deleteTodo(todo);
@@ -106,6 +113,7 @@ class TodoCubit extends Cubit<List<Todo>> {
     loadTodos();
   }
 
+  /// Updates a subtask and reloads the list.
   Future<void> updateSubtask(Todo subtask) async {
     await repository.updateSubTask(subtask);
     loadTodos();

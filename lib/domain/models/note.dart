@@ -1,3 +1,10 @@
+/// A domain model representing a note item in the application.
+///
+/// The [Note] class encapsulates the core data and behaviors of a note,
+/// including its title, content text, completion status, optional reminder date,
+/// and whether the note is pinned.
+///
+/// This class is immutable. To modify a note, use [copyWith] or [toggleCompletion].
 class Note {
   final int id;
   final String title;

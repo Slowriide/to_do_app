@@ -3,12 +3,17 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 
+/// Manages local notifications in a Flutter app.
+///
+/// Provides initialization, permission handling, and scheduling or canceling
+/// notifications using [flutter_local_notifications] and [timezone].
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   bool _isInit = false;
 
+  /// Private constructor to ensure singleton pattern
   Future<void> _requestPermissions() async {
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -16,10 +21,13 @@ class NotificationService {
         ?.requestNotificationsPermission();
   }
 
+  /// Initializes the notification service and configures timezone and permissions.
+  ///
+  /// This method must be called before showing any notifications.
   Future<void> init() async {
     if (_isInit) return;
 
-    _requestPermissions();
+    await _requestPermissions();
     tz.initializeTimeZones();
 
     final androidInitSettings =
@@ -36,6 +44,7 @@ class NotificationService {
     _isInit = true;
   }
 
+  /// Builds the default [NotificationDetails] for Android.
   NotificationDetails notificationDetails() {
     return NotificationDetails(
       android: AndroidNotificationDetails(
@@ -48,6 +57,9 @@ class NotificationService {
     );
   }
 
+  /// Schedules a notification for the specified [scheduledDate].
+  ///
+  /// If the date is in the past, no notification is shown.
   Future<void> showNotification({
     required int id,
     required String title,
@@ -83,6 +95,7 @@ class NotificationService {
   //   }
   // }
 
+  /// Cancels a notification with the given [id], if any exists.
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
   }

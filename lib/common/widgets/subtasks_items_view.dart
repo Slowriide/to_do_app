@@ -3,7 +3,17 @@ import 'package:implicitly_animated_reorderable_list_2/implicitly_animated_reord
 import 'package:implicitly_animated_reorderable_list_2/transitions.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
 
+/// Displays a list of editable subtasks with drag-and-drop support.
+///
+/// This widget allows users to reorder subtasks, toggle completion, and delete them.
+/// Animations and reordering behavior are powered by the [ImplicitlyAnimatedReorderableList] package.
 class SubtaskItemsView extends StatelessWidget {
+  /// Creates a view to display and manage a list of subtasks.
+  ///
+  /// [subtasks] is the list of subtasks to display.
+  /// [onToggleComplete] is called when a subtask is toggled as complete/incomplete.
+  /// [onDelete] is called when a subtask is removed.
+  /// [onReorder] is called with the new order when the list is reordered.
   final List<EditableSubtask> subtasks;
   final void Function(int index)? onToggleComplete;
   final void Function(int index)? onDelete;

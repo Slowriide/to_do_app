@@ -6,6 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 
+/// A custom drawer widget that provides navigation options for the app.
+///
+/// This widget includes navigation destinations for Notes, ToDo's, Settings, and Help.
+/// It also includes a bottom sheet for theme selection.
+
 class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
 
@@ -38,7 +43,9 @@ class _MyDrawerState extends State<MyDrawer> {
               indicatorColor: theme.onPrimary,
               selectedIndex: _getSelectedIndex(location),
               onDestinationSelected: (index) async {
-                Navigator.of(context).pop(); // Cierra el drawer
+                Navigator.of(context).pop();
+
+                // Small delay to allow drawer closing animation to finish before navigation.
                 await Future.delayed(const Duration(milliseconds: 250));
 
                 if (!mounted) return;
@@ -97,6 +104,11 @@ class _MyDrawerState extends State<MyDrawer> {
     );
   }
 
+  /// Returns the index of the selected destination based on the current location.
+  ///
+  /// If the location is '/todos', it returns 1 (ToDo's).
+  /// If the location is '/settings', it returns 2 (Settings).
+  ///  Otherwise, it returns 0 (Notes).
   int _getSelectedIndex(String location) {
     if (location == '/todos') return 1;
     if (location == '/settings') return 2;

@@ -3,6 +3,10 @@ import 'package:to_do_app/data/models/isar_todo.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 
+/// Isar implementation of [TodoRepository].
+///
+/// This class handles the persistence of todo items and their subtasks
+/// using the Isar database.
 class IsarTodoRepositoryImpl implements TodoRepository {
   final Isar db;
   IsarTodoRepositoryImpl(this.db);

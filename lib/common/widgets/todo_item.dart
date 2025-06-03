@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
+/// A widget that displays a single todo item with its title and subtasks.
+///
+/// Used to represent a [Todo] in a list or grid. It shows the todo's title,
+/// its subtasks (if any), and an optional pinned icon. Highlights the border
+/// if the item is selected via [isSelected].
+///
+/// Subtasks are displayed in sorted order based on their order field.
 class TodoItem extends StatelessWidget {
   final Todo todo;
   final bool isSelected;

@@ -4,6 +4,18 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 
+/// Screen for adding a new Note with optional reminder support.
+///
+/// Allows the user to input a title and content, and optionally pick a
+/// reminder date and time to schedule a notification.
+///
+/// Generates a unique ID based on the current timestamp, and uses [NoteCubit]
+/// to save the note. Also intercepts back navigation to auto-save if not already saved.
+///
+/// Reminder notifications are handled via [NotificationService].
+///
+/// Also intercepts the back navigation (pop) to automatically save the note
+/// if it hasn't been saved yet.
 class AddNote extends StatefulWidget {
   const AddNote({super.key});
 
@@ -12,12 +24,18 @@ class AddNote extends StatefulWidget {
 }
 
 class _AddNoteState extends State<AddNote> {
+  /// Tracks whether the note has already been saved to avoid duplicate saves.
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _textController = TextEditingController();
+
+  /// Stores the currently selected reminder date and time.
   DateTime? _reminderDate;
 
+  /// Opens a date picker and a time picker sequentially to select
+  /// the reminder date and time.
+  /// Updates [_reminderDate] state if both are selected.
   Future<void> pickReminderDateTime() async {
     final now = DateTime.now();
 
@@ -55,6 +73,12 @@ class _AddNoteState extends State<AddNote> {
     });
   }
 
+  /// Validates the form and saves the note.
+  ///
+  /// Generates a unique ID based on the current timestamp.
+  /// If a reminder date is set, schedules a notification.
+  /// Calls the NoteCubit to add the new note.
+  /// Navigates back to the main notes page after saving.
   Future<void> _saveNote() async {
     final noteCubit = context.read<NoteCubit>();
     if (_alreadySaved) return;
@@ -98,7 +122,11 @@ class _AddNoteState extends State<AddNote> {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     return PopScope(
+      /// Intercepts back navigation to auto-save unsaved ToDo.
+      ///
+      /// Prevents data loss if the user exits without manually saving.
       canPop: true,
+
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
           _saveNote();
@@ -119,6 +147,7 @@ class _AddNoteState extends State<AddNote> {
           ),
           actions: [
             IconButton(
+              // Show alarm icon filled if reminder set, outlined otherwise
               onPressed: pickReminderDateTime,
               icon: Icon(
                 _reminderDate != null
@@ -131,6 +160,7 @@ class _AddNoteState extends State<AddNote> {
         ),
 
         //Body
+        /// Form containing the title and note text input fields.
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: Form(
@@ -150,6 +180,8 @@ class _AddNoteState extends State<AddNote> {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Multiline expanding text field for note body
                 Expanded(
                   child: TextFormField(
                     maxLines: null,
@@ -170,6 +202,8 @@ class _AddNoteState extends State<AddNote> {
             ),
           ),
         ),
+
+        /// Bottom save button that commits changes and navigates back.
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
           child: FilledButton.icon(

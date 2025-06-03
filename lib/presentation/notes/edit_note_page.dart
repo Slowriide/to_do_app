@@ -5,7 +5,22 @@ import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 
+/// Screen for editing an existing note.
+///
+/// Allows the user to modify the note’s title and content, and optionally update
+/// a reminder date and time.
+///
+/// Initializes with the current note data, including subtasks if any.
+///
+/// When saved, updates the note via the corresponding cubit, manages notifications
+/// by cancelling the old reminder and scheduling a new one if set.
+///
+/// Also intercepts back navigation to automatically save changes if they haven’t
+/// been saved yet.
+///
+/// Uses [PopScope] to handle back navigation with save logic.
 class EditNotePage extends StatefulWidget {
+  /// The note to be edited.
   final Note note;
   const EditNotePage({super.key, required this.note});
 
@@ -14,20 +29,28 @@ class EditNotePage extends StatefulWidget {
 }
 
 class _EditNotePageState extends State<EditNotePage> {
+  /// Tracks whether the note has already been saved to avoid duplicate saves.
   final bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _textController;
+
+  /// Stores the currently selected reminder date and time.
   DateTime? _selectedDateReminder;
 
   @override
   void initState() {
     super.initState();
+    // Initialize text controllers with existing note data
     _titleController = TextEditingController(text: widget.note.title);
     _textController = TextEditingController(text: widget.note.text);
+    // Initialize reminder date from the existing note
     _selectedDateReminder = widget.note.reminder;
   }
 
+  /// Shows a dialog that allows the user to edit or delete the existing reminder.
+  ///
+  /// If there is no reminder set, this method does nothing.
   Future<void> _showEditOrDeleteDialog() async {
     if (_selectedDateReminder == null) return;
 
@@ -63,6 +86,9 @@ class _EditNotePageState extends State<EditNotePage> {
     );
   }
 
+  /// Opens a date and time picker to select a new reminder.
+  ///
+  /// Updates [_selectedDateReminder] if a valid date and time are chosen.
   Future<void> pickDateReminderDate() async {
     final date = await showDatePicker(
       context: context,
@@ -99,6 +125,11 @@ class _EditNotePageState extends State<EditNotePage> {
     }
   }
 
+  /// Saves the current changes to the note, updates the reminder notification,
+  /// and updates the note via the [NoteCubit].
+  ///
+  /// If the reminder is in the past or null, it will be cleared.
+  /// Cancels any previous notification before scheduling a new one.
   Future<void> _updateNote() async {
     final noteCubit = context.read<NoteCubit>();
     final reminderToSave = (_selectedDateReminder != null &&
@@ -131,7 +162,11 @@ class _EditNotePageState extends State<EditNotePage> {
     final textStyle = Theme.of(context).textTheme;
     final theme = Theme.of(context).colorScheme;
     return PopScope(
+      /// Intercepts back navigation to auto-save unsaved ToDo.
+      ///
+      /// Prevents data loss if the user exits without manually saving.
       canPop: true,
+
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
           _updateNote();
@@ -171,6 +206,7 @@ class _EditNotePageState extends State<EditNotePage> {
         ),
 
         //Body
+        /// Form containing the title and note text input fields.
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: Form(
@@ -209,6 +245,8 @@ class _EditNotePageState extends State<EditNotePage> {
             ),
           ),
         ),
+
+        /// Bottom save button that commits changes and navigates back.
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
           child: FilledButton.icon(

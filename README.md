@@ -1,21 +1,38 @@
+# ToDo App
 
-Aplicación de notas y tareas desarrollada en Flutter, utilizando Riverpod para la gestión de estado. Permite crear, editar y eliminar tareas de manera sencilla y eficiente.
+A Flutter application for managing notes and todos with reminders, subtasks, and notifications.
 
-## 🚀 Características
+---
 
-- 📋 Crear, editar y eliminar tareas.
-- ✅ Marcar tareas como completadas.
-- 🔄 Gestión de estado con Riverpod.
-- 💾 Persistencia local de datos.
-- 📱 Interfaz amigable y responsiva.
+## Features
 
-## 🧰 Tecnologías utilizadas
+- **Notes and Todos Management:** Create, edit, delete notes and todos.
+- **Subtasks:** Add, reorder, complete, and delete subtasks within todos.
+- **Reminders:** Set date and time reminders for notes and todos.
+- **Notifications:** Scheduled notifications for reminders.
+- **Local Storage:** Data persistence using Isar database.
+- **Theming:** Supports light and dark modes with dynamic theme switching.
+- **Search:** Search functionality for notes and todos.
+- **User Interface:** Clean, responsive UI with custom widgets and material design.
 
-- [Flutter](https://flutter.dev/)
-- [Riverpod](https://riverpod.dev/)
-- [Isar](https://isar.dev/)
+---
 
-## 📦 Instalación
+## Screenshots
+
+_Add screenshots here if available_
+
+---
+
+
+### Prerequisites
+
+- Flutter SDK (tested on Flutter 3.x+)
+- Dart SDK
+- Android Studio / Xcode (for emulator or physical device)
+
+---
+
+## 📦 Installation
 
 1. Clona el repositorio:
 
@@ -25,12 +42,36 @@ Aplicación de notas y tareas desarrollada en Flutter, utilizando Riverpod para 
    flutter pub get
    flutter run
 
-## 📁 Estructura del proyecto
+---
+
+## 📁 Project Structure
 
 lib/
-├── main.dart              # Punto de entrada
-├── common/                # Estilos, constantes, widgets generales
-├── core/                  # Configuraciones globales, navegación, inyección de dependencias
-├── data/                  # Fuentes de datos (API, DB, storage) y DTOs
-├── domain/                # Entidades, casos de uso, repositorios abstractos
-├── presentation/          # UI (widgets, screens), controladores de estado
+├── main.dart              # App entry point and dependency injection.
+├── common/                # Shared utilities and widgets.
+├── core/                  # Core services like notifications, theme, local storage, router.
+├── data/                  # Data models and repository implementations using Isar database.
+├── domain/                # Business models and repository interfaces.
+├── presentation/          # UI pages, widgets, and state management (cubits).
+
+---
+
+## State Management
+
+Uses Flutter Bloc package for state management:
+
+NoteCubit — Handles note CRUD operations.
+TodoCubit — Handles todo CRUD operations.
+ThemeCubit — Manages app theme state.
+NoteSearchCubit & TodoSearchCubit — Manage searching/filtering functionality.
+
+---
+
+## Local Storage
+
+Uses Isar database for storing notes and todos.
+
+Data persisted locally on the device.
+
+## Contact
+Created by [Thiago Gobbi] - feel free to contact me at [thiagogobbi7@gmail.com]

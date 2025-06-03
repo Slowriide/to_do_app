@@ -7,6 +7,20 @@ import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
+/// Screen for editing an existing todo item.
+///
+/// Initializes with the given [todo] data, allowing the user to update the title,
+/// subtasks, and optionally set or modify a reminder date/time.
+///
+/// Handles reordering, adding, completing, and deleting subtasks within the UI.
+///
+/// When saving, updates the todo via [TodoCubit], manages notifications by cancelling
+/// the old reminder and scheduling a new one if set.
+///
+/// Also intercepts back navigation to automatically save changes if they haven't
+/// been saved yet.
+///
+/// Uses [PopScope] to handle back navigation with save logic.
 class EditTodo extends StatefulWidget {
   final Todo todo;
   const EditTodo({super.key, required this.todo});
@@ -16,19 +30,26 @@ class EditTodo extends StatefulWidget {
 }
 
 class _EditTodoState extends State<EditTodo> {
+  /// Tracks whether the todo has already been saved to avoid duplicate saves.
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
+
+  /// Currently selected reminder date and time, if any.
   DateTime? _selectedReminder;
 
+  /// List of editable subtasks shown in the UI.
   late List<EditableSubtask> _editableSubtasks = [];
 
   @override
   void initState() {
     super.initState();
+    // Initialize title controller with the current todo title.
     _titleController = TextEditingController(text: widget.todo.title);
+    // Set the current reminder date.
     _selectedReminder = widget.todo.reminder;
 
+    // Initialize editable subtasks from the todo’s subtasks, sorted by order.
     final sordetSubtasks = [...widget.todo.subTasks]
       ..sort((a, b) => a.order.compareTo(b.order));
     _editableSubtasks = sordetSubtasks
@@ -43,6 +64,9 @@ class _EditTodoState extends State<EditTodo> {
         .toList();
   }
 
+  /// Shows a dialog that allows the user to edit or delete the existing reminder.
+  ///
+  /// If there is no reminder set, this method does nothing.
   Future<void> _showEditOrDeleteDialog() async {
     if (_selectedReminder == null) return;
 
@@ -78,6 +102,9 @@ class _EditTodoState extends State<EditTodo> {
     );
   }
 
+  /// Opens a date and time picker to select a new reminder.
+  ///
+  /// Updates [_selectedReminder] if a valid date and time are chosen.
   Future<void> pickDateReminderDate() async {
     final now = DateTime.now();
 
@@ -115,6 +142,9 @@ class _EditTodoState extends State<EditTodo> {
     });
   }
 
+  /// Updates the order of subtasks after a reorder event in the UI.
+  ///
+  /// Sets the order property of each [EditableSubtask] accordingly.
   void _handleReorder(List<EditableSubtask> newOrder) {
     setState(() {
       _editableSubtasks = newOrder;
@@ -124,6 +154,7 @@ class _EditTodoState extends State<EditTodo> {
     });
   }
 
+  /// Adds a new empty subtask to the list for editing.
   void _addSubtask() {
     setState(() {
       _editableSubtasks.add(
@@ -135,6 +166,10 @@ class _EditTodoState extends State<EditTodo> {
     });
   }
 
+  /// Validates the form and updates the todo with the current values.
+  ///
+  /// Cancels any existing notification and schedules a new one if a valid reminder is set.
+  /// Calls the [TodoCubit] to update the todo in the state.
   Future<void> _updateTodo() async {
     final todoCubit = context.read<TodoCubit>();
     if (_formKey.currentState?.validate() ?? false) {
@@ -184,6 +219,9 @@ class _EditTodoState extends State<EditTodo> {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     return PopScope(
+      /// Intercepts back navigation to auto-save unsaved ToDo.
+      ///
+      /// Prevents data loss if the user exits without manually saving.
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
@@ -224,6 +262,7 @@ class _EditTodoState extends State<EditTodo> {
           ],
         ),
         //body
+        /// Form containing the title and todo subtasks.
         body: Padding(
           padding: EdgeInsets.all(16),
           child: Form(
@@ -279,6 +318,8 @@ class _EditTodoState extends State<EditTodo> {
             ),
           ),
         ),
+
+        /// Bottom save button that commits changes and navigates back.
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16),
           child: FilledButton.icon(

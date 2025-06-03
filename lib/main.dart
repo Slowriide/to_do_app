@@ -18,24 +18,33 @@ import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 
+/// Entry point of the application.
+///
+/// Initializes local storage, notification service, and database,
+/// then injects repositories and sets up Bloc providers for state management.
+///
+/// Also handles theme switching and routing configuration.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize local preferences storage.
   await LocalStorage.configurePrefs();
 
+  // Initialize notification service.
   await NotificationService().init();
 
-//get dir path for storage data
+  // Get the application documents directory for Isar database storage.
   final dir = await getApplicationDocumentsDirectory();
 
-  //open db
+  // Open the Isar database with note and todo schemas.
   final isar =
       await Isar.open([NoteIsarSchema, TodoIsarSchema], directory: dir.path);
 
-  //init repo
+  // Initialize repositories with the Isar database instance.
   final isarNoteRepo = IsarNoteRepositoryImpl(isar);
   final isarTodosRepo = IsarTodoRepositoryImpl(isar);
 
+  // Run the app with injected repositories.
   runApp(MyApp(
     noteRepo: isarNoteRepo,
     todoRepo: isarTodosRepo,

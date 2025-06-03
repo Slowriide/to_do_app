@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// A custom tooltip widget that displays a message when the user hovers over or taps on an icon.
 class MyTooltip extends StatelessWidget {
   final void Function()? onPressed;
   final String message;
