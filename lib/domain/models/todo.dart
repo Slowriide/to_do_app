@@ -14,6 +14,7 @@ class Todo {
   final int order;
   final DateTime? reminder;
   final bool isPinned;
+  final int? folderId;
 
   Todo({
     required this.id,
@@ -24,6 +25,7 @@ class Todo {
     required this.order,
     this.reminder,
     this.isPinned = false,
+    this.folderId,
   });
 
   Todo copyWith({
@@ -35,6 +37,7 @@ class Todo {
     int? order,
     DateTime? reminder,
     bool? isPinned,
+    int? folderId,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -45,6 +48,7 @@ class Todo {
       order: order ?? this.order,
       reminder: reminder ?? this.reminder,
       isPinned: isPinned ?? this.isPinned,
+      folderId: folderId ?? this.folderId,
     );
   }
 
@@ -58,6 +62,7 @@ class Todo {
       order: order,
       reminder: reminder,
       isPinned: isPinned,
+      folderId: folderId,
     );
   }
 }

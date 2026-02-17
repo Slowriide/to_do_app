@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
+import 'package:to_do_app/domain/models/folder.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
+import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
 import 'package:to_do_app/presentation/notes/masonry_view.dart';
@@ -45,7 +48,7 @@ class _NotesViewState extends State<NotesView> {
 
   /// Selects all notes if not all are selected, otherwise clears selection.
   void selectAll() {
-    final allNotes = context.read<NoteCubit>().state;
+    final allNotes = context.read<NoteSearchCubit>().state;
     final allNotesIds = allNotes.map((note) => note.id).toSet();
 
     setState(() {
@@ -96,12 +99,55 @@ class _NotesViewState extends State<NotesView> {
     clearSelection();
   }
 
+  Future<void> moveSelectedNotes() async {
+    final result = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) {
+        return BlocBuilder<FolderCubit, List<Folder>>(
+          builder: (context, folders) {
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const ListTile(
+                    title: Text('Move selected notes to'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.inbox_outlined),
+                    title: const Text('Inbox'),
+                    onTap: () => Navigator.pop(context, -1),
+                  ),
+                  ...folders.map(
+                    (folder) => ListTile(
+                      leading: const Icon(Icons.folder_outlined),
+                      title: Text(folder.name),
+                      onTap: () => Navigator.pop(context, folder.id),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (result == null) return;
+    final folderId = result == -1 ? null : result;
+    await context
+        .read<NoteCubit>()
+        .moveNotesToFolder(selectedNotes.toList(), folderId);
+    clearSelection();
+  }
+
   @override
   void initState() {
     super.initState();
 
     final noteCubit = context.read<NoteCubit>();
     noteCubit.loadNotes();
+    context
+        .read<NoteSearchCubit>()
+        .setFolderFilter(context.read<FolderFilterCubit>().state);
   }
 
   @override
@@ -205,6 +251,12 @@ class _NotesViewState extends State<NotesView> {
                       valueKey: ValueKey('SelectAll'),
                     ),
                     MyTooltip(
+                      message: 'Move to Folder',
+                      icon: Icons.drive_file_move_outline,
+                      onPressed: moveSelectedNotes,
+                      valueKey: ValueKey('Move'),
+                    ),
+                    MyTooltip(
                       message: 'Select All',
                       icon: Icons.select_all_outlined,
                       onPressed: selectAll,
@@ -241,50 +293,106 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-          child: TextField(
-            controller: textController,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
-              hintText: 'Search Notes',
-              suffixIcon: IconButton(
-                onPressed: () {
-                  textController.clear();
-                  context.read<NoteSearchCubit>().clearSearch();
-                },
-                icon: Icon(Icons.close_rounded, color: theme.tertiary),
-              ),
-            ),
-            onChanged: (value) {
-              context.read<NoteSearchCubit>().search(value);
-            },
-          ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
-            child: BlocBuilder<NoteSearchCubit, List<Note>>(
-              builder: (context, notes) {
-                return MasonryView(
-                  notes: notes,
-                  isSelectionMode: isSelectionMode,
-                  selectedNoteIds: selectedNotesId,
-                  onToggleSelect: toggleSelection,
-                  onReorder: (draggedId, targetId) {
-                    context
-                        .read<NoteCubit>()
-                        .reorderNoteByIds(draggedId, targetId);
+    return BlocListener<FolderFilterCubit, FolderFilter>(
+      listener: (context, filter) {
+        context.read<NoteSearchCubit>().setFolderFilter(filter);
+      },
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+            child: TextField(
+              controller: textController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
+                hintText: 'Search Notes',
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    textController.clear();
+                    context.read<NoteSearchCubit>().clearSearch();
                   },
-                );
+                  icon: Icon(Icons.close_rounded, color: theme.tertiary),
+                ),
+              ),
+              onChanged: (value) {
+                context.read<NoteSearchCubit>().search(value);
               },
             ),
           ),
-        ),
-      ],
+          _FolderChips(),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
+              child: BlocBuilder<NoteSearchCubit, List<Note>>(
+                builder: (context, notes) {
+                  return MasonryView(
+                    notes: notes,
+                    isSelectionMode: isSelectionMode,
+                    selectedNoteIds: selectedNotesId,
+                    onToggleSelect: toggleSelection,
+                    onReorder: (draggedId, targetId) {
+                      context
+                          .read<NoteCubit>()
+                          .reorderNoteByIds(draggedId, targetId);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FolderChips extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<FolderCubit, List<Folder>>(
+      builder: (context, folders) {
+        return BlocBuilder<FolderFilterCubit, FolderFilter>(
+          builder: (context, filter) {
+            return SizedBox(
+              height: 52,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                children: [
+                  ChoiceChip(
+                    label: const Text('All'),
+                    selected: filter.type == FolderFilterType.all,
+                    onSelected: (_) =>
+                        context.read<FolderFilterCubit>().setAll(),
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Text('Inbox'),
+                    selected: filter.type == FolderFilterType.inbox,
+                    onSelected: (_) =>
+                        context.read<FolderFilterCubit>().setInbox(),
+                  ),
+                  const SizedBox(width: 8),
+                  ...folders.map(
+                    (folder) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(folder.name),
+                        selected: filter.type == FolderFilterType.custom &&
+                            filter.folderId == folder.id,
+                        onSelected: (_) => context
+                            .read<FolderFilterCubit>()
+                            .setCustom(folder.id),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
+import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
 /// Screen for adding a new ToDo with optional subtasks and a reminder.
@@ -35,6 +38,18 @@ class _AddTodoState extends State<AddTodo> {
 
   /// Stores the currently selected reminder date and time.
   DateTime? _reminderDate;
+  int? _selectedFolderId;
+
+  @override
+  void initState() {
+    super.initState();
+    final filter = context.read<FolderFilterCubit>().state;
+    if (filter.type == FolderFilterType.custom) {
+      _selectedFolderId = filter.folderId;
+    } else {
+      _selectedFolderId = null;
+    }
+  }
 
   /// Opens a date picker and a time picker sequentially to select
   /// the reminder date and time.
@@ -138,9 +153,14 @@ class _AddTodoState extends State<AddTodo> {
 
       if (_reminderDate != null) {
         await todoCubit.addTodo(title, subtasks,
-            reminder: _reminderDate, id: uniqueId);
+            reminder: _reminderDate, id: uniqueId, folderId: _selectedFolderId);
       } else {
-        await todoCubit.addTodo(title, subtasks, id: uniqueId);
+        await todoCubit.addTodo(
+          title,
+          subtasks,
+          id: uniqueId,
+          folderId: _selectedFolderId,
+        );
       }
       if (mounted) context.go('/todos');
     }
@@ -185,9 +205,8 @@ class _AddTodoState extends State<AddTodo> {
               )
               .toList();
 
-          await context
-              .read<TodoCubit>()
-              .addTodo(title, subtasks, id: uniqueId);
+          await context.read<TodoCubit>().addTodo(title, subtasks,
+              id: uniqueId, folderId: _selectedFolderId);
           _isAlreadysaved = true;
         }
       },
@@ -242,6 +261,33 @@ class _AddTodoState extends State<AddTodo> {
                       hintText: 'Title',
                       border: InputBorder.none,
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  BlocBuilder<FolderCubit, List<Folder>>(
+                    builder: (context, folders) {
+                      return DropdownButtonFormField<int?>(
+                        value: _selectedFolderId,
+                        decoration: const InputDecoration(
+                          labelText: 'Folder',
+                          border: InputBorder.none,
+                        ),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('Inbox'),
+                          ),
+                          ...folders.map(
+                            (folder) => DropdownMenuItem<int?>(
+                              value: folder.id,
+                              child: Text(folder.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedFolderId = value);
+                        },
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(

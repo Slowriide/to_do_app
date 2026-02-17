@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
+import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
+import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
 import 'package:to_do_app/presentation/todos/todo_masonry_view.dart';
@@ -45,7 +48,7 @@ class _TodosViewState extends State<TodosView> {
 
   /// Selects all ToDos, or clears selection if all are already selected.
   void selectAll() {
-    final allTodos = context.read<TodoCubit>().state;
+    final allTodos = context.read<TodoSearchCubit>().state;
     final allTodosIds = allTodos.map((todo) => todo.id).toSet();
     setState(() {
       if (selectedTodos.containsAll(allTodosIds)) {
@@ -95,12 +98,55 @@ class _TodosViewState extends State<TodosView> {
     clearSelection();
   }
 
+  Future<void> moveSelectedTodos() async {
+    final result = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) {
+        return BlocBuilder<FolderCubit, List<Folder>>(
+          builder: (context, folders) {
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const ListTile(
+                    title: Text('Move selected todos to'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.inbox_outlined),
+                    title: const Text('Inbox'),
+                    onTap: () => Navigator.pop(context, -1),
+                  ),
+                  ...folders.map(
+                    (folder) => ListTile(
+                      leading: const Icon(Icons.folder_outlined),
+                      title: Text(folder.name),
+                      onTap: () => Navigator.pop(context, folder.id),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (result == null) return;
+    final folderId = result == -1 ? null : result;
+    await context
+        .read<TodoCubit>()
+        .moveTodosToFolder(selectedTodos.toList(), folderId);
+    clearSelection();
+  }
+
   @override
   void initState() {
     super.initState();
 
     final todoCubit = context.read<TodoCubit>();
     todoCubit.loadTodos();
+    context
+        .read<TodoSearchCubit>()
+        .setFolderFilter(context.read<FolderFilterCubit>().state);
   }
 
   @override
@@ -205,6 +251,12 @@ class _TodosViewState extends State<TodosView> {
                         valueKey: ValueKey('SelectAll'),
                       ),
                       MyTooltip(
+                        message: 'Move to Folder',
+                        icon: Icons.drive_file_move_outline,
+                        onPressed: moveSelectedTodos,
+                        valueKey: ValueKey('Move'),
+                      ),
+                      MyTooltip(
                         message: 'Select All',
                         icon: Icons.select_all_outlined,
                         onPressed: selectAll,
@@ -243,50 +295,106 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-          child: TextField(
-            controller: textController,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
-              hintText: 'Search Todos',
-              suffixIcon: IconButton(
-                onPressed: () {
-                  textController.clear();
-                  context.read<TodoSearchCubit>().clearSearch();
-                },
-                icon: Icon(Icons.close_rounded, color: theme.tertiary),
-              ),
-            ),
-            onChanged: (value) {
-              context.read<TodoSearchCubit>().search(value);
-            },
-          ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
-            child: BlocBuilder<TodoSearchCubit, List<Todo>>(
-              builder: (context, todos) {
-                return TodoMasonryView(
-                  todos: todos.where((todo) => !todo.isSubtask).toList(),
-                  isSelectionMode: isSelectionMode,
-                  selectedTodoIds: selectedTodosId,
-                  onToggleSelect: toggleSelection,
-                  onReorder: (draggedId, targetId) {
-                    context
-                        .read<TodoCubit>()
-                        .reorderTodoByIds(draggedId, targetId);
+    return BlocListener<FolderFilterCubit, FolderFilter>(
+      listener: (context, filter) {
+        context.read<TodoSearchCubit>().setFolderFilter(filter);
+      },
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+            child: TextField(
+              controller: textController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
+                hintText: 'Search Todos',
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    textController.clear();
+                    context.read<TodoSearchCubit>().clearSearch();
                   },
-                );
+                  icon: Icon(Icons.close_rounded, color: theme.tertiary),
+                ),
+              ),
+              onChanged: (value) {
+                context.read<TodoSearchCubit>().search(value);
               },
             ),
           ),
-        ),
-      ],
+          _FolderChips(),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
+              child: BlocBuilder<TodoSearchCubit, List<Todo>>(
+                builder: (context, todos) {
+                  return TodoMasonryView(
+                    todos: todos.where((todo) => !todo.isSubtask).toList(),
+                    isSelectionMode: isSelectionMode,
+                    selectedTodoIds: selectedTodosId,
+                    onToggleSelect: toggleSelection,
+                    onReorder: (draggedId, targetId) {
+                      context
+                          .read<TodoCubit>()
+                          .reorderTodoByIds(draggedId, targetId);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FolderChips extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<FolderCubit, List<Folder>>(
+      builder: (context, folders) {
+        return BlocBuilder<FolderFilterCubit, FolderFilter>(
+          builder: (context, filter) {
+            return SizedBox(
+              height: 52,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                children: [
+                  ChoiceChip(
+                    label: const Text('All'),
+                    selected: filter.type == FolderFilterType.all,
+                    onSelected: (_) =>
+                        context.read<FolderFilterCubit>().setAll(),
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Text('Inbox'),
+                    selected: filter.type == FolderFilterType.inbox,
+                    onSelected: (_) =>
+                        context.read<FolderFilterCubit>().setInbox(),
+                  ),
+                  const SizedBox(width: 8),
+                  ...folders.map(
+                    (folder) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(folder.name),
+                        selected: filter.type == FolderFilterType.custom &&
+                            filter.folderId == folder.id,
+                        onSelected: (_) => context
+                            .read<FolderFilterCubit>()
+                            .setCustom(folder.id),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

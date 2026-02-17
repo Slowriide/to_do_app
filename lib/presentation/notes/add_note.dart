@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/domain/models/folder.dart';
+import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 
 /// Screen for adding a new Note with optional reminder support.
@@ -32,6 +35,18 @@ class _AddNoteState extends State<AddNote> {
 
   /// Stores the currently selected reminder date and time.
   DateTime? _reminderDate;
+  int? _selectedFolderId;
+
+  @override
+  void initState() {
+    super.initState();
+    final filter = context.read<FolderFilterCubit>().state;
+    if (filter.type == FolderFilterType.custom) {
+      _selectedFolderId = filter.folderId;
+    } else {
+      _selectedFolderId = null;
+    }
+  }
 
   /// Opens a date picker and a time picker sequentially to select
   /// the reminder date and time.
@@ -101,9 +116,14 @@ class _AddNoteState extends State<AddNote> {
 
       if (_reminderDate != null) {
         await noteCubit.addNote(text, title,
-            reminder: _reminderDate, id: uniqueId);
+            reminder: _reminderDate, id: uniqueId, folderId: _selectedFolderId);
       } else {
-        await noteCubit.addNote(text, title, id: uniqueId);
+        await noteCubit.addNote(
+          text,
+          title,
+          id: uniqueId,
+          folderId: _selectedFolderId,
+        );
       }
 
       if (mounted) context.go('/providerPage');
@@ -178,6 +198,33 @@ class _AddNoteState extends State<AddNote> {
                     hintText: 'Title',
                     border: InputBorder.none,
                   ),
+                ),
+                const SizedBox(height: 16),
+                BlocBuilder<FolderCubit, List<Folder>>(
+                  builder: (context, folders) {
+                    return DropdownButtonFormField<int?>(
+                      value: _selectedFolderId,
+                      decoration: const InputDecoration(
+                        labelText: 'Folder',
+                        border: InputBorder.none,
+                      ),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Inbox'),
+                        ),
+                        ...folders.map(
+                          (folder) => DropdownMenuItem<int?>(
+                            value: folder.id,
+                            child: Text(folder.name),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _selectedFolderId = value);
+                      },
+                    );
+                  },
                 ),
                 const SizedBox(height: 16),
 

@@ -36,7 +36,7 @@ class NoteCubit extends Cubit<List<Note>> {
   ///
   /// Saves the note to the repository and reloads the notes.
   Future<void> addNote(String text, String title,
-      {DateTime? reminder, required int id}) async {
+      {DateTime? reminder, required int id, int? folderId}) async {
     final nextOrder = state.isEmpty
         ? 0
         : state.map((n) => n.order).reduce((a, b) => a > b ? a : b) + 1;
@@ -46,6 +46,7 @@ class NoteCubit extends Cubit<List<Note>> {
       text: text,
       reminder: reminder,
       order: nextOrder,
+      folderId: folderId,
     );
 
     await repository.addNote(newNote);
@@ -136,6 +137,14 @@ class NoteCubit extends Cubit<List<Note>> {
 
     for (var i = 0; i < notes.length; i++) {
       await repository.updateNote(notes[i].copyWith(order: i));
+    }
+    await loadNotes();
+  }
+
+  Future<void> moveNotesToFolder(List<int> noteIds, int? folderId) async {
+    final selected = state.where((note) => noteIds.contains(note.id)).toList();
+    for (final note in selected) {
+      await repository.updateNote(note.copyWith(folderId: folderId));
     }
     await loadNotes();
   }

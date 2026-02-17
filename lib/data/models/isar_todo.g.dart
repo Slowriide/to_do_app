@@ -17,33 +17,38 @@ const TodoIsarSchema = CollectionSchema(
   name: r'TodoIsar',
   id: -495579864114062347,
   properties: {
-    r'isCompleted': PropertySchema(
+    r'folderId': PropertySchema(
       id: 0,
+      name: r'folderId',
+      type: IsarType.long,
+    ),
+    r'isCompleted': PropertySchema(
+      id: 1,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
     r'isPinned': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'isPinned',
       type: IsarType.bool,
     ),
     r'isSubtask': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'isSubtask',
       type: IsarType.bool,
     ),
     r'order': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'order',
       type: IsarType.long,
     ),
     r'reminder': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'reminder',
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'title',
       type: IsarType.string,
     )
@@ -85,12 +90,13 @@ void _todoIsarSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.isCompleted);
-  writer.writeBool(offsets[1], object.isPinned);
-  writer.writeBool(offsets[2], object.isSubtask);
-  writer.writeLong(offsets[3], object.order);
-  writer.writeDateTime(offsets[4], object.reminder);
-  writer.writeString(offsets[5], object.title);
+  writer.writeLong(offsets[0], object.folderId);
+  writer.writeBool(offsets[1], object.isCompleted);
+  writer.writeBool(offsets[2], object.isPinned);
+  writer.writeBool(offsets[3], object.isSubtask);
+  writer.writeLong(offsets[4], object.order);
+  writer.writeDateTime(offsets[5], object.reminder);
+  writer.writeString(offsets[6], object.title);
 }
 
 TodoIsar _todoIsarDeserialize(
@@ -100,13 +106,14 @@ TodoIsar _todoIsarDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = TodoIsar();
+  object.folderId = reader.readLongOrNull(offsets[0]);
   object.id = id;
-  object.isCompleted = reader.readBool(offsets[0]);
-  object.isPinned = reader.readBool(offsets[1]);
-  object.isSubtask = reader.readBool(offsets[2]);
-  object.order = reader.readLong(offsets[3]);
-  object.reminder = reader.readDateTimeOrNull(offsets[4]);
-  object.title = reader.readString(offsets[5]);
+  object.isCompleted = reader.readBool(offsets[1]);
+  object.isPinned = reader.readBool(offsets[2]);
+  object.isSubtask = reader.readBool(offsets[3]);
+  object.order = reader.readLong(offsets[4]);
+  object.reminder = reader.readDateTimeOrNull(offsets[5]);
+  object.title = reader.readString(offsets[6]);
   return object;
 }
 
@@ -118,16 +125,18 @@ P _todoIsarDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
       return (reader.readBool(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 6:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -224,6 +233,75 @@ extension TodoIsarQueryWhere on QueryBuilder<TodoIsar, TodoIsar, QWhereClause> {
 
 extension TodoIsarQueryFilter
     on QueryBuilder<TodoIsar, TodoIsar, QFilterCondition> {
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> folderIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'folderId',
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> folderIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'folderId',
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> folderIdEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'folderId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> folderIdGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'folderId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> folderIdLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'folderId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> folderIdBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'folderId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -624,6 +702,18 @@ extension TodoIsarQueryLinks
 }
 
 extension TodoIsarQuerySortBy on QueryBuilder<TodoIsar, TodoIsar, QSortBy> {
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByFolderIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> sortByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.asc);
@@ -699,6 +789,18 @@ extension TodoIsarQuerySortBy on QueryBuilder<TodoIsar, TodoIsar, QSortBy> {
 
 extension TodoIsarQuerySortThenBy
     on QueryBuilder<TodoIsar, TodoIsar, QSortThenBy> {
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenByFolderIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.desc);
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -786,6 +888,12 @@ extension TodoIsarQuerySortThenBy
 
 extension TodoIsarQueryWhereDistinct
     on QueryBuilder<TodoIsar, TodoIsar, QDistinct> {
+  QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'folderId');
+    });
+  }
+
   QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCompleted');
@@ -829,6 +937,12 @@ extension TodoIsarQueryProperty
   QueryBuilder<TodoIsar, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<TodoIsar, int?, QQueryOperations> folderIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'folderId');
     });
   }
 

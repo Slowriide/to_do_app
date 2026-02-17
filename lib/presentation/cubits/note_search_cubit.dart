@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
+import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
 
 /// Cubit responsible for managing note search functionality.
 ///
@@ -7,31 +8,49 @@ import 'package:to_do_app/domain/models/note.dart';
 /// Supports updating the notes list, searching by query, and clearing the search.
 class NoteSearchCubit extends Cubit<List<Note>> {
   List<Note> _notes;
+  String _query = '';
+  FolderFilter _folderFilter = const FolderFilter.all();
 
   NoteSearchCubit(this._notes) : super(_notes);
 
   /// Updates the internal notes list and emits the updated list.
   void updateNotes(List<Note> notes) {
     _notes = notes;
-    emit(_notes);
+    _emitFiltered();
   }
 
   /// Filters notes by the given query, matching either title or text (case-insensitive).
   void search(String query) {
-    final lowerQuery = query.toLowerCase();
-
-    final filteredNotes = _notes
-        .where(
-          (note) =>
-              note.text.toLowerCase().contains(lowerQuery) ||
-              note.title.toLowerCase().contains(lowerQuery),
-        )
-        .toList();
-    emit(filteredNotes);
+    _query = query.toLowerCase();
+    _emitFiltered();
   }
 
   /// Clears the search and emits the full notes list.
   void clearSearch() {
-    emit(_notes);
+    _query = '';
+    _emitFiltered();
+  }
+
+  void setFolderFilter(FolderFilter filter) {
+    _folderFilter = filter;
+    _emitFiltered();
+  }
+
+  void _emitFiltered() {
+    final filtered = _notes.where((note) {
+      final matchesQuery = note.text.toLowerCase().contains(_query) ||
+          note.title.toLowerCase().contains(_query);
+      if (!matchesQuery) return false;
+
+      switch (_folderFilter.type) {
+        case FolderFilterType.all:
+          return true;
+        case FolderFilterType.inbox:
+          return note.folderId == null;
+        case FolderFilterType.custom:
+          return note.folderId == _folderFilter.folderId;
+      }
+    }).toList();
+    emit(filtered);
   }
 }

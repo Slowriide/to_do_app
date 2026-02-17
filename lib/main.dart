@@ -7,6 +7,9 @@ import 'package:to_do_app/core/config/theme/app_theme.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
+import 'package:to_do_app/domain/repository/folder_repository.dart';
+import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
@@ -34,6 +37,7 @@ void main() async {
   runApp(MyApp(
     noteRepo: repositories.noteRepository,
     todoRepo: repositories.todoRepository,
+    folderRepo: repositories.folderRepository,
   ));
 }
 
@@ -41,7 +45,13 @@ class MyApp extends StatelessWidget {
   //db injection
   final NoteRepository noteRepo;
   final TodoRepository todoRepo;
-  const MyApp({super.key, required this.noteRepo, required this.todoRepo});
+  final FolderRepository folderRepo;
+  const MyApp({
+    super.key,
+    required this.noteRepo,
+    required this.todoRepo,
+    required this.folderRepo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,11 +59,16 @@ class MyApp extends StatelessWidget {
       providers: [
         RepositoryProvider.value(value: noteRepo),
         RepositoryProvider.value(value: todoRepo),
+        RepositoryProvider.value(value: folderRepo),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(create: (context) => NoteCubit(noteRepo)..loadNotes()),
           BlocProvider(create: (context) => TodoCubit(todoRepo)..loadTodos()),
+          BlocProvider(
+            create: (context) => FolderCubit(folderRepo)..loadFolders(),
+          ),
+          BlocProvider(create: (context) => FolderFilterCubit()),
           BlocProvider(create: (context) => NoteSearchCubit([])),
           BlocProvider(create: (context) => TodoSearchCubit([])),
           BlocProvider(create: (context) => ThemeCubit()),

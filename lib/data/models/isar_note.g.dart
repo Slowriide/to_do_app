@@ -17,33 +17,38 @@ const NoteIsarSchema = CollectionSchema(
   name: r'NoteIsar',
   id: 513149557421112620,
   properties: {
-    r'isCompleted': PropertySchema(
+    r'folderId': PropertySchema(
       id: 0,
+      name: r'folderId',
+      type: IsarType.long,
+    ),
+    r'isCompleted': PropertySchema(
+      id: 1,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
     r'isPinned': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'isPinned',
       type: IsarType.bool,
     ),
     r'order': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'order',
       type: IsarType.long,
     ),
     r'reminder': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'reminder',
       type: IsarType.dateTime,
     ),
     r'text': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'text',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'title',
       type: IsarType.string,
     )
@@ -79,12 +84,13 @@ void _noteIsarSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.isCompleted);
-  writer.writeBool(offsets[1], object.isPinned);
-  writer.writeLong(offsets[2], object.order);
-  writer.writeDateTime(offsets[3], object.reminder);
-  writer.writeString(offsets[4], object.text);
-  writer.writeString(offsets[5], object.title);
+  writer.writeLong(offsets[0], object.folderId);
+  writer.writeBool(offsets[1], object.isCompleted);
+  writer.writeBool(offsets[2], object.isPinned);
+  writer.writeLong(offsets[3], object.order);
+  writer.writeDateTime(offsets[4], object.reminder);
+  writer.writeString(offsets[5], object.text);
+  writer.writeString(offsets[6], object.title);
 }
 
 NoteIsar _noteIsarDeserialize(
@@ -94,13 +100,14 @@ NoteIsar _noteIsarDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = NoteIsar();
+  object.folderId = reader.readLongOrNull(offsets[0]);
   object.id = id;
-  object.isCompleted = reader.readBool(offsets[0]);
-  object.isPinned = reader.readBool(offsets[1]);
-  object.order = reader.readLong(offsets[2]);
-  object.reminder = reader.readDateTimeOrNull(offsets[3]);
-  object.text = reader.readString(offsets[4]);
-  object.title = reader.readString(offsets[5]);
+  object.isCompleted = reader.readBool(offsets[1]);
+  object.isPinned = reader.readBool(offsets[2]);
+  object.order = reader.readLong(offsets[3]);
+  object.reminder = reader.readDateTimeOrNull(offsets[4]);
+  object.text = reader.readString(offsets[5]);
+  object.title = reader.readString(offsets[6]);
   return object;
 }
 
@@ -112,16 +119,18 @@ P _noteIsarDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -217,6 +226,75 @@ extension NoteIsarQueryWhere on QueryBuilder<NoteIsar, NoteIsar, QWhereClause> {
 
 extension NoteIsarQueryFilter
     on QueryBuilder<NoteIsar, NoteIsar, QFilterCondition> {
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'folderId',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'folderId',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'folderId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'folderId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'folderId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'folderId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -679,6 +757,18 @@ extension NoteIsarQueryLinks
     on QueryBuilder<NoteIsar, NoteIsar, QFilterCondition> {}
 
 extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByFolderIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.asc);
@@ -754,6 +844,18 @@ extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
 
 extension NoteIsarQuerySortThenBy
     on QueryBuilder<NoteIsar, NoteIsar, QSortThenBy> {
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByFolderIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -841,6 +943,12 @@ extension NoteIsarQuerySortThenBy
 
 extension NoteIsarQueryWhereDistinct
     on QueryBuilder<NoteIsar, NoteIsar, QDistinct> {
+  QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'folderId');
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCompleted');
@@ -885,6 +993,12 @@ extension NoteIsarQueryProperty
   QueryBuilder<NoteIsar, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<NoteIsar, int?, QQueryOperations> folderIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'folderId');
     });
   }
 

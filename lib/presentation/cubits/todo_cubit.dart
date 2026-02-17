@@ -42,7 +42,7 @@ class TodoCubit extends Cubit<List<Todo>> {
   ///
   /// Then reloads the todos list.
   Future<void> addTodo(String title, List<Todo> subtasks,
-      {DateTime? reminder, required int id}) async {
+      {DateTime? reminder, required int id, int? folderId}) async {
     final nextOrder = state.isEmpty
         ? 0
         : state.map((t) => t.order).reduce((a, b) => a > b ? a : b) + 1;
@@ -54,6 +54,7 @@ class TodoCubit extends Cubit<List<Todo>> {
       isSubtask: false,
       order: nextOrder,
       reminder: reminder,
+      folderId: folderId,
     );
     await repository.addTodo(newTodo);
     loadTodos();
@@ -148,6 +149,14 @@ class TodoCubit extends Cubit<List<Todo>> {
 
     for (var i = 0; i < todos.length; i++) {
       await repository.updateTodo(todos[i].copyWith(order: i));
+    }
+    await loadTodos();
+  }
+
+  Future<void> moveTodosToFolder(List<int> todoIds, int? folderId) async {
+    final selected = state.where((todo) => todoIds.contains(todo.id)).toList();
+    for (final todo in selected) {
+      await repository.updateTodo(todo.copyWith(folderId: folderId));
     }
     await loadTodos();
   }

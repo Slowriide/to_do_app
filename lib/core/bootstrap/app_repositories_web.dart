@@ -1,6 +1,8 @@
 import 'package:to_do_app/core/bootstrap/app_repositories_base.dart';
+import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/models/todo.dart';
+import 'package:to_do_app/domain/repository/folder_repository.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 
@@ -105,9 +107,40 @@ class InMemoryTodoRepository implements TodoRepository {
   }
 }
 
+class InMemoryFolderRepository implements FolderRepository {
+  final List<Folder> _folders = [];
+
+  @override
+  Future<void> addFolder(Folder folder) async {
+    _folders.removeWhere((f) => f.id == folder.id);
+    _folders.add(folder);
+  }
+
+  @override
+  Future<void> deleteFolder(int folderId) async {
+    _folders.removeWhere((f) => f.id == folderId);
+  }
+
+  @override
+  Future<List<Folder>> getFolders() async {
+    return List<Folder>.from(_folders);
+  }
+
+  @override
+  Future<void> updateFolder(Folder folder) async {
+    final index = _folders.indexWhere((f) => f.id == folder.id);
+    if (index >= 0) {
+      _folders[index] = folder;
+      return;
+    }
+    _folders.add(folder);
+  }
+}
+
 Future<AppRepositories> createAppRepositories() async {
   return AppRepositories(
     noteRepository: InMemoryNoteRepository(),
     todoRepository: InMemoryTodoRepository(),
+    folderRepository: InMemoryFolderRepository(),
   );
 }

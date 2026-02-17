@@ -13,6 +13,7 @@ class Note {
   final DateTime? reminder;
   final bool isPinned;
   final int order;
+  final int? folderId;
 
   Note({
     required this.id,
@@ -22,6 +23,7 @@ class Note {
     this.reminder,
     this.isPinned = false,
     this.order = 0,
+    this.folderId,
   });
 
   Note toggleCompletion() {
@@ -33,6 +35,7 @@ class Note {
       reminder: reminder,
       isPinned: isPinned,
       order: order,
+      folderId: folderId,
     );
   }
 
@@ -43,6 +46,7 @@ class Note {
     DateTime? reminder,
     bool? isPinned,
     int? order,
+    int? folderId,
   }) {
     return Note(
       id: id,
@@ -52,6 +56,7 @@ class Note {
       reminder: reminder ?? this.reminder,
       isPinned: isPinned ?? this.isPinned,
       order: order ?? this.order,
+      folderId: folderId ?? this.folderId,
     );
   }
 }

@@ -137,7 +137,8 @@ class AppTheme {
       navigationDrawerTheme: NavigationDrawerThemeData(
         backgroundColor: colors.surface,
         indicatorColor: colors.onPrimary.withValues(alpha: 0.15),
-        iconTheme: WidgetStatePropertyAll(IconThemeData(color: colors.onSurface)),
+        iconTheme:
+            WidgetStatePropertyAll(IconThemeData(color: colors.onSurface)),
         labelTextStyle: WidgetStatePropertyAll(
           GoogleFonts.notoSans(
             color: colors.onSurface,
