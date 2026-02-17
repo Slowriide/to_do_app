@@ -2,223 +2,153 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:to_do_app/core/config/theme/app_colors.dart';
 
-/// A class that defines the application's theme based on the current mode (dark or light).
-///
-/// It provides methods to get the appropriate [ThemeData] for the application,
-/// and defines text styles for various text elements in the app.
+/// Defines the visual system for both light and dark modes.
 class AppTheme {
   final bool isDarkMode;
   late final AppColors colors;
   AppTheme({required this.isDarkMode}) {
     colors = AppColors(isDarkMode);
   }
-  ThemeData getTheme() {
-    return isDarkMode ? _darkTheme : _lightTheme;
+
+  ThemeData getTheme() => isDarkMode ? _darkTheme : _lightTheme;
+
+  ThemeData _buildTheme(Brightness brightness) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: colors.onPrimary,
+      brightness: brightness,
+    ).copyWith(
+      primary: colors.onPrimary,
+      secondary: colors.secondary,
+      surface: colors.surface,
+      onSurface: colors.onSurface,
+    );
+
+    final baseText = GoogleFonts.notoSansTextTheme().apply(
+      bodyColor: colors.text,
+      displayColor: colors.text,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: colors.surface,
+      textTheme: baseText.copyWith(
+        titleLarge: baseText.titleLarge?.copyWith(
+          fontSize: 30,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+        ),
+        titleMedium: baseText.titleMedium?.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: baseText.bodyLarge?.copyWith(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyMedium: baseText.bodyMedium?.copyWith(
+          fontSize: 15,
+          height: 1.35,
+        ),
+        bodySmall: baseText.bodySmall?.copyWith(
+          fontSize: 13,
+          height: 1.3,
+          color: colors.tertiary,
+        ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.surface,
+        foregroundColor: colors.onSurface,
+        centerTitle: false,
+        titleTextStyle: GoogleFonts.notoSans(
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: colors.onSurface,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: colors.primary,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: colors.tertiary.withValues(alpha: 0.28),
+            width: 1,
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colors.onPrimary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: TextStyle(color: colors.tertiary),
+        filled: true,
+        fillColor: colors.surface2,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide(
+            color: colors.tertiary.withValues(alpha: 0.24),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide(
+            color: colors.tertiary.withValues(alpha: 0.24),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide(color: colors.onPrimary, width: 1.5),
+        ),
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        headerForegroundColor: colors.onSurface,
+        dayStyle: TextStyle(color: colors.onSurface),
+        todayBorder: BorderSide(color: colors.onPrimary),
+        todayBackgroundColor: WidgetStatePropertyAll(
+          colors.onPrimary.withValues(alpha: 0.12),
+        ),
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: colors.surface,
+        dialBackgroundColor: colors.surface2,
+        hourMinuteColor: colors.surface2,
+        hourMinuteTextColor: colors.onSurface,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      tooltipTheme: TooltipThemeData(
+        textStyle: TextStyle(color: colors.onSurface, fontSize: 13),
+        decoration: BoxDecoration(
+          color: colors.surface2,
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      navigationDrawerTheme: NavigationDrawerThemeData(
+        backgroundColor: colors.surface,
+        indicatorColor: colors.onPrimary.withValues(alpha: 0.15),
+        iconTheme: WidgetStatePropertyAll(IconThemeData(color: colors.onSurface)),
+        labelTextStyle: WidgetStatePropertyAll(
+          GoogleFonts.notoSans(
+            color: colors.onSurface,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 
-  final bodySmall = GoogleFonts.roboto()
-      .copyWith(color: const Color.fromARGB(255, 236, 236, 236), fontSize: 18);
-  final titleSmall = GoogleFonts.roboto().copyWith(fontSize: 20);
-
-  ThemeData get _darkTheme => ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: colors.surface,
-        colorScheme: ColorScheme.dark(
-            brightness: Brightness.dark,
-            surface: colors.surface,
-            onSurface: colors.onSurface,
-            primary: colors.primary,
-            onPrimary: colors.onPrimary,
-            secondary: colors.secondary,
-            tertiary: colors.tertiary,
-            onTertiary: colors.onTertiary),
-        textTheme: TextTheme(
-          titleLarge: GoogleFonts.roboto().copyWith(
-            fontSize: 50,
-            fontWeight: FontWeight.bold,
-            color: colors.text,
-          ),
-          titleMedium: GoogleFonts.roboto().copyWith(
-            fontSize: 30,
-            fontWeight: FontWeight.w400,
-            color: colors.text,
-          ),
-          titleSmall: GoogleFonts.roboto().copyWith(fontSize: 20),
-          bodyLarge: GoogleFonts.roboto().copyWith(
-              color: colors.text, fontSize: 25, fontWeight: FontWeight.w500),
-          bodyMedium: GoogleFonts.roboto().copyWith(
-              color: colors.text, fontSize: 19, fontWeight: FontWeight.w500),
-          bodySmall:
-              GoogleFonts.roboto().copyWith(color: colors.text, fontSize: 18),
-          labelSmall:
-              GoogleFonts.roboto().copyWith(color: colors.text, fontSize: 15),
-          labelMedium: GoogleFonts.roboto().copyWith(
-              color: colors.text, fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-
-        //DATE PICKER
-        datePickerTheme: DatePickerThemeData(
-          cancelButtonStyle: TextButton.styleFrom(foregroundColor: colors.text),
-          confirmButtonStyle:
-              TextButton.styleFrom(foregroundColor: colors.text),
-          dividerColor: Colors.transparent,
-          headerHelpStyle: TextStyle(color: colors.text),
-          headerForegroundColor: colors.text,
-          backgroundColor: Color.fromARGB(255, 17, 17, 17),
-          todayBorder: BorderSide(
-            color: const Color.fromARGB(255, 64, 79, 165),
-          ),
-          todayBackgroundColor: WidgetStateProperty.all(colors.purple),
-          yearStyle: TextStyle(color: colors.text),
-          inputDecorationTheme: InputDecorationTheme(
-            hintStyle: TextStyle(color: colors.text),
-            labelStyle: TextStyle(color: colors.purple),
-            focusColor: colors.text,
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: colors.purple)),
-            focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: colors.purple, width: 2)),
-          ),
-        ),
-
-        //TIME PICKER
-        timePickerTheme: TimePickerThemeData(
-          cancelButtonStyle: TextButton.styleFrom(foregroundColor: colors.text),
-          confirmButtonStyle:
-              TextButton.styleFrom(foregroundColor: colors.text),
-          backgroundColor: Color.fromARGB(255, 17, 17, 17),
-          dialBackgroundColor: Color.fromARGB(255, 17, 17, 17),
-          hourMinuteColor: Color.fromARGB(210, 27, 27, 27),
-          hourMinuteTextColor: colors.text,
-          inputDecorationTheme: InputDecorationTheme(
-            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: colors.purple, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.transparent, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        dialogTheme: DialogThemeData(
-          backgroundColor: Color.fromARGB(255, 17, 17, 17),
-        ),
-
-        //Tool tip
-        tooltipTheme: TooltipThemeData(
-          textStyle: bodySmall.copyWith(color: colors.text),
-          decoration: BoxDecoration(
-            color: colors.primary,
-            borderRadius: BorderRadius.circular(5),
-          ),
-        ),
-
-        navigationDrawerTheme: NavigationDrawerThemeData(
-          iconTheme: WidgetStatePropertyAll(IconThemeData(color: colors.text)),
-          labelTextStyle:
-              WidgetStatePropertyAll(titleSmall.copyWith(color: colors.text)),
-        ),
-      );
-
-  ThemeData get _lightTheme => ThemeData.light().copyWith(
-        scaffoldBackgroundColor: colors.surface,
-        colorScheme: ColorScheme.light(
-          surface: colors.surface,
-          onSurface: colors.onSurface,
-          primary: colors.primary,
-          onPrimary: colors.onPrimary,
-          secondary: colors.secondary,
-          tertiary: colors.tertiary,
-          onTertiary: colors.text,
-        ),
-        textTheme: TextTheme(
-          titleLarge: GoogleFonts.roboto().copyWith(
-            fontSize: 50,
-            fontWeight: FontWeight.bold,
-            color: colors.text,
-          ),
-          titleMedium: GoogleFonts.roboto().copyWith(
-            fontSize: 30,
-            fontWeight: FontWeight.w400,
-            color: colors.text,
-          ),
-          titleSmall: GoogleFonts.roboto().copyWith(fontSize: 20),
-          bodyLarge: GoogleFonts.roboto().copyWith(
-              color: colors.text, fontSize: 25, fontWeight: FontWeight.w500),
-          bodyMedium: GoogleFonts.roboto().copyWith(
-              color: colors.text, fontSize: 19, fontWeight: FontWeight.w500),
-          bodySmall:
-              GoogleFonts.roboto().copyWith(color: colors.text, fontSize: 18),
-          labelSmall:
-              GoogleFonts.roboto().copyWith(color: colors.text, fontSize: 15),
-          labelMedium: GoogleFonts.roboto().copyWith(
-              color: colors.text, fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-
-        //DATE PICKER
-        datePickerTheme: DatePickerThemeData(
-          cancelButtonStyle: TextButton.styleFrom(foregroundColor: colors.text),
-          confirmButtonStyle:
-              TextButton.styleFrom(foregroundColor: colors.text),
-          dividerColor: Colors.transparent,
-          headerHelpStyle: TextStyle(color: colors.text),
-          headerForegroundColor: colors.text,
-          backgroundColor: colors.surface,
-          todayBorder: BorderSide(
-            color: Color(0xff7F5539),
-          ),
-          todayBackgroundColor: WidgetStateProperty.all(Color(0xff7F5539)),
-          yearStyle: TextStyle(color: colors.text),
-          inputDecorationTheme: InputDecorationTheme(
-            hintStyle: TextStyle(color: colors.text),
-            labelStyle: TextStyle(color: Color(0xff7F5539)),
-            focusColor: colors.text,
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xff7F5539))),
-            focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xff7F5539), width: 2)),
-          ),
-        ),
-
-        //TIME PICKER
-        timePickerTheme: TimePickerThemeData(
-          cancelButtonStyle: TextButton.styleFrom(foregroundColor: colors.text),
-          confirmButtonStyle:
-              TextButton.styleFrom(foregroundColor: colors.text),
-          backgroundColor: colors.surface,
-          dialBackgroundColor: Color(0xFFE6CCB2),
-          hourMinuteColor: Color.fromARGB(210, 27, 27, 27),
-          hourMinuteTextColor: colors.text,
-          inputDecorationTheme: InputDecorationTheme(
-            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Color(0xff7F5539), width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.transparent, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        dialogTheme: DialogThemeData(
-          backgroundColor: Color.fromARGB(255, 17, 17, 17),
-        ),
-
-        //Tool tip
-        tooltipTheme: TooltipThemeData(
-          textStyle: bodySmall.copyWith(color: colors.text),
-          decoration: BoxDecoration(
-            color: colors.primary,
-            borderRadius: BorderRadius.circular(5),
-          ),
-        ),
-
-        navigationDrawerTheme: NavigationDrawerThemeData(
-          iconTheme: WidgetStatePropertyAll(IconThemeData(color: colors.text)),
-          labelTextStyle:
-              WidgetStatePropertyAll(titleSmall.copyWith(color: colors.text)),
-        ),
-      );
+  ThemeData get _lightTheme => _buildTheme(Brightness.light);
+  ThemeData get _darkTheme => _buildTheme(Brightness.dark);
 }

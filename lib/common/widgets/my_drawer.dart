@@ -30,11 +30,17 @@ class _MyDrawerState extends State<MyDrawer> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(15, 28, 0, 0),
+            padding: const EdgeInsets.fromLTRB(20, 34, 0, 12),
             decoration: BoxDecoration(color: theme.surface),
             child: Align(
               alignment: Alignment.bottomLeft,
-              child: Text("My ToDo App", style: textStyles.titleMedium),
+              child: Text(
+                "My ToDo App",
+                style: textStyles.titleMedium?.copyWith(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
           Expanded(
@@ -79,7 +85,7 @@ class _MyDrawerState extends State<MyDrawer> {
                 ),
                 NavigationDrawerDestination(
                   icon: Icon(Icons.settings),
-                  label: Text('Ajustes'),
+                  label: Text('Settings'),
                 ),
                 NavigationDrawerDestination(
                   icon: Icon(Icons.question_mark_rounded),
