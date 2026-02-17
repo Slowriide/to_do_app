@@ -124,7 +124,7 @@ class _TodosViewState extends State<TodosView> {
           ? null
           : FloatingActionButton(
               onPressed: () => context.push('/addtodo'),
-              child: Icon(Icons.add, color: Colors.white, size: 25),
+              child: const Icon(Icons.add_rounded, size: 28),
             ),
     );
   }
@@ -151,12 +151,12 @@ class _TodosViewState extends State<TodosView> {
         selected.isNotEmpty && selected.every((n) => n.isPinned);
 
     return SliverAppBar(
-      toolbarHeight: 60,
+      toolbarHeight: 68,
       foregroundColor: theme.onSurface,
       backgroundColor: theme.surface,
       pinned: true,
       elevation: 0,
-      centerTitle: true,
+      centerTitle: false,
       leading: isSelectionMode
           ? MyTooltip(
               message: 'Clear Selection',
@@ -181,7 +181,7 @@ class _TodosViewState extends State<TodosView> {
                 'ToDo\'s',
                 key: ValueKey('normal'),
                 style: textStyle.titleMedium?.copyWith(
-                  fontSize: 40,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -247,26 +247,18 @@ class _Body extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(20, 5, 20, 0),
+          padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
           child: TextField(
             controller: textController,
             decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
-              ),
-              prefixIcon: Icon(Icons.search, color: theme.onSurface),
+              prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
               hintText: 'Search Todos',
-              filled: true,
-              fillColor: theme.secondary,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               suffixIcon: IconButton(
                 onPressed: () {
                   textController.clear();
                   context.read<TodoSearchCubit>().clearSearch();
                 },
-                icon: Icon(Icons.close),
+                icon: Icon(Icons.close_rounded, color: theme.tertiary),
               ),
             ),
             onChanged: (value) {
@@ -284,8 +276,10 @@ class _Body extends StatelessWidget {
                   isSelectionMode: isSelectionMode,
                   selectedTodoIds: selectedTodosId,
                   onToggleSelect: toggleSelection,
-                  onReorder: (reorderedTodos) {
-                    context.read<TodoCubit>().reorderTodos(reorderedTodos);
+                  onReorder: (draggedId, targetId) {
+                    context
+                        .read<TodoCubit>()
+                        .reorderTodoByIds(draggedId, targetId);
                   },
                 );
               },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/todo_item.dart';
 import 'package:to_do_app/domain/models/todo.dart';
@@ -21,7 +22,7 @@ class TodoMasonryView extends StatelessWidget {
   final Set<int> selectedTodoIds;
   final bool isSelectionMode;
   final Function(int id) onToggleSelect;
-  final void Function(List<Todo> reorderedTodos) onReorder;
+  final void Function(int draggedId, int targetId) onReorder;
   const TodoMasonryView({
     super.key,
     required this.todos,
@@ -33,51 +34,70 @@ class TodoMasonryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ReorderableListView.builder(
+    return MasonryGridView.count(
+      crossAxisCount: 2,
       itemCount: todos.length,
-      buildDefaultDragHandles: false,
-      onReorder: (oldIndex, newIndex) {
-        final reordered = List<Todo>.from(todos);
-        if (newIndex > oldIndex) {
-          newIndex -= 1;
-        }
-        final item = reordered.removeAt(oldIndex);
-        reordered.insert(newIndex, item);
-        onReorder(reordered);
-      },
       itemBuilder: (context, index) {
         final todo = todos[index];
         final isSelected = selectedTodoIds.contains(todo.id);
+        final theme = Theme.of(context).colorScheme;
 
-        return Row(
-          key: ValueKey(todo.id),
-          children: [
-            if (!isSelectionMode)
-              ReorderableDragStartListener(
-                index: index,
-                child: const SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Icon(Icons.drag_indicator_rounded),
-                ),
+        return DragTarget<int>(
+          onWillAcceptWithDetails: (details) {
+            if (isSelectionMode) return false;
+            final draggedId = details.data;
+            if (draggedId == todo.id) return false;
+            Todo? dragged;
+            for (final t in todos) {
+              if (t.id == draggedId) {
+                dragged = t;
+                break;
+              }
+            }
+            if (dragged == null) return false;
+            return dragged.isPinned == todo.isPinned;
+          },
+          onAcceptWithDetails: (details) {
+            onReorder(details.data, todo.id);
+          },
+          builder: (context, candidateData, rejectedData) {
+            final isDropTarget = candidateData.isNotEmpty;
+            return GestureDetector(
+              onTap: () {
+                if (isSelectionMode) {
+                  onToggleSelect(todo.id);
+                } else {
+                  context.push('/edittodo', extra: todo);
+                }
+              },
+              onLongPress: () => onToggleSelect(todo.id),
+              child: TodoItem(
+                todo: todo,
+                isSelected: isSelected || isDropTarget,
+                dragHandle: isSelectionMode
+                    ? null
+                    : Draggable<int>(
+                        data: todo.id,
+                        maxSimultaneousDrags: 1,
+                        feedback: Material(
+                          color: Colors.transparent,
+                          child: SizedBox(
+                            width: 180,
+                            child: TodoItem(todo: todo, isSelected: true),
+                          ),
+                        ),
+                        childWhenDragging: Icon(
+                          Icons.drag_indicator_rounded,
+                          color: theme.tertiary.withValues(alpha: 0.5),
+                        ),
+                        child: Icon(
+                          Icons.drag_indicator_rounded,
+                          color: theme.tertiary,
+                        ),
+                      ),
               ),
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  if (isSelectionMode) {
-                    onToggleSelect(todo.id);
-                  } else {
-                    context.push('/edittodo', extra: todo);
-                  }
-                },
-                onLongPress: () => onToggleSelect(todo.id),
-                child: TodoItem(
-                  todo: todo,
-                  isSelected: isSelected,
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );

@@ -28,48 +28,94 @@ class NoteItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
+    final cardColor = _noteTint(note.id, theme);
 
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 170),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       width: double.infinity,
       decoration: BoxDecoration(
+        color: cardColor,
         border: Border.all(
-          color: !isSelected ? theme.primary : theme.onPrimary,
+          color: isSelected
+              ? theme.primary.withValues(alpha: 0.75)
+              : theme.tertiary.withValues(alpha: 0.28),
+          width: isSelected ? 1.5 : 1,
         ),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  note.title,
-                  style: textStyle.bodyMedium,
-                  maxLines: 1,
-                ),
-              ),
-              note.isPinned
-                  ? Icon(
-                      Icons.push_pin_rounded,
-                      color: theme.tertiary,
-                    )
-                  : const SizedBox.shrink(),
-              if (dragHandle != null) ...[
-                const SizedBox(width: 6),
-                dragHandle!,
-              ],
-            ],
-          ),
-          SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(child: Text(note.text, style: textStyle.bodySmall)),
-            ],
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    note.title,
+                    style: textStyle.bodyLarge,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                note.isPinned
+                    ? Icon(
+                        Icons.push_pin_rounded,
+                        size: 18,
+                        color: theme.tertiary,
+                      )
+                    : const SizedBox.shrink(),
+                if (dragHandle != null) ...[
+                  const SizedBox(width: 6),
+                  dragHandle!,
+                ],
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+            child: Text(
+              note.text,
+              style: textStyle.bodyMedium,
+              maxLines: 8,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _noteTint(int id, ColorScheme theme) {
+    const lightTints = <Color>[
+      Color(0xFFFFF2AB),
+      Color(0xFFD7F4D2),
+      Color(0xFFD3ECFF),
+      Color(0xFFFFE0C7),
+      Color(0xFFE8DCFF),
+      Color(0xFFFCD8E6),
+    ];
+    const darkTints = <Color>[
+      Color(0xFF33412A),
+      Color(0xFF1F3F3A),
+      Color(0xFF213E56),
+      Color(0xFF4B3522),
+      Color(0xFF3A2F54),
+      Color(0xFF4A2738),
+    ];
+    final isDark = theme.brightness == Brightness.dark;
+    final tints = isDark ? darkTints : lightTints;
+    return Color.alphaBlend(
+      tints[id.abs() % tints.length].withValues(alpha: isDark ? 0.42 : 0.28),
+      theme.surface,
     );
   }
 }

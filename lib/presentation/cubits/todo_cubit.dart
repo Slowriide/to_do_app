@@ -130,4 +130,25 @@ class TodoCubit extends Cubit<List<Todo>> {
     }
     await loadTodos();
   }
+
+  /// Reorders todos by dragged and target ids.
+  ///
+  /// Reordering is constrained to todos within the same pin group so that
+  /// pinned/unpinned sort behavior remains predictable.
+  Future<void> reorderTodoByIds(int draggedId, int targetId) async {
+    final todos = [...state];
+    final from = todos.indexWhere((t) => t.id == draggedId);
+    final to = todos.indexWhere((t) => t.id == targetId);
+
+    if (from < 0 || to < 0 || from == to) return;
+    if (todos[from].isPinned != todos[to].isPinned) return;
+
+    final moved = todos.removeAt(from);
+    todos.insert(to, moved);
+
+    for (var i = 0; i < todos.length; i++) {
+      await repository.updateTodo(todos[i].copyWith(order: i));
+    }
+    await loadTodos();
+  }
 }
