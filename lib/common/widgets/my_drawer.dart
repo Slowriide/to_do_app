@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
+import 'package:to_do_app/domain/models/folder.dart';
+import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
+import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
-
-/// A custom drawer widget that provides navigation options for the app.
-///
-/// This widget includes navigation destinations for Notes, ToDo's, Settings, and Help.
-/// It also includes a bottom sheet for theme selection.
+import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
 class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
@@ -23,9 +23,9 @@ class _MyDrawerState extends State<MyDrawer> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textTheme;
-
     final location = GoRouterState.of(context).uri.toString();
     final themeCubit = context.read<ThemeCubit>().state;
+
     return Drawer(
       child: Column(
         children: [
@@ -35,7 +35,7 @@ class _MyDrawerState extends State<MyDrawer> {
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Text(
-                "My ToDo App",
+                'My ToDo App',
                 style: textStyles.titleMedium?.copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -45,15 +45,12 @@ class _MyDrawerState extends State<MyDrawer> {
           ),
           Expanded(
             child: NavigationDrawer(
-              tilePadding: EdgeInsets.symmetric(horizontal: 12),
-              indicatorColor: theme.onPrimary,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+              indicatorColor: theme.onPrimary.withValues(alpha: 0.18),
               selectedIndex: _getSelectedIndex(location),
               onDestinationSelected: (index) async {
                 Navigator.of(context).pop();
-
-                // Small delay to allow drawer closing animation to finish before navigation.
                 await Future.delayed(const Duration(milliseconds: 250));
-
                 if (!mounted) return;
                 switch (index) {
                   case 0:
@@ -68,48 +65,36 @@ class _MyDrawerState extends State<MyDrawer> {
                 }
               },
               children: [
-                NavigationDrawerDestination(
+                const NavigationDrawerDestination(
                   icon: Icon(Icons.note_alt_outlined),
                   selectedIcon: Icon(Icons.note_alt_outlined),
                   label: Text('Notes'),
                 ),
-                NavigationDrawerDestination(
+                const NavigationDrawerDestination(
                   icon: Icon(Icons.check_box_outlined),
                   selectedIcon: Icon(Icons.check_box),
                   label: Text("ToDo's"),
                 ),
-                Divider(
-                  indent: 27,
-                  endIndent: 27,
-                  color: theme.primary,
-                ),
-                NavigationDrawerDestination(
+                const NavigationDrawerDestination(
                   icon: Icon(Icons.settings),
                   label: Text('Settings'),
                 ),
-                NavigationDrawerDestination(
-                  icon: Icon(Icons.question_mark_rounded),
-                  label: Text('Help'),
-                ),
-                Divider(
-                  indent: 27,
-                  endIndent: 27,
-                  color: theme.primary,
-                ),
+                const SizedBox(height: 10),
+                _buildFoldersSection(context),
+                const SizedBox(height: 12),
                 ListTile(
-                  leading: Icon(Icons.dark_mode_outlined),
-                  title:
-                      Text(themeCubit.isDarkmode ? 'Dark Mode' : 'Light Mode'),
+                  leading: const Icon(Icons.dark_mode_outlined),
+                  title: Text(
+                    themeCubit.isDarkmode ? 'Dark Mode' : 'Light Mode',
+                  ),
                   onTap: () {
                     Navigator.of(context).pop();
                     showModalBottomSheet(
                       context: context,
-                      builder: (context) {
-                        return MyBottomSheet();
-                      },
+                      builder: (context) => const MyBottomSheet(),
                     );
                   },
-                )
+                ),
               ],
             ),
           ),
@@ -118,11 +103,262 @@ class _MyDrawerState extends State<MyDrawer> {
     );
   }
 
-  /// Returns the index of the selected destination based on the current location.
-  ///
-  /// If the location is '/todos', it returns 1 (ToDo's).
-  /// If the location is '/settings', it returns 2 (Settings).
-  ///  Otherwise, it returns 0 (Notes).
+  Widget _buildFoldersSection(BuildContext context) {
+    final theme = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme;
+    return BlocBuilder<FolderCubit, List<Folder>>(
+      builder: (context, folders) {
+        return BlocBuilder<FolderFilterCubit, FolderFilter>(
+          builder: (context, filter) {
+            final isAll = filter.type == FolderFilterType.all;
+            final isInbox = filter.type == FolderFilterType.inbox;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.secondary.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: theme.tertiary.withValues(alpha: 0.2),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Folders',
+                          style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _createFolder,
+                        icon: const Icon(Icons.create_new_folder_outlined),
+                        tooltip: 'Create folder',
+                      ),
+                    ],
+                  ),
+                  _folderTile(
+                    title: 'All',
+                    selected: isAll,
+                    onTap: () => _selectFolder(const FolderFilter.all()),
+                  ),
+                  _folderTile(
+                    title: 'Inbox',
+                    selected: isInbox,
+                    onTap: () => _selectFolder(const FolderFilter.inbox()),
+                  ),
+                  ...folders.map(
+                    (folder) => _folderTile(
+                      title: folder.name,
+                      selected: filter.type == FolderFilterType.custom &&
+                          filter.folderId == folder.id,
+                      trailing: IconButton(
+                        onPressed: () => _showFolderMenu(folder),
+                        icon: const Icon(Icons.more_vert_rounded),
+                      ),
+                      onTap: () =>
+                          _selectFolder(FolderFilter.custom(folder.id)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _folderTile({
+    required String title,
+    required bool selected,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    final theme = Theme.of(context).colorScheme;
+    return ListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      minLeadingWidth: 20,
+      leading: Icon(
+        Icons.folder_outlined,
+        size: 18,
+        color: selected ? theme.onPrimary : theme.tertiary,
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: trailing,
+      selected: selected,
+      selectedTileColor: theme.onPrimary.withValues(alpha: 0.14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onTap: onTap,
+    );
+  }
+
+  Future<void> _createFolder() async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Folder'),
+        content: TextField(
+          controller: controller,
+          maxLength: 32,
+          decoration: const InputDecoration(hintText: 'Folder name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+    if (value == null) return;
+    final error = await context.read<FolderCubit>().createFolder(value);
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  Future<void> _showFolderMenu(Folder folder) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.drive_file_rename_outline),
+              title: const Text('Rename'),
+              onTap: () => Navigator.pop(context, 'rename'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: const Text('Delete'),
+              onTap: () => Navigator.pop(context, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (action == 'rename') {
+      await _renameFolder(folder);
+    } else if (action == 'delete') {
+      await _deleteFolder(folder);
+    }
+  }
+
+  Future<void> _renameFolder(Folder folder) async {
+    final controller = TextEditingController(text: folder.name);
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Folder'),
+        content: TextField(
+          controller: controller,
+          maxLength: 32,
+          decoration: const InputDecoration(hintText: 'Folder name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (value == null) return;
+    final error =
+        await context.read<FolderCubit>().renameFolder(folder.id, value);
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  Future<void> _deleteFolder(Folder folder) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Folder'),
+        content: Text(
+          'Items in "${folder.name}" will be moved to Inbox. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final noteIds = context
+        .read<NoteCubit>()
+        .state
+        .where((note) => note.folderId == folder.id)
+        .map((note) => note.id)
+        .toList();
+    final todoIds = context
+        .read<TodoCubit>()
+        .state
+        .where((todo) => todo.folderId == folder.id)
+        .map((todo) => todo.id)
+        .toList();
+
+    await context.read<NoteCubit>().moveNotesToFolder(noteIds, null);
+    await context.read<TodoCubit>().moveTodosToFolder(todoIds, null);
+    await context.read<FolderCubit>().deleteFolder(folder.id);
+
+    final filter = context.read<FolderFilterCubit>().state;
+    if (filter.type == FolderFilterType.custom &&
+        filter.folderId == folder.id) {
+      context.read<FolderFilterCubit>().setInbox();
+    }
+  }
+
+  void _selectFolder(FolderFilter filter) {
+    final folderFilterCubit = context.read<FolderFilterCubit>();
+    switch (filter.type) {
+      case FolderFilterType.all:
+        folderFilterCubit.setAll();
+        break;
+      case FolderFilterType.inbox:
+        folderFilterCubit.setInbox();
+        break;
+      case FolderFilterType.custom:
+        folderFilterCubit.setCustom(filter.folderId!);
+        break;
+    }
+
+    final location = GoRouterState.of(context).uri.toString();
+    if (location != '/providerPage' && location != '/todos') {
+      context.go('/providerPage');
+    }
+    Navigator.of(context).pop();
+  }
+
   int _getSelectedIndex(String location) {
     if (location == '/todos') return 1;
     if (location == '/settings') return 2;
