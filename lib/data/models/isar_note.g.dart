@@ -27,18 +27,23 @@ const NoteIsarSchema = CollectionSchema(
       name: r'isPinned',
       type: IsarType.bool,
     ),
-    r'reminder': PropertySchema(
+    r'order': PropertySchema(
       id: 2,
+      name: r'order',
+      type: IsarType.long,
+    ),
+    r'reminder': PropertySchema(
+      id: 3,
       name: r'reminder',
       type: IsarType.dateTime,
     ),
     r'text': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'text',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'title',
       type: IsarType.string,
     )
@@ -76,9 +81,10 @@ void _noteIsarSerialize(
 ) {
   writer.writeBool(offsets[0], object.isCompleted);
   writer.writeBool(offsets[1], object.isPinned);
-  writer.writeDateTime(offsets[2], object.reminder);
-  writer.writeString(offsets[3], object.text);
-  writer.writeString(offsets[4], object.title);
+  writer.writeLong(offsets[2], object.order);
+  writer.writeDateTime(offsets[3], object.reminder);
+  writer.writeString(offsets[4], object.text);
+  writer.writeString(offsets[5], object.title);
 }
 
 NoteIsar _noteIsarDeserialize(
@@ -91,9 +97,10 @@ NoteIsar _noteIsarDeserialize(
   object.id = id;
   object.isCompleted = reader.readBool(offsets[0]);
   object.isPinned = reader.readBool(offsets[1]);
-  object.reminder = reader.readDateTimeOrNull(offsets[2]);
-  object.text = reader.readString(offsets[3]);
-  object.title = reader.readString(offsets[4]);
+  object.order = reader.readLong(offsets[2]);
+  object.reminder = reader.readDateTimeOrNull(offsets[3]);
+  object.text = reader.readString(offsets[4]);
+  object.title = reader.readString(offsets[5]);
   return object;
 }
 
@@ -109,10 +116,12 @@ P _noteIsarDeserializeProp<P>(
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -276,6 +285,59 @@ extension NoteIsarQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isPinned',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> orderEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> orderGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> orderLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> orderBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'order',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -641,6 +703,18 @@ extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByReminder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminder', Sort.asc);
@@ -716,6 +790,18 @@ extension NoteIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByReminder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'reminder', Sort.asc);
@@ -767,6 +853,12 @@ extension NoteIsarQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'order');
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByReminder() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'reminder');
@@ -805,6 +897,12 @@ extension NoteIsarQueryProperty
   QueryBuilder<NoteIsar, bool, QQueryOperations> isPinnedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isPinned');
+    });
+  }
+
+  QueryBuilder<NoteIsar, int, QQueryOperations> orderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'order');
     });
   }
 

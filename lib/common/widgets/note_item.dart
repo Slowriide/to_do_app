@@ -15,11 +15,13 @@ import 'package:to_do_app/domain/models/note.dart';
 class NoteItem extends StatelessWidget {
   final Note note;
   final bool isSelected;
+  final Widget? dragHandle;
 
   const NoteItem({
     super.key,
     required this.note,
     required this.isSelected,
+    this.dragHandle,
   });
 
   @override
@@ -54,6 +56,10 @@ class NoteItem extends StatelessWidget {
                       color: theme.tertiary,
                     )
                   : const SizedBox.shrink(),
+              if (dragHandle != null) ...[
+                const SizedBox(width: 6),
+                dragHandle!,
+              ],
             ],
           ),
           SizedBox(height: 10),

@@ -12,6 +12,7 @@ class Note {
   final bool isCompleted;
   final DateTime? reminder;
   final bool isPinned;
+  final int order;
 
   Note({
     required this.id,
@@ -20,6 +21,7 @@ class Note {
     this.isCompleted = false,
     this.reminder,
     this.isPinned = false,
+    this.order = 0,
   });
 
   Note toggleCompletion() {
@@ -30,6 +32,7 @@ class Note {
       isCompleted: !isCompleted,
       reminder: reminder,
       isPinned: isPinned,
+      order: order,
     );
   }
 
@@ -39,6 +42,7 @@ class Note {
     bool? isCompleted,
     DateTime? reminder,
     bool? isPinned,
+    int? order,
   }) {
     return Note(
       id: id,
@@ -47,6 +51,7 @@ class Note {
       isCompleted: isCompleted ?? this.isCompleted,
       reminder: reminder ?? this.reminder,
       isPinned: isPinned ?? this.isPinned,
+      order: order ?? this.order,
     );
   }
 }

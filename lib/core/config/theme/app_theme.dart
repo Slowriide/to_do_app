@@ -23,14 +23,14 @@ class AppTheme {
   ThemeData get _darkTheme => ThemeData.dark().copyWith(
         scaffoldBackgroundColor: colors.surface,
         colorScheme: ColorScheme.dark(
-          brightness: Brightness.dark,
-          surface: colors.surface,
-          onSurface: colors.onSurface,
-          primary: colors.primary,
-          onPrimary: colors.onPrimary,
-          secondary: colors.secondary,
-          tertiary: colors.tertiary,
-        ),
+            brightness: Brightness.dark,
+            surface: colors.surface,
+            onSurface: colors.onSurface,
+            primary: colors.primary,
+            onPrimary: colors.onPrimary,
+            secondary: colors.secondary,
+            tertiary: colors.tertiary,
+            onTertiary: colors.onTertiary),
         textTheme: TextTheme(
           titleLarge: GoogleFonts.roboto().copyWith(
             fontSize: 50,

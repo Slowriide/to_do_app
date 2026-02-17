@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/note.dart';
@@ -23,24 +23,46 @@ class MasonryView extends StatelessWidget {
   final Set<int> selectedNoteIds;
   final bool isSelectionMode;
   final Function(int id) onToggleSelect;
+  final void Function(int draggedId, int targetId) onReorder;
   const MasonryView({
     super.key,
     required this.notes,
     required this.selectedNoteIds,
     required this.isSelectionMode,
     required this.onToggleSelect,
+    required this.onReorder,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        MasonryGridView.count(
-          itemCount: notes.length,
-          crossAxisCount: 2,
-          itemBuilder: (context, index) {
-            final note = notes[index];
-            final isSelected = selectedNoteIds.contains(note.id);
+    return MasonryGridView.count(
+      itemCount: notes.length,
+      crossAxisCount: 2,
+      itemBuilder: (context, index) {
+        final note = notes[index];
+        final isSelected = selectedNoteIds.contains(note.id);
+        final theme = Theme.of(context).colorScheme;
+
+        return DragTarget<int>(
+          onWillAcceptWithDetails: (details) {
+            if (isSelectionMode) return false;
+            final draggedId = details.data;
+            if (draggedId == note.id) return false;
+            Note? dragged;
+            for (final n in notes) {
+              if (n.id == draggedId) {
+                dragged = n;
+                break;
+              }
+            }
+            if (dragged == null) return false;
+            return dragged.isPinned == note.isPinned;
+          },
+          onAcceptWithDetails: (details) {
+            onReorder(details.data, note.id);
+          },
+          builder: (context, candidateData, rejectedData) {
+            final isDropTarget = candidateData.isNotEmpty;
             return GestureDetector(
               onTap: () {
                 if (isSelectionMode) {
@@ -50,11 +72,35 @@ class MasonryView extends StatelessWidget {
                 }
               },
               onLongPress: () => onToggleSelect(note.id),
-              child: NoteItem(note: notes[index], isSelected: isSelected),
+              child: NoteItem(
+                note: note,
+                isSelected: isSelected || isDropTarget,
+                dragHandle: isSelectionMode
+                    ? null
+                    : Draggable<int>(
+                        data: note.id,
+                        maxSimultaneousDrags: 1,
+                        feedback: Material(
+                          color: Colors.transparent,
+                          child: SizedBox(
+                            width: 180,
+                            child: NoteItem(note: note, isSelected: true),
+                          ),
+                        ),
+                        childWhenDragging: Icon(
+                          Icons.drag_indicator_rounded,
+                          color: theme.tertiary.withValues(alpha: 0.5),
+                        ),
+                        child: Icon(
+                          Icons.drag_indicator_rounded,
+                          color: theme.tertiary,
+                        ),
+                      ),
+              ),
             );
           },
-        ),
-      ],
+        );
+      },
     );
   }
 }

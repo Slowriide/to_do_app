@@ -279,13 +279,14 @@ class _Body extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
             child: BlocBuilder<TodoSearchCubit, List<Todo>>(
               builder: (context, todos) {
-                return Expanded(
-                  child: TodoMasonryView(
-                    todos: todos.where((todo) => !todo.isSubtask).toList(),
-                    isSelectionMode: isSelectionMode,
-                    selectedTodoIds: selectedTodosId,
-                    onToggleSelect: toggleSelection,
-                  ),
+                return TodoMasonryView(
+                  todos: todos.where((todo) => !todo.isSubtask).toList(),
+                  isSelectionMode: isSelectionMode,
+                  selectedTodoIds: selectedTodosId,
+                  onToggleSelect: toggleSelection,
+                  onReorder: (reorderedTodos) {
+                    context.read<TodoCubit>().reorderTodos(reorderedTodos);
+                  },
                 );
               },
             ),

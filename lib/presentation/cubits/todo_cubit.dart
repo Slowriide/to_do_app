@@ -30,7 +30,7 @@ class TodoCubit extends Cubit<List<Todo>> {
 
     final sortedTodos = [...todosList]..sort(
         (a, b) {
-          if (a.isPinned == b.isPinned) return 0;
+          if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
           return a.isPinned ? -1 : 1;
         },
       );
@@ -43,13 +43,16 @@ class TodoCubit extends Cubit<List<Todo>> {
   /// Then reloads the todos list.
   Future<void> addTodo(String title, List<Todo> subtasks,
       {DateTime? reminder, required int id}) async {
+    final nextOrder = state.isEmpty
+        ? 0
+        : state.map((t) => t.order).reduce((a, b) => a > b ? a : b) + 1;
     final newTodo = Todo(
       id: id,
       title: title,
       isCompleted: false,
       subTasks: subtasks,
       isSubtask: false,
-      order: 0,
+      order: nextOrder,
       reminder: reminder,
     );
     await repository.addTodo(newTodo);
@@ -117,5 +120,14 @@ class TodoCubit extends Cubit<List<Todo>> {
   Future<void> updateSubtask(Todo subtask) async {
     await repository.updateSubTask(subtask);
     loadTodos();
+  }
+
+  /// Reorders todos based on the UI order and persists it.
+  Future<void> reorderTodos(List<Todo> orderedTodos) async {
+    for (var i = 0; i < orderedTodos.length; i++) {
+      final todo = orderedTodos[i];
+      await repository.updateTodo(todo.copyWith(order: i));
+    }
+    await loadTodos();
   }
 }

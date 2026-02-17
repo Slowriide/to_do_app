@@ -23,6 +23,7 @@ class NoteIsar {
   late bool isCompleted;
   DateTime? reminder;
   late bool isPinned;
+  late int order;
 
 //isar object to pure object
   Note toDomain() {
@@ -33,6 +34,7 @@ class NoteIsar {
       isCompleted: isCompleted,
       reminder: reminder,
       isPinned: isPinned,
+      order: order,
     );
   }
 
@@ -44,6 +46,7 @@ class NoteIsar {
       ..title = note.title
       ..isCompleted = note.isCompleted
       ..reminder = note.reminder
-      ..isPinned = note.isPinned;
+      ..isPinned = note.isPinned
+      ..order = note.order;
   }
 }

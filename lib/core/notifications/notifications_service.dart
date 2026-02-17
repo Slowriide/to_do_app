@@ -33,13 +33,13 @@ class NotificationService {
     final androidInitSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+    final timeZone = await FlutterTimezone.getLocalTimezone();
 
     final initSettings = InitializationSettings(android: androidInitSettings);
 
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
+    tz.setLocalLocation(tz.getLocation(timeZone.identifier));
 
-    await _notificationsPlugin.initialize(initSettings);
+    await _notificationsPlugin.initialize(settings: initSettings);
 
     _isInit = true;
   }
@@ -71,14 +71,14 @@ class NotificationService {
     if (scheduledDate.isBefore(now)) {
       return;
     }
-    await _notificationsPlugin.cancel(id);
+    await _notificationsPlugin.cancel(id: id);
 
     await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      notificationDetails(),
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: notificationDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: 'payload',
     );
@@ -97,6 +97,6 @@ class NotificationService {
 
   /// Cancels a notification with the given [id], if any exists.
   Future<void> cancelNotification(int id) async {
-    await _notificationsPlugin.cancel(id);
+    await _notificationsPlugin.cancel(id: id);
   }
 }

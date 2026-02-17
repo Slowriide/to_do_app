@@ -19,8 +19,7 @@ class AppColors {
       isDark ? Color.fromARGB(255, 17, 17, 17) : Color(0xFFE6CCB2);
   Color get tertiary =>
       isDark ? Color.fromARGB(213, 158, 158, 158) : Color(0xFFE6CCB2);
-  Color get onTertiary =>
-      isDark ? Color.fromARGB(213, 158, 158, 158) : Color(0xFFE6CCB2);
+  Color get onTertiary => isDark ? Color(0xFFE3E3E3) : Color(0xFFE6CCB2);
 
   Color get text => isDark ? Colors.white : Color(0xff7F5539);
 }

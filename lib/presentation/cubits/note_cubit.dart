@@ -21,10 +21,10 @@ class NoteCubit extends Cubit<List<Note>> {
   Future<void> loadNotes() async {
     final notesList = await repository.getNotes();
 
-    //order pinned
+    // Order pinned first, then by manual order.
     final sortedNotes = [...notesList]..sort(
         (a, b) {
-          if (a.isPinned == b.isPinned) return 0;
+          if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
           return a.isPinned ? -1 : 1;
         },
       );
@@ -37,11 +37,15 @@ class NoteCubit extends Cubit<List<Note>> {
   /// Saves the note to the repository and reloads the notes.
   Future<void> addNote(String text, String title,
       {DateTime? reminder, required int id}) async {
+    final nextOrder = state.isEmpty
+        ? 0
+        : state.map((n) => n.order).reduce((a, b) => a > b ? a : b) + 1;
     final newNote = Note(
       id: id,
       title: title,
       text: text,
       reminder: reminder,
+      order: nextOrder,
     );
 
     await repository.addNote(newNote);
@@ -104,5 +108,35 @@ class NoteCubit extends Cubit<List<Note>> {
       }
     }
     loadNotes();
+  }
+
+  /// Reorders notes based on the UI order and persists it.
+  Future<void> reorderNotes(List<Note> orderedNotes) async {
+    for (var i = 0; i < orderedNotes.length; i++) {
+      final note = orderedNotes[i];
+      await repository.updateNote(note.copyWith(order: i));
+    }
+    await loadNotes();
+  }
+
+  /// Reorders notes by dragged and target ids.
+  ///
+  /// Reordering is constrained to notes within the same pin group so that
+  /// pinned/unpinned sort behavior remains predictable.
+  Future<void> reorderNoteByIds(int draggedId, int targetId) async {
+    final notes = [...state];
+    final from = notes.indexWhere((n) => n.id == draggedId);
+    final to = notes.indexWhere((n) => n.id == targetId);
+
+    if (from < 0 || to < 0 || from == to) return;
+    if (notes[from].isPinned != notes[to].isPinned) return;
+
+    final moved = notes.removeAt(from);
+    notes.insert(to, moved);
+
+    for (var i = 0; i < notes.length; i++) {
+      await repository.updateNote(notes[i].copyWith(order: i));
+    }
+    await loadNotes();
   }
 }
