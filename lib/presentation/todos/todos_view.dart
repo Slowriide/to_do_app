@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:to_do_app/common/widgets/folder_chips.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
-import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
-import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
-import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
-import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
 import 'package:to_do_app/presentation/todos/todo_masonry_view.dart';
 
 /// TodosView is the main screen that displays a list of ToDo items.
@@ -321,7 +322,7 @@ class _Body extends StatelessWidget {
               },
             ),
           ),
-          _FolderChips(),
+          FolderChips(),
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
@@ -344,57 +345,6 @@ class _Body extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _FolderChips extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<FolderCubit, List<Folder>>(
-      builder: (context, folders) {
-        return BlocBuilder<FolderFilterCubit, FolderFilter>(
-          builder: (context, filter) {
-            return SizedBox(
-              height: 52,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                children: [
-                  ChoiceChip(
-                    label: const Text('All'),
-                    selected: filter.type == FolderFilterType.all,
-                    onSelected: (_) =>
-                        context.read<FolderFilterCubit>().setAll(),
-                  ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: const Text('Inbox'),
-                    selected: filter.type == FolderFilterType.inbox,
-                    onSelected: (_) =>
-                        context.read<FolderFilterCubit>().setInbox(),
-                  ),
-                  const SizedBox(width: 8),
-                  ...folders.map(
-                    (folder) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(folder.name),
-                        selected: filter.type == FolderFilterType.custom &&
-                            filter.folderId == folder.id,
-                        onSelected: (_) => context
-                            .read<FolderFilterCubit>()
-                            .setCustom(folder.id),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }

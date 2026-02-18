@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
-import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
-import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
-import 'package:to_do_app/presentation/cubits/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 
 class AddNote extends StatefulWidget {
   const AddNote({super.key});
@@ -106,7 +106,7 @@ class _AddNoteState extends State<AddNote> {
         );
       }
 
-      if (mounted) context.go('/providerPage');
+      if (mounted) context.go('/home');
     }
   }
 

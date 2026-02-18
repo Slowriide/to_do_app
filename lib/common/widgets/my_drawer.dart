@@ -5,11 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/folder.dart';
-import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
-import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
-import 'package:to_do_app/presentation/cubits/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
-import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 
 class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
@@ -54,7 +54,7 @@ class _MyDrawerState extends State<MyDrawer> {
                 if (!mounted) return;
                 switch (index) {
                   case 0:
-                    context.go('/providerPage');
+                    context.go('/home');
                     break;
                   case 1:
                     context.go('/todos');
@@ -353,8 +353,8 @@ class _MyDrawerState extends State<MyDrawer> {
     }
 
     final location = GoRouterState.of(context).uri.toString();
-    if (location != '/providerPage' && location != '/todos') {
-      context.go('/providerPage');
+    if (location != '/home' && location != '/todos') {
+      context.go('/home');
     }
     Navigator.of(context).pop();
   }

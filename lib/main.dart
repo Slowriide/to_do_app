@@ -8,13 +8,13 @@ import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/domain/repository/folder_repository.dart';
-import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
-import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
-import 'package:to_do_app/presentation/cubits/note_cubit.dart';
-import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
-import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
-import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
 
 /// Entry point of the application.
 ///

@@ -5,8 +5,8 @@ import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
-import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
-import 'package:to_do_app/presentation/cubits/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 
 class EditNotePage extends StatefulWidget {
   final Note note;
@@ -220,12 +220,12 @@ class _EditNotePageState extends State<EditNotePage> {
         },
         onBackTap: () {
           _updateNote();
-          if (mounted) context.go('/providerPage');
+          if (mounted) context.go('/home');
         },
         actionLabel: 'Save Note',
         onActionTap: () {
           _updateNote();
-          if (mounted) context.go('/providerPage');
+          if (mounted) context.go('/home');
         },
         floatingActionButton: BlocBuilder<FolderCubit, List<Folder>>(
           builder: (context, folders) {

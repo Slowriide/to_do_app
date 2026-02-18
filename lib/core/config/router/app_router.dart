@@ -10,17 +10,12 @@ import 'package:to_do_app/presentation/pages.dart';
 
 /// The app router configuration for the ToDo application using GoRouter.
 final appRouter = GoRouter(
-  initialLocation: '/providerPage',
+  initialLocation: '/home',
   routes: [
     GoRoute(
       path: '/home',
-      builder: (context, state) => const NotesView(),
-    ),
-    GoRoute(
-      path: '/providerPage',
       builder: (context, state) {
-        final repo = RepositoryProvider.of<NoteRepository>(context);
-
+        final repo = context.read<NoteRepository>();
         return NotePage(repository: repo);
       },
     ),

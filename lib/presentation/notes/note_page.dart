@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
-import 'package:to_do_app/presentation/cubits/note_cubit.dart';
-import 'package:to_do_app/presentation/cubits/note_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/notes/notes_view.dart';
 
 /// Provides the necessary Cubits for the notes feature.

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
-import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
-import 'package:to_do_app/presentation/cubits/todo_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
 import 'package:to_do_app/presentation/todos/todos_view.dart';
 
 /// TodoPage provides the necessary cubits and dependencies for displaying ToDos.

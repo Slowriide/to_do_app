@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
-import 'package:to_do_app/presentation/cubits/folder_filter_cubit.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 
 /// Cubit responsible for managing note search functionality.
 ///
