@@ -153,8 +153,7 @@ class _EditTodoState extends State<EditTodo> {
         final index = entry.key;
         final ctrl = entry.value;
         return Todo(
-          id: DateTime.now().millisecondsSinceEpoch.remainder(1000000) +
-              ctrl.hashCode,
+          id: ctrl.id,
           title: ctrl.controller.text.trim(),
           isCompleted: ctrl.isCompleted,
           subTasks: [],

@@ -17,7 +17,7 @@ class EditNotePage extends StatefulWidget {
 }
 
 class _EditNotePageState extends State<EditNotePage> {
-  final bool _alreadySaved = false;
+  bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _textController;
@@ -133,6 +133,14 @@ class _EditNotePageState extends State<EditNotePage> {
     await noteCubit.updateNote(updatedNote);
   }
 
+  Future<void> _saveAndGoHome() async {
+    if (_alreadySaved) return;
+    _alreadySaved = true;
+    await _updateNote();
+    if (!mounted) return;
+    context.go('/home');
+  }
+
   Future<void> _pickFolder() async {
     final selected = await showModalBottomSheet<int?>(
       context: context,
@@ -202,6 +210,7 @@ class _EditNotePageState extends State<EditNotePage> {
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
+          _alreadySaved = true;
           await _updateNote();
         }
       },
@@ -218,15 +227,9 @@ class _EditNotePageState extends State<EditNotePage> {
             pickDateReminderDate();
           }
         },
-        onBackTap: () {
-          _updateNote();
-          if (mounted) context.go('/home');
-        },
+        onBackTap: _saveAndGoHome,
         actionLabel: 'Save Note',
-        onActionTap: () {
-          _updateNote();
-          if (mounted) context.go('/home');
-        },
+        onActionTap: _saveAndGoHome,
         floatingActionButton: BlocBuilder<FolderCubit, List<Folder>>(
           builder: (context, folders) {
             return FloatingActionButton.extended(
