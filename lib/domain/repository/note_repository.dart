@@ -11,5 +11,7 @@ abstract class NoteRepository {
 
   Future<void> updateNote(Note note);
 
+  Future<void> updateNotes(List<Note> notes);
+
   Future<void> deleteNote(Note note);
 }

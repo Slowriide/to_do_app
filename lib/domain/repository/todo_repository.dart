@@ -8,6 +8,7 @@ abstract class TodoRepository {
   Future<List<Todo>> getTodos();
   Future<void> addTodo(Todo newTodo);
   Future<void> updateTodo(Todo todo);
+  Future<void> updateTodos(List<Todo> todos);
   Future<void> deleteTodo(Todo todo);
   Future<void> addSubTask(Todo subtask, int todoId);
   Future<void> updateSubTask(Todo subtask);

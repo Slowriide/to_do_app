@@ -88,15 +88,14 @@ class TodoCubit extends Cubit<List<Todo>> {
   ///
   /// Also schedules notifications for todos with reminders.
   Future<void> updateTodos(List<Todo> todos) async {
+    await repository.updateTodos(todos);
     for (final todo in todos) {
-      await repository.updateTodo(todo);
-      if (todo.reminder != null) {
-        NotificationService().showNotification(
-          id: todo.id,
-          title: todo.title,
-          scheduledDate: todo.reminder!,
-        );
-      }
+      if (todo.reminder == null) continue;
+      NotificationService().showNotification(
+        id: todo.id,
+        title: todo.title,
+        scheduledDate: todo.reminder!,
+      );
     }
     await loadTodos();
   }
@@ -125,10 +124,9 @@ class TodoCubit extends Cubit<List<Todo>> {
 
   /// Reorders todos based on the UI order and persists it.
   Future<void> reorderTodos(List<Todo> orderedTodos) async {
-    for (var i = 0; i < orderedTodos.length; i++) {
-      final todo = orderedTodos[i];
-      await repository.updateTodo(todo.copyWith(order: i));
-    }
+    final reordered =
+        List<Todo>.generate(orderedTodos.length, (i) => orderedTodos[i].copyWith(order: i));
+    await repository.updateTodos(reordered);
     await loadTodos();
   }
 
@@ -147,9 +145,11 @@ class TodoCubit extends Cubit<List<Todo>> {
     final moved = todos.removeAt(from);
     todos.insert(to, moved);
 
-    for (var i = 0; i < todos.length; i++) {
-      await repository.updateTodo(todos[i].copyWith(order: i));
-    }
+    final reordered = List<Todo>.generate(
+      todos.length,
+      (i) => todos[i].copyWith(order: i),
+    );
+    await repository.updateTodos(reordered);
     await loadTodos();
   }
 

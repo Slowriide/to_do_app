@@ -63,11 +63,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => NoteCubit(noteRepo)..loadNotes()),
-          BlocProvider(create: (context) => TodoCubit(todoRepo)..loadTodos()),
-          BlocProvider(
-            create: (context) => FolderCubit(folderRepo)..loadFolders(),
-          ),
+          BlocProvider(create: (context) => NoteCubit(noteRepo)),
+          BlocProvider(create: (context) => TodoCubit(todoRepo)),
+          BlocProvider(create: (context) => FolderCubit(folderRepo)),
           BlocProvider(create: (context) => FolderFilterCubit()),
           BlocProvider(create: (context) => NoteSearchCubit([])),
           BlocProvider(create: (context) => TodoSearchCubit([])),

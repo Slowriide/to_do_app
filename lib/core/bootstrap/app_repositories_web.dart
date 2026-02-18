@@ -34,6 +34,22 @@ class InMemoryNoteRepository implements NoteRepository {
     }
     _notes.add(note);
   }
+
+  @override
+  Future<void> updateNotes(List<Note> notes) async {
+    final byId = {for (final note in notes) note.id: note};
+    for (var i = 0; i < _notes.length; i++) {
+      final updated = byId[_notes[i].id];
+      if (updated != null) {
+        _notes[i] = updated;
+      }
+    }
+    for (final note in notes) {
+      if (_notes.every((existing) => existing.id != note.id)) {
+        _notes.add(note);
+      }
+    }
+  }
 }
 
 class InMemoryTodoRepository implements TodoRepository {
@@ -63,6 +79,22 @@ class InMemoryTodoRepository implements TodoRepository {
       return;
     }
     _todos.add(todo);
+  }
+
+  @override
+  Future<void> updateTodos(List<Todo> todos) async {
+    final byId = {for (final todo in todos) todo.id: todo};
+    for (var i = 0; i < _todos.length; i++) {
+      final updated = byId[_todos[i].id];
+      if (updated != null) {
+        _todos[i] = updated;
+      }
+    }
+    for (final todo in todos) {
+      if (_todos.every((existing) => existing.id != todo.id)) {
+        _todos.add(todo);
+      }
+    }
   }
 
   @override

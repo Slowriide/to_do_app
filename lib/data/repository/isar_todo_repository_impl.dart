@@ -103,6 +103,32 @@ class IsarTodoRepositoryImpl implements TodoRepository {
   }
 
   @override
+  Future<void> updateTodos(List<Todo> todos) async {
+    await db.writeTxn(() async {
+      for (final todo in todos) {
+        final existingSubTasks = await db.todoIsars.get(todo.id);
+        if (existingSubTasks != null) {
+          await existingSubTasks.subtasks.load();
+          for (var oldsub in existingSubTasks.subtasks) {
+            await db.todoIsars.delete(oldsub.id);
+          }
+          existingSubTasks.subtasks.clear();
+        }
+
+        final todoIsar = TodoIsar.fromDomain(todo.copyWith(isSubtask: false));
+        await db.todoIsars.put(todoIsar);
+
+        for (var sub in todo.subTasks) {
+          final subIsar = TodoIsar.fromDomain(sub.copyWith(isSubtask: true));
+          await db.todoIsars.put(subIsar);
+          todoIsar.subtasks.add(subIsar);
+        }
+        await todoIsar.subtasks.save();
+      }
+    });
+  }
+
+  @override
   Future<void> updateSubTask(Todo subtask) async {
     final subTaskIsar = TodoIsar.fromDomain(subtask);
 

@@ -97,26 +97,24 @@ class NoteCubit extends Cubit<List<Note>> {
   ///
   /// Schedules notifications for notes with reminders and reloads the notes.
   Future<void> updateNotes(List<Note> notes) async {
+    await repository.updateNotes(notes);
     for (final note in notes) {
-      await repository.updateNote(note);
-      if (note.reminder != null) {
-        NotificationService().showNotification(
-          id: note.id,
-          title: note.title,
-          body: note.text,
-          scheduledDate: note.reminder!,
-        );
-      }
+      if (note.reminder == null) continue;
+      NotificationService().showNotification(
+        id: note.id,
+        title: note.title,
+        body: note.text,
+        scheduledDate: note.reminder!,
+      );
     }
     loadNotes();
   }
 
   /// Reorders notes based on the UI order and persists it.
   Future<void> reorderNotes(List<Note> orderedNotes) async {
-    for (var i = 0; i < orderedNotes.length; i++) {
-      final note = orderedNotes[i];
-      await repository.updateNote(note.copyWith(order: i));
-    }
+    final reordered =
+        List<Note>.generate(orderedNotes.length, (i) => orderedNotes[i].copyWith(order: i));
+    await repository.updateNotes(reordered);
     await loadNotes();
   }
 
@@ -135,9 +133,11 @@ class NoteCubit extends Cubit<List<Note>> {
     final moved = notes.removeAt(from);
     notes.insert(to, moved);
 
-    for (var i = 0; i < notes.length; i++) {
-      await repository.updateNote(notes[i].copyWith(order: i));
-    }
+    final reordered = List<Note>.generate(
+      notes.length,
+      (i) => notes[i].copyWith(order: i),
+    );
+    await repository.updateNotes(reordered);
     await loadNotes();
   }
 

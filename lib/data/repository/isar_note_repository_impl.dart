@@ -41,4 +41,10 @@ class IsarNoteRepositoryImpl implements NoteRepository {
     //store in db
     return db.writeTxn(() => db.noteIsars.put(noteIsar));
   }
+
+  @override
+  Future<void> updateNotes(List<Note> notes) async {
+    final noteIsars = notes.map(NoteIsar.fromDomain).toList();
+    await db.writeTxn(() => db.noteIsars.putAll(noteIsars));
+  }
 }
