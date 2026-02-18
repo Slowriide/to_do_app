@@ -66,17 +66,23 @@ class _TodosViewState extends State<TodosView> {
   }
 
   /// Deletes all currently selected ToDos.
-  void deleteSelectedTodos() {
+  Future<void> deleteSelectedTodos() async {
     final todoCubit = context.read<TodoCubit>();
 
-    // Filtrar las notas seleccionadas
     final todosToDelete = todoCubit.state
         .where((todo) => selectedTodos.contains(todo.id))
         .toList();
 
-    // Eliminar todas las notas seleccionadas de una vez
-    todoCubit.deleteMultiples(todosToDelete);
+    if (todosToDelete.isEmpty) return;
 
+    final confirmed = await showDeleteConfirmationDialog(
+      context: context,
+      itemLabel: 'todo',
+      count: todosToDelete.length,
+    );
+    if (!confirmed) return;
+
+    await todoCubit.deleteMultiples(todosToDelete);
     clearSelection();
   }
 

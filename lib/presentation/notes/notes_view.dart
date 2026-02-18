@@ -67,18 +67,23 @@ class _NotesViewState extends State<NotesView> {
   }
 
   /// Deletes all currently selected notes using the NoteCubit.
-  void deleteSelectedNotes() {
+  Future<void> deleteSelectedNotes() async {
     final noteCubit = context.read<NoteCubit>();
 
-    // Filtrar las notas seleccionadas
     final notesToDelete = noteCubit.state
         .where((note) => selectedNotes.contains(note.id))
         .toList();
 
-    // Eliminar todas las notas seleccionadas de una vez
+    if (notesToDelete.isEmpty) return;
 
-    noteCubit.deleteNotes(notesToDelete);
+    final confirmed = await showDeleteConfirmationDialog(
+      context: context,
+      itemLabel: 'note',
+      count: notesToDelete.length,
+    );
+    if (!confirmed) return;
 
+    await noteCubit.deleteNotes(notesToDelete);
     clearSelection();
   }
 
