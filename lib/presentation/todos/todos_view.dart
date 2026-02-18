@@ -334,8 +334,50 @@ class _Body extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
               child: BlocBuilder<TodoSearchCubit, List<Todo>>(
                 builder: (context, todos) {
+                  final allTodos = context.watch<TodoCubit>().state;
+                  final folderFilter = context.watch<FolderFilterCubit>().state;
+                  final isTrulyEmpty = allTodos.isEmpty;
+                  final hasSearch = textController.text.trim().isNotEmpty;
+                  final hasFolderFilter =
+                      folderFilter.type != FolderFilterType.all;
+                  final visibleTodos =
+                      todos.where((todo) => !todo.isSubtask).toList();
+                  final isNoResults = visibleTodos.isEmpty &&
+                      !isTrulyEmpty &&
+                      (hasSearch || hasFolderFilter);
+
+                  if (isTrulyEmpty) {
+                    return ActivationEmptyState(
+                      title: 'No todos yet',
+                      subtitle:
+                          'Create your first task and break it into subtasks.',
+                      icon: Icons.playlist_add_check_circle_rounded,
+                      primaryLabel: 'Create first todo',
+                      onPrimaryTap: () => context.push('/addtodo'),
+                      secondaryLabel: 'Set reminder',
+                      onSecondaryTap: () =>
+                          context.push('/addtodo?mode=reminder'),
+                    );
+                  }
+
+                  if (isNoResults) {
+                    return NoResultsState(
+                      title: 'No matches found',
+                      subtitle: 'Try a different search or remove filters.',
+                      primaryLabel: 'Clear search',
+                      onPrimaryTap: () {
+                        textController.clear();
+                        context.read<TodoSearchCubit>().clearSearch();
+                      },
+                      secondaryLabel: 'Show all folders',
+                      onSecondaryTap: () {
+                        context.read<FolderFilterCubit>().setAll();
+                      },
+                    );
+                  }
+
                   return TodoMasonryView(
-                    todos: todos.where((todo) => !todo.isSubtask).toList(),
+                    todos: visibleTodos,
                     isSelectionMode: isSelectionMode,
                     selectedTodoIds: selectedTodosId,
                     onToggleSelect: toggleSelection,

@@ -21,7 +21,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/addNote',
-      builder: (context, state) => const AddNote(),
+      builder: (context, state) {
+        final reminderMode = state.uri.queryParameters['mode'] == 'reminder';
+        return AddNote(autoOpenReminder: reminderMode);
+      },
     ),
     GoRoute(
       path: '/editNote',
@@ -42,7 +45,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/addtodo',
-      builder: (context, state) => const AddTodo(),
+      builder: (context, state) {
+        final reminderMode = state.uri.queryParameters['mode'] == 'reminder';
+        return AddTodo(autoOpenReminder: reminderMode);
+      },
     ),
     GoRoute(
       path: '/edittodo',

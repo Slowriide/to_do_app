@@ -331,6 +331,45 @@ class _Body extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
               child: BlocBuilder<NoteSearchCubit, List<Note>>(
                 builder: (context, notes) {
+                  final allNotes = context.watch<NoteCubit>().state;
+                  final folderFilter = context.watch<FolderFilterCubit>().state;
+                  final isTrulyEmpty = allNotes.isEmpty;
+                  final hasSearch = textController.text.trim().isNotEmpty;
+                  final hasFolderFilter =
+                      folderFilter.type != FolderFilterType.all;
+                  final isNoResults = notes.isEmpty &&
+                      !isTrulyEmpty &&
+                      (hasSearch || hasFolderFilter);
+
+                  if (isTrulyEmpty) {
+                    return ActivationEmptyState(
+                      title: 'No notes yet',
+                      subtitle: 'Capture your first idea to get started.',
+                      icon: Icons.note_add_rounded,
+                      primaryLabel: 'Create first note',
+                      onPrimaryTap: () => context.push('/addNote'),
+                      secondaryLabel: 'Set reminder',
+                      onSecondaryTap: () =>
+                          context.push('/addNote?mode=reminder'),
+                    );
+                  }
+
+                  if (isNoResults) {
+                    return NoResultsState(
+                      title: 'No matches found',
+                      subtitle: 'Try a different search or remove filters.',
+                      primaryLabel: 'Clear search',
+                      onPrimaryTap: () {
+                        textController.clear();
+                        context.read<NoteSearchCubit>().clearSearch();
+                      },
+                      secondaryLabel: 'Show all folders',
+                      onSecondaryTap: () {
+                        context.read<FolderFilterCubit>().setAll();
+                      },
+                    );
+                  }
+
                   return MasonryView(
                     notes: notes,
                     isSelectionMode: isSelectionMode,

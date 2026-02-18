@@ -9,7 +9,12 @@ import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 
 class AddNote extends StatefulWidget {
-  const AddNote({super.key});
+  final bool autoOpenReminder;
+
+  const AddNote({
+    super.key,
+    this.autoOpenReminder = false,
+  });
 
   @override
   State<AddNote> createState() => _AddNoteState();
@@ -30,6 +35,12 @@ class _AddNoteState extends State<AddNote> {
     final filter = context.read<FolderFilterCubit>().state;
     _selectedFolderId =
         filter.type == FolderFilterType.custom ? filter.folderId : null;
+    if (widget.autoOpenReminder) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        pickReminderDateTime();
+      });
+    }
   }
 
   Future<void> pickReminderDateTime() async {
