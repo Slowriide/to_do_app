@@ -17,11 +17,11 @@ class AppTheme {
       seedColor: colors.onPrimary,
       brightness: brightness,
     ).copyWith(
-      primary: colors.onPrimary,
-      secondary: colors.secondary,
-      surface: colors.surface,
-      onSurface: colors.onSurface,
-    );
+        primary: colors.onPrimary,
+        secondary: colors.secondary,
+        surface: colors.surface,
+        onSurface: colors.onSurface,
+        onInverseSurface: colors.surface2);
 
     final baseText = GoogleFonts.notoSansTextTheme().apply(
       bodyColor: colors.text,
@@ -87,24 +87,116 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(color: colors.tertiary),
         filled: true,
-        fillColor: colors.surface2,
+        fillColor: colors.surface2.withValues(alpha: 0.78),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        labelStyle: TextStyle(
+          color: colors.onSurface.withValues(alpha: 0.9),
+          fontWeight: FontWeight.w600,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-            color: colors.tertiary.withValues(alpha: 0.24),
+            color: colors.tertiary.withValues(alpha: 0.26),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-            color: colors.tertiary.withValues(alpha: 0.24),
+            color: colors.tertiary.withValues(alpha: 0.26),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: BorderSide(color: colors.onPrimary, width: 1.5),
+          borderSide: BorderSide(
+            color: colors.onPrimary.withValues(alpha: 0.95),
+            width: 1.6,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: ButtonStyle(
+          textStyle: WidgetStatePropertyAll(
+            GoogleFonts.notoSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.1,
+            ),
+          ),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return colors.tertiary.withValues(alpha: 0.35);
+            }
+            if (states.contains(WidgetState.pressed)) {
+              return colors.onPrimary.withValues(alpha: 0.85);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return colors.onPrimary.withValues(alpha: 0.92);
+            }
+            return colors.onPrimary;
+          }),
+          foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          elevation: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) return 0;
+            if (states.contains(WidgetState.pressed)) return 0;
+            if (states.contains(WidgetState.hovered)) return 2;
+            return 0;
+          }),
+        ),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: TextStyle(
+          color: colors.onSurface,
+          fontSize: 15,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: colors.surface2.withValues(alpha: 0.78),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: colors.tertiary.withValues(alpha: 0.24),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: colors.tertiary.withValues(alpha: 0.24),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: colors.onPrimary.withValues(alpha: 0.95),
+              width: 1.4,
+            ),
+          ),
+        ),
+        menuStyle: MenuStyle(
+          backgroundColor:
+              WidgetStatePropertyAll(colors.surface2.withValues(alpha: 0.98)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: colors.tertiary.withValues(alpha: 0.25)),
+          ),
         ),
       ),
       datePickerTheme: DatePickerThemeData(

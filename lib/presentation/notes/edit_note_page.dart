@@ -1,28 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/note_cubit.dart';
 
-/// Screen for editing an existing note.
-///
-/// Allows the user to modify the note’s title and content, and optionally update
-/// a reminder date and time.
-///
-/// Initializes with the current note data, including subtasks if any.
-///
-/// When saved, updates the note via the corresponding cubit, manages notifications
-/// by cancelling the old reminder and scheduling a new one if set.
-///
-/// Also intercepts back navigation to automatically save changes if they haven’t
-/// been saved yet.
-///
-/// Uses [PopScope] to handle back navigation with save logic.
 class EditNotePage extends StatefulWidget {
-  /// The note to be edited.
   final Note note;
   const EditNotePage({super.key, required this.note});
 
@@ -31,41 +17,34 @@ class EditNotePage extends StatefulWidget {
 }
 
 class _EditNotePageState extends State<EditNotePage> {
-  /// Tracks whether the note has already been saved to avoid duplicate saves.
   final bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _textController;
 
-  /// Stores the currently selected reminder date and time.
   DateTime? _selectedDateReminder;
   int? _selectedFolderId;
 
   @override
   void initState() {
     super.initState();
-    // Initialize text controllers with existing note data
     _titleController = TextEditingController(text: widget.note.title);
     _textController = TextEditingController(text: widget.note.text);
-    // Initialize reminder date from the existing note
     _selectedDateReminder = widget.note.reminder;
     _selectedFolderId = widget.note.folderId;
   }
 
-  /// Shows a dialog that allows the user to edit or delete the existing reminder.
-  ///
-  /// If there is no reminder set, this method does nothing.
   Future<void> _showEditOrDeleteDialog() async {
     if (_selectedDateReminder == null) return;
 
     final formattedDate =
-        '${MaterialLocalizations.of(context).formatFullDate(_selectedDateReminder!)} \n ${TimeOfDay.fromDateTime(_selectedDateReminder!).format(context)}';
+        '${MaterialLocalizations.of(context).formatFullDate(_selectedDateReminder!)}\n${TimeOfDay.fromDateTime(_selectedDateReminder!).format(context)}';
 
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Programed reminder:'),
+          title: const Text('Scheduled reminder'),
           content: Text(formattedDate),
           actions: [
             TextButton(
@@ -73,7 +52,7 @@ class _EditNotePageState extends State<EditNotePage> {
                 context.pop();
                 pickDateReminderDate();
               },
-              child: Text('Edit', style: TextStyle(color: Colors.white)),
+              child: const Text('Edit'),
             ),
             TextButton(
               onPressed: () {
@@ -82,7 +61,7 @@ class _EditNotePageState extends State<EditNotePage> {
                 });
                 context.pop();
               },
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -90,9 +69,6 @@ class _EditNotePageState extends State<EditNotePage> {
     );
   }
 
-  /// Opens a date and time picker to select a new reminder.
-  ///
-  /// Updates [_selectedDateReminder] if a valid date and time are chosen.
   Future<void> pickDateReminderDate() async {
     final date = await showDatePicker(
       context: context,
@@ -129,11 +105,6 @@ class _EditNotePageState extends State<EditNotePage> {
     }
   }
 
-  /// Saves the current changes to the note, updates the reminder notification,
-  /// and updates the note via the [NoteCubit].
-  ///
-  /// If the reminder is in the past or null, it will be cleared.
-  /// Cancels any previous notification before scheduling a new one.
   Future<void> _updateNote() async {
     final noteCubit = context.read<NoteCubit>();
     final reminderToSave = (_selectedDateReminder != null &&
@@ -162,138 +133,162 @@ class _EditNotePageState extends State<EditNotePage> {
     await noteCubit.updateNote(updatedNote);
   }
 
+  Future<void> _pickFolder() async {
+    final selected = await showModalBottomSheet<int?>(
+      context: context,
+      builder: (sheetContext) {
+        return BlocBuilder<FolderCubit, List<Folder>>(
+          builder: (context, folders) {
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const ListTile(
+                    title: Text('Choose folder'),
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.layers_outlined,
+                      color: _selectedFolderId == null
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : null,
+                    ),
+                    title: const Text('All (default)'),
+                    trailing: _selectedFolderId == null
+                        ? const Icon(Icons.check_rounded)
+                        : null,
+                    onTap: () => Navigator.pop(sheetContext, null),
+                  ),
+                  ...folders.map(
+                    (folder) => ListTile(
+                      leading: const Icon(Icons.folder_outlined),
+                      title: Text(folder.name),
+                      trailing: _selectedFolderId == folder.id
+                          ? const Icon(Icons.check_rounded)
+                          : null,
+                      onTap: () => Navigator.pop(sheetContext, folder.id),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted || selected == _selectedFolderId) return;
+    setState(() => _selectedFolderId = selected);
+  }
+
+  String _folderLabel(List<Folder> folders) {
+    if (_selectedFolderId == null) return 'All';
+    final selected = folders.where((folder) => folder.id == _selectedFolderId);
+    if (selected.isEmpty) return 'Folder';
+    return selected.first.name;
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _textController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme;
-    final theme = Theme.of(context).colorScheme;
     return PopScope(
-      /// Intercepts back navigation to auto-save unsaved ToDo.
-      ///
-      /// Prevents data loss if the user exits without manually saving.
       canPop: true,
-
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
-          _updateNote();
+          await _updateNote();
         }
       },
-      child: Scaffold(
-        backgroundColor: theme.surface,
-        //Appbar
-        appBar: AppBar(
-          leading: IconButton(
-            onPressed: () {
-              _updateNote();
-              if (mounted) context.go('/providerPage');
-            },
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: theme.onSurface,
-            ),
-          ),
-          actions: [
-            IconButton(
-              onPressed: () {
-                if (_selectedDateReminder != null) {
-                  _showEditOrDeleteDialog();
-                } else {
-                  pickDateReminderDate();
-                }
-              },
-              icon: Icon(
-                _selectedDateReminder != null
-                    ? Icons.alarm_on
-                    : Icons.alarm_add_rounded,
-                color: _selectedDateReminder != null ? Colors.green : null,
-              ),
-            ),
-          ],
+      child: EditorPageScaffold(
+        title: 'Edit Note',
+        subtitle: 'Update details and keep your notes organized.',
+        reminderEnabled: _selectedDateReminder != null,
+        reminderEnabledLabel: 'Reminder on',
+        reminderDisabledLabel: 'Set reminder',
+        onReminderTap: () {
+          if (_selectedDateReminder != null) {
+            _showEditOrDeleteDialog();
+          } else {
+            pickDateReminderDate();
+          }
+        },
+        onBackTap: () {
+          _updateNote();
+          if (mounted) context.go('/providerPage');
+        },
+        actionLabel: 'Save Note',
+        onActionTap: () {
+          _updateNote();
+          if (mounted) context.go('/providerPage');
+        },
+        floatingActionButton: BlocBuilder<FolderCubit, List<Folder>>(
+          builder: (context, folders) {
+            return FloatingActionButton.extended(
+              onPressed: _pickFolder,
+              icon: const Icon(Icons.folder_outlined),
+              label: Text(_folderLabel(folders)),
+              tooltip: 'Select folder',
+            );
+          },
         ),
-
-        //Body
-        /// Form containing the title and note text input fields.
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  maxLines: 3,
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Título',
-                    labelStyle: textStyle.bodyLarge,
-                    alignLabelWithHint: true,
-                    hintText: 'title',
-                    border: InputBorder.none,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                BlocBuilder<FolderCubit, List<Folder>>(
-                  builder: (context, folders) {
-                    return DropdownButtonFormField<int?>(
-                      value: _selectedFolderId,
-                      decoration: const InputDecoration(
-                        labelText: 'Folder',
-                        border: InputBorder.none,
-                      ),
-                      items: [
-                        const DropdownMenuItem<int?>(
-                          value: null,
-                          child: Text('Inbox'),
-                        ),
-                        ...folders.map(
-                          (folder) => DropdownMenuItem<int?>(
-                            value: folder.id,
-                            child: Text(folder.name),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() => _selectedFolderId = value);
-                      },
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: TextFormField(
-                    maxLines: null,
-                    expands: true,
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      labelText: 'Texto',
-                      alignLabelWithHint: true,
-                      labelStyle: textStyle.bodyLarge,
-                      hintText: 'Note',
-                      border: InputBorder.none,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              EditorSectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Details',
+                      style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                  ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      minLines: 1,
+                      maxLines: 3,
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        hintText: 'What is this note about?',
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ),
-
-        /// Bottom save button that commits changes and navigates back.
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(16),
-          child: FilledButton.icon(
-            onPressed: () {
-              _updateNote();
-              if (mounted) context.go('/providerPage');
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Save Note'),
-            style: FilledButton.styleFrom(
-              elevation: 0,
-              backgroundColor: theme.surface,
-              minimumSize: const Size.fromHeight(50),
-              foregroundColor: theme.onSurface,
-            ),
+              ),
+              const SizedBox(height: 16),
+              EditorSectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Content',
+                      style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      minLines: 10,
+                      maxLines: 16,
+                      controller: _textController,
+                      decoration: const InputDecoration(
+                        alignLabelWithHint: true,
+                        labelText: 'Content',
+                        hintText: 'Continue writing...',
+                      ),
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

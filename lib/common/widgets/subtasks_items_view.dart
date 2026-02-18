@@ -27,6 +27,7 @@ class SubtaskItemsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     void handleReorder(int oldIndex, int newIndex) {
       final reordered = List<EditableSubtask>.from(subtasks);
@@ -38,76 +39,96 @@ class SubtaskItemsView extends StatelessWidget {
       onReorder(reordered);
     }
 
-    return Expanded(
-      child: ReorderableListView.builder(
-        itemCount: subtasks.length,
-        buildDefaultDragHandles: false,
-        onReorder: handleReorder,
-        proxyDecorator: (child, index, animation) {
-          return Material(
-            color: Colors.transparent,
-            child: child,
-          );
-        },
-        itemBuilder: (context, index) {
-          final item = subtasks[index];
-          return Padding(
-            key: ValueKey(item.id),
-            padding: const EdgeInsets.only(bottom: 8),
+    return ReorderableListView.builder(
+      itemCount: subtasks.length,
+      buildDefaultDragHandles: false,
+      onReorder: handleReorder,
+      proxyDecorator: (child, index, animation) {
+        return Material(
+          color: Colors.transparent,
+          child: child,
+        );
+      },
+      itemBuilder: (context, index) {
+        final item = subtasks[index];
+        return Padding(
+          key: ValueKey(item.id),
+          padding: const EdgeInsets.only(bottom: 10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            decoration: BoxDecoration(
+              color: theme.onInverseSurface.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.tertiary.withValues(alpha: 0.2),
+              ),
+            ),
             child: Row(
               children: [
                 MouseRegion(
                   cursor: SystemMouseCursors.grab,
                   child: ReorderableDragStartListener(
                     index: index,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.drag_indicator_rounded,
-                        color: theme.primary,
-                      ),
+                    child: const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Icon(Icons.drag_indicator_rounded),
                     ),
                   ),
                 ),
                 Expanded(
-                  child: TextFormField(
-                    style: TextStyle(
-                      color: theme.onTertiary,
-                      decoration:
-                          item.isCompleted ? TextDecoration.lineThrough : null,
-                      decorationColor: theme.tertiary,
-                    ),
-                    controller: item.controller,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      prefixIcon: IconButton(
-                        onPressed: onToggleComplete == null
-                            ? null
-                            : () => onToggleComplete!(index),
-                        icon: Icon(
-                          item.isCompleted
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                          color: item.isCompleted
-                              ? theme.onPrimary
-                              : theme.tertiary,
-                        ),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    opacity: item.isCompleted ? 0.72 : 1,
+                    child: TextFormField(
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: theme.onSurface,
+                        decoration: item.isCompleted
+                            ? TextDecoration.lineThrough
+                            : null,
+                        decorationColor: theme.tertiary,
                       ),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed:
-                            onDelete == null ? null : () => onDelete!(index),
+                      controller: item.controller,
+                      decoration: InputDecoration(
+                        hintText: 'Subtask',
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 10,
+                        ),
+                        prefixIcon: IconButton(
+                          onPressed: onToggleComplete == null
+                              ? null
+                              : () => onToggleComplete!(index),
+                          tooltip: item.isCompleted
+                              ? 'Mark as pending'
+                              : 'Mark as complete',
+                          icon: Icon(
+                            item.isCompleted
+                                ? Icons.check_box_rounded
+                                : Icons.check_box_outline_blank_rounded,
+                            color: item.isCompleted
+                                ? theme.onPrimary
+                                : theme.tertiary,
+                          ),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          tooltip: 'Delete subtask',
+                          onPressed:
+                              onDelete == null ? null : () => onDelete!(index),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

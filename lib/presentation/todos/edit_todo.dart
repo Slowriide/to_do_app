@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
+import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
@@ -9,20 +10,6 @@ import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/presentation/cubits/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todo_cubit.dart';
 
-/// Screen for editing an existing todo item.
-///
-/// Initializes with the given [todo] data, allowing the user to update the title,
-/// subtasks, and optionally set or modify a reminder date/time.
-///
-/// Handles reordering, adding, completing, and deleting subtasks within the UI.
-///
-/// When saving, updates the todo via [TodoCubit], manages notifications by cancelling
-/// the old reminder and scheduling a new one if set.
-///
-/// Also intercepts back navigation to automatically save changes if they haven't
-/// been saved yet.
-///
-/// Uses [PopScope] to handle back navigation with save logic.
 class EditTodo extends StatefulWidget {
   final Todo todo;
   const EditTodo({super.key, required this.todo});
@@ -32,31 +19,24 @@ class EditTodo extends StatefulWidget {
 }
 
 class _EditTodoState extends State<EditTodo> {
-  /// Tracks whether the todo has already been saved to avoid duplicate saves.
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
-
-  /// Currently selected reminder date and time, if any.
   DateTime? _selectedReminder;
 
-  /// List of editable subtasks shown in the UI.
   late List<EditableSubtask> _editableSubtasks = [];
   int? _selectedFolderId;
 
   @override
   void initState() {
     super.initState();
-    // Initialize title controller with the current todo title.
     _titleController = TextEditingController(text: widget.todo.title);
-    // Set the current reminder date.
     _selectedReminder = widget.todo.reminder;
     _selectedFolderId = widget.todo.folderId;
 
-    // Initialize editable subtasks from the todo’s subtasks, sorted by order.
-    final sordetSubtasks = [...widget.todo.subTasks]
+    final sortedSubtasks = [...widget.todo.subTasks]
       ..sort((a, b) => a.order.compareTo(b.order));
-    _editableSubtasks = sordetSubtasks
+    _editableSubtasks = sortedSubtasks
         .map(
           (sub) => EditableSubtask(
             id: sub.id,
@@ -68,20 +48,17 @@ class _EditTodoState extends State<EditTodo> {
         .toList();
   }
 
-  /// Shows a dialog that allows the user to edit or delete the existing reminder.
-  ///
-  /// If there is no reminder set, this method does nothing.
   Future<void> _showEditOrDeleteDialog() async {
     if (_selectedReminder == null) return;
 
     final formattedDate =
-        '${MaterialLocalizations.of(context).formatFullDate(_selectedReminder!)} \n ${TimeOfDay.fromDateTime(_selectedReminder!).format(context)}';
+        '${MaterialLocalizations.of(context).formatFullDate(_selectedReminder!)}\n${TimeOfDay.fromDateTime(_selectedReminder!).format(context)}';
 
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Programed reminder:'),
+          title: const Text('Scheduled reminder'),
           content: Text(formattedDate),
           actions: [
             TextButton(
@@ -89,7 +66,7 @@ class _EditTodoState extends State<EditTodo> {
                 context.pop();
                 pickDateReminderDate();
               },
-              child: Text('Edit', style: TextStyle(color: Colors.white)),
+              child: const Text('Edit'),
             ),
             TextButton(
               onPressed: () {
@@ -98,7 +75,7 @@ class _EditTodoState extends State<EditTodo> {
                 });
                 context.pop();
               },
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -106,9 +83,6 @@ class _EditTodoState extends State<EditTodo> {
     );
   }
 
-  /// Opens a date and time picker to select a new reminder.
-  ///
-  /// Updates [_selectedReminder] if a valid date and time are chosen.
   Future<void> pickDateReminderDate() async {
     final now = DateTime.now();
 
@@ -146,9 +120,6 @@ class _EditTodoState extends State<EditTodo> {
     });
   }
 
-  /// Updates the order of subtasks after a reorder event in the UI.
-  ///
-  /// Sets the order property of each [EditableSubtask] accordingly.
   void _handleReorder(List<EditableSubtask> newOrder) {
     setState(() {
       _editableSubtasks = newOrder;
@@ -158,7 +129,6 @@ class _EditTodoState extends State<EditTodo> {
     });
   }
 
-  /// Adds a new empty subtask to the list for editing.
   void _addSubtask() {
     setState(() {
       _editableSubtasks.add(
@@ -170,10 +140,6 @@ class _EditTodoState extends State<EditTodo> {
     });
   }
 
-  /// Validates the form and updates the todo with the current values.
-  ///
-  /// Cancels any existing notification and schedules a new one if a valid reminder is set.
-  /// Calls the [TodoCubit] to update the todo in the state.
   Future<void> _updateTodo() async {
     final todoCubit = context.read<TodoCubit>();
     if (_formKey.currentState?.validate() ?? false) {
@@ -219,14 +185,74 @@ class _EditTodoState extends State<EditTodo> {
     }
   }
 
+  Future<void> _pickFolder() async {
+    final selected = await showModalBottomSheet<int?>(
+      context: context,
+      builder: (sheetContext) {
+        return BlocBuilder<FolderCubit, List<Folder>>(
+          builder: (context, folders) {
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const ListTile(
+                    title: Text('Choose folder'),
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.layers_outlined,
+                      color: _selectedFolderId == null
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : null,
+                    ),
+                    title: const Text('All (default)'),
+                    trailing: _selectedFolderId == null
+                        ? const Icon(Icons.check_rounded)
+                        : null,
+                    onTap: () => Navigator.pop(sheetContext, null),
+                  ),
+                  ...folders.map(
+                    (folder) => ListTile(
+                      leading: const Icon(Icons.folder_outlined),
+                      title: Text(folder.name),
+                      trailing: _selectedFolderId == folder.id
+                          ? const Icon(Icons.check_rounded)
+                          : null,
+                      onTap: () => Navigator.pop(sheetContext, folder.id),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted || selected == _selectedFolderId) return;
+    setState(() => _selectedFolderId = selected);
+  }
+
+  String _folderLabel(List<Folder> folders) {
+    if (_selectedFolderId == null) return 'All';
+    final selected = folders.where((folder) => folder.id == _selectedFolderId);
+    if (selected.isEmpty) return 'Folder';
+    return selected.first.name;
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    for (final ctrl in _editableSubtasks) {
+      ctrl.controller.dispose();
+    }
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     return PopScope(
-      /// Intercepts back navigation to auto-save unsaved ToDo.
-      ///
-      /// Prevents data loss if the user exits without manually saving.
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && !_alreadySaved) {
@@ -234,138 +260,116 @@ class _EditTodoState extends State<EditTodo> {
           await _updateTodo();
         }
       },
-      child: Scaffold(
-        backgroundColor: theme.surface,
-        //appbar
-        appBar: AppBar(
-          leading: IconButton(
-            onPressed: () {
-              _updateTodo();
-              context.go('/todos');
-            },
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: theme.onSurface,
-            ),
-          ),
-          actions: [
-            IconButton(
-              onPressed: () {
-                if (_selectedReminder != null) {
-                  _showEditOrDeleteDialog();
-                } else {
-                  pickDateReminderDate();
-                }
-              },
-              icon: Icon(
-                _selectedReminder != null
-                    ? Icons.alarm_on
-                    : Icons.alarm_add_rounded,
-                color: _selectedReminder != null ? Colors.green : null,
-              ),
-            ),
-          ],
+      child: EditorPageScaffold(
+        title: 'Edit ToDo',
+        subtitle: 'Fine-tune tasks, reminders, and subtask order.',
+        reminderEnabled: _selectedReminder != null,
+        reminderEnabledLabel: 'Reminder on',
+        reminderDisabledLabel: 'Set reminder',
+        onReminderTap: () {
+          if (_selectedReminder != null) {
+            _showEditOrDeleteDialog();
+          } else {
+            pickDateReminderDate();
+          }
+        },
+        onBackTap: () {
+          _updateTodo();
+          context.go('/todos');
+        },
+        actionLabel: 'Save ToDo',
+        onActionTap: () {
+          _updateTodo();
+          context.go('/todos');
+        },
+        floatingActionButton: BlocBuilder<FolderCubit, List<Folder>>(
+          builder: (context, folders) {
+            return FloatingActionButton.extended(
+              onPressed: _pickFolder,
+              icon: const Icon(Icons.folder_outlined),
+              label: Text(_folderLabel(folders)),
+              tooltip: 'Select folder',
+            );
+          },
         ),
-        //body
-        /// Form containing the title and todo subtasks.
-        body: Padding(
-          padding: EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  minLines: 1,
-                  maxLines: 3,
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Title',
-                    labelStyle: textStyle.bodyLarge,
-                    alignLabelWithHint: true,
-                    hintText: 'Title',
-                    border: InputBorder.none,
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              EditorSectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Subtasks', style: textStyle.titleMedium),
-                    IconButton(
-                      onPressed: _addSubtask,
-                      icon: const Icon(Icons.add),
-                      tooltip: 'Add Subtask',
+                    Text(
+                      'Details',
+                      style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      minLines: 1,
+                      maxLines: 3,
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        hintText: 'What do you need to do?',
+                      ),
                     ),
                   ],
                 ),
-                BlocBuilder<FolderCubit, List<Folder>>(
-                  builder: (context, folders) {
-                    return DropdownButtonFormField<int?>(
-                      value: _selectedFolderId,
-                      decoration: const InputDecoration(
-                        labelText: 'Folder',
-                        border: InputBorder.none,
-                      ),
-                      items: [
-                        const DropdownMenuItem<int?>(
-                          value: null,
-                          child: Text('Inbox'),
+              ),
+              const SizedBox(height: 16),
+              EditorSectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Subtasks',
+                            style:
+                                textStyle.titleMedium?.copyWith(fontSize: 18),
+                          ),
                         ),
-                        ...folders.map(
-                          (folder) => DropdownMenuItem<int?>(
-                            value: folder.id,
-                            child: Text(folder.name),
+                        Tooltip(
+                          message: 'Add subtask',
+                          child: IconButton(
+                            onPressed: _addSubtask,
+                            icon: const Icon(Icons.add_rounded),
                           ),
                         ),
                       ],
-                      onChanged: (value) {
-                        setState(() => _selectedFolderId = value);
-                      },
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                SubtaskItemsView(
-                  subtasks: _editableSubtasks,
-                  onToggleComplete: (index) {
-                    setState(() {
-                      final task = _editableSubtasks.removeAt(index);
-                      task.isCompleted = !task.isCompleted;
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 340,
+                      child: SubtaskItemsView(
+                        subtasks: _editableSubtasks,
+                        onToggleComplete: (index) {
+                          setState(() {
+                            final task = _editableSubtasks.removeAt(index);
+                            task.isCompleted = !task.isCompleted;
 
-                      if (task.isCompleted) {
-                        _editableSubtasks.add(task);
-                      } else {
-                        _editableSubtasks.insert(0, task);
-                      }
-                    });
-                  },
-                  onDelete: (index) {
-                    setState(() {
-                      _editableSubtasks.removeAt(index);
-                    });
-                  },
-                  onReorder: _handleReorder,
+                            if (task.isCompleted) {
+                              _editableSubtasks.add(task);
+                            } else {
+                              _editableSubtasks.insert(0, task);
+                            }
+                          });
+                        },
+                        onDelete: (index) {
+                          setState(() {
+                            _editableSubtasks.removeAt(index);
+                          });
+                        },
+                        onReorder: _handleReorder,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ),
-
-        /// Bottom save button that commits changes and navigates back.
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(16),
-          child: FilledButton.icon(
-            onPressed: () {
-              _updateTodo();
-              context.go('/todos');
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Save Todo'),
-            style: FilledButton.styleFrom(
-              elevation: 0,
-              backgroundColor: theme.surface,
-              minimumSize: const Size.fromHeight(50),
-              foregroundColor: theme.onSurface,
-            ),
+              ),
+            ],
           ),
         ),
       ),
