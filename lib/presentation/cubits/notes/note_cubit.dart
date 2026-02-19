@@ -161,16 +161,44 @@ class NoteCubit extends Cubit<NoteState> {
 
   Future<void> archiveNotes(List<Note> notes) async {
     if (notes.isEmpty) return;
-    final archived = notes
-        .map((note) => note.copyWith(isArchived: true, isPinned: false))
+    final toArchiveIds = notes.map((note) => note.id).toSet();
+
+    final archivedState = state.notes
+        .map((note) => toArchiveIds.contains(note.id)
+            ? note.copyWith(isArchived: true, isPinned: false)
+            : note)
         .toList();
-    await updateNotes(archived);
+
+    final reflowed = _reflowActiveNotes(archivedState);
+    await repository.updateNotes(reflowed);
+    await loadNotes();
   }
 
   Future<void> restoreNotes(List<Note> notes) async {
     if (notes.isEmpty) return;
-    final restored =
-        notes.map((note) => note.copyWith(isArchived: false)).toList();
-    await updateNotes(restored);
+    final toRestoreIds = notes.map((note) => note.id).toSet();
+    final restoredState = state.notes
+        .map((note) => toRestoreIds.contains(note.id)
+            ? note.copyWith(isArchived: false)
+            : note)
+        .toList();
+
+    final reflowed = _reflowActiveNotes(restoredState);
+    await repository.updateNotes(reflowed);
+    await loadNotes();
+  }
+
+  List<Note> _reflowActiveNotes(List<Note> notes) {
+    final active = notes.where((note) => !note.isArchived).toList()
+      ..sort((a, b) {
+        if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
+        return a.isPinned ? -1 : 1;
+      });
+
+    final activeById = {
+      for (var i = 0; i < active.length; i++) active[i].id: active[i].copyWith(order: i),
+    };
+
+    return notes.map((note) => activeById[note.id] ?? note).toList();
   }
 }

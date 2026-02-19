@@ -115,6 +115,25 @@ void main() {
     await cubit.close();
   });
 
+  test('archiveNotes reflows remaining active notes order', () async {
+    final repo = FakeNoteRepository([
+      Note(id: 1, title: 'a', text: 'a', order: 0, isPinned: false),
+      Note(id: 2, title: 'b', text: 'b', order: 1, isPinned: false),
+      Note(id: 3, title: 'c', text: 'c', order: 2, isPinned: false),
+    ]);
+    final cubit = NoteCubit(repo);
+    await _settle();
+
+    final middle = cubit.state.notes.firstWhere((n) => n.id == 2);
+    await cubit.archiveNotes([middle]);
+
+    final active = cubit.state.notes.where((n) => !n.isArchived).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    expect(active.map((n) => n.id).toList(), [1, 3]);
+    expect(active.map((n) => n.order).toList(), [0, 1]);
+    await cubit.close();
+  });
+
   test('restoreNotes restores archived notes', () async {
     final repo = FakeNoteRepository([
       Note(id: 1, title: 'a', text: 'a', order: 0, isArchived: true),
