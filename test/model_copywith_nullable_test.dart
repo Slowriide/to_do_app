@@ -35,6 +35,16 @@ void main() {
     expect(updated.folderId, 42);
   });
 
+  test('Note.copyWith updates archived flag', () {
+    final note = Note(id: 1, title: 'n', text: 't');
+
+    final archived = note.copyWith(isArchived: true);
+    final restored = archived.copyWith(isArchived: false);
+
+    expect(archived.isArchived, isTrue);
+    expect(restored.isArchived, isFalse);
+  });
+
   test('Todo.copyWith can explicitly clear nullable fields', () {
     final todo = Todo(
       id: 1,

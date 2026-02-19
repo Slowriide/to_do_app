@@ -14,6 +14,7 @@ class Note {
   final bool isCompleted;
   final DateTime? reminder;
   final bool isPinned;
+  final bool isArchived;
   final int order;
   final int? folderId;
 
@@ -24,6 +25,7 @@ class Note {
     this.isCompleted = false,
     this.reminder,
     this.isPinned = false,
+    this.isArchived = false,
     this.order = 0,
     this.folderId,
   });
@@ -36,6 +38,7 @@ class Note {
       isCompleted: !isCompleted,
       reminder: reminder,
       isPinned: isPinned,
+      isArchived: isArchived,
       order: order,
       folderId: folderId,
     );
@@ -47,6 +50,7 @@ class Note {
     bool? isCompleted,
     Object? reminder = _unset,
     bool? isPinned,
+    bool? isArchived,
     int? order,
     Object? folderId = _unset,
   }) {
@@ -58,9 +62,9 @@ class Note {
       reminder:
           identical(reminder, _unset) ? this.reminder : reminder as DateTime?,
       isPinned: isPinned ?? this.isPinned,
+      isArchived: isArchived ?? this.isArchived,
       order: order ?? this.order,
-      folderId:
-          identical(folderId, _unset) ? this.folderId : folderId as int?,
+      folderId: identical(folderId, _unset) ? this.folderId : folderId as int?,
     );
   }
 }

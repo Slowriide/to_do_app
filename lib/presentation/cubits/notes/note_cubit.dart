@@ -67,7 +67,9 @@ class NoteCubit extends Cubit<NoteState> {
   Future<void> deleteNotes(List<Note> notesToDelete) async {
     for (final note in notesToDelete) {
       await repository.deleteNote(note);
-      await NotificationService().cancelNotification(note.id);
+      if (note.reminder != null) {
+        await NotificationService().cancelNotification(note.id);
+      }
     }
     await loadNotes();
   }
@@ -119,8 +121,8 @@ class NoteCubit extends Cubit<NoteState> {
 
   /// Reorders notes based on the UI order and persists it.
   Future<void> reorderNotes(List<Note> orderedNotes) async {
-    final reordered =
-        List<Note>.generate(orderedNotes.length, (i) => orderedNotes[i].copyWith(order: i));
+    final reordered = List<Note>.generate(
+        orderedNotes.length, (i) => orderedNotes[i].copyWith(order: i));
     await repository.updateNotes(reordered);
     await loadNotes();
   }
@@ -155,5 +157,20 @@ class NoteCubit extends Cubit<NoteState> {
       await repository.updateNote(note.copyWith(folderId: folderId));
     }
     await loadNotes();
+  }
+
+  Future<void> archiveNotes(List<Note> notes) async {
+    if (notes.isEmpty) return;
+    final archived = notes
+        .map((note) => note.copyWith(isArchived: true, isPinned: false))
+        .toList();
+    await updateNotes(archived);
+  }
+
+  Future<void> restoreNotes(List<Note> notes) async {
+    if (notes.isEmpty) return;
+    final restored =
+        notes.map((note) => note.copyWith(isArchived: false)).toList();
+    await updateNotes(restored);
   }
 }

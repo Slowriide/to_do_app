@@ -60,6 +60,9 @@ class _MyDrawerState extends State<MyDrawer> {
                     context.go('/todos');
                     break;
                   case 2:
+                    context.go('/archived-notes');
+                    break;
+                  case 3:
                     context.go('/settings');
                     break;
                 }
@@ -74,6 +77,11 @@ class _MyDrawerState extends State<MyDrawer> {
                   icon: Icon(Icons.check_box_outlined),
                   selectedIcon: Icon(Icons.check_box),
                   label: Text("ToDo's"),
+                ),
+                const NavigationDrawerDestination(
+                  icon: Icon(Icons.archive_outlined),
+                  selectedIcon: Icon(Icons.archive),
+                  label: Text('Archived Notes'),
                 ),
                 const NavigationDrawerDestination(
                   icon: Icon(Icons.settings),
@@ -355,7 +363,9 @@ class _MyDrawerState extends State<MyDrawer> {
     }
 
     final location = GoRouterState.of(context).uri.toString();
-    if (location != '/home' && location != '/todos') {
+    if (location != '/home' &&
+        location != '/archived-notes' &&
+        location != '/todos') {
       context.go('/home');
     }
     Navigator.of(context).pop();
@@ -363,7 +373,8 @@ class _MyDrawerState extends State<MyDrawer> {
 
   int _getSelectedIndex(String location) {
     if (location == '/todos') return 1;
-    if (location == '/settings') return 2;
+    if (location == '/archived-notes') return 2;
+    if (location == '/settings') return 3;
     return 0;
   }
 }

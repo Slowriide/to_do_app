@@ -42,6 +42,10 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: '/archived-notes',
+      builder: (context, state) => const ArchivedNotePage(),
+    ),
+    GoRoute(
         path: '/todos',
         builder: (context, state) {
           final repo = RepositoryProvider.of<TodoRepository>(context);

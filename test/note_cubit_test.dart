@@ -98,4 +98,36 @@ void main() {
     expect(cubit.state.notes.map((n) => n.id).toList(), before);
     await cubit.close();
   });
+
+  test('archiveNotes archives and unpins notes', () async {
+    final repo = FakeNoteRepository([
+      Note(id: 1, title: 'a', text: 'a', order: 0, isPinned: true),
+      Note(id: 2, title: 'b', text: 'b', order: 1),
+    ]);
+    final cubit = NoteCubit(repo);
+    await _settle();
+
+    await cubit.archiveNotes([cubit.state.notes.first]);
+
+    final archived = cubit.state.notes.firstWhere((n) => n.id == 1);
+    expect(archived.isArchived, isTrue);
+    expect(archived.isPinned, isFalse);
+    await cubit.close();
+  });
+
+  test('restoreNotes restores archived notes', () async {
+    final repo = FakeNoteRepository([
+      Note(id: 1, title: 'a', text: 'a', order: 0, isArchived: true),
+      Note(id: 2, title: 'b', text: 'b', order: 1),
+    ]);
+    final cubit = NoteCubit(repo);
+    await _settle();
+
+    final archived = cubit.state.notes.where((n) => n.isArchived).toList();
+    await cubit.restoreNotes(archived);
+
+    final restored = cubit.state.notes.firstWhere((n) => n.id == 1);
+    expect(restored.isArchived, isFalse);
+    await cubit.close();
+  });
 }

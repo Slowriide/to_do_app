@@ -65,6 +65,12 @@ Widget _buildNotesApp({
           return Scaffold(body: Text('add-note:$mode'));
         },
       ),
+      GoRoute(
+        path: '/archived-notes',
+        builder: (context, state) => const Scaffold(
+          body: Text('archived-notes'),
+        ),
+      ),
     ],
   );
 
@@ -185,5 +191,55 @@ void main() {
     await tester.tap(find.text('Show all folders'));
     await tester.pumpAndSettle();
     expect(find.text('Inbox note'), findsOneWidget);
+  });
+
+  testWidgets('active notes view excludes archived notes', (tester) async {
+    await _initPrefs();
+    final notes = [
+      Note(id: 1, title: 'Archived', text: 'old', isArchived: true),
+    ];
+    final noteRepo = FakeNoteRepository(initial: notes);
+    final todoRepo = FakeTodoRepository(initial: const []);
+    final folderRepo = FakeFolderRepository(initial: const []);
+
+    await tester.pumpWidget(
+      _buildNotesApp(
+        noteRepo: noteRepo,
+        todoRepo: todoRepo,
+        folderRepo: folderRepo,
+        searchSeed: notes,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('No notes yet'), findsOneWidget);
+    expect(find.text('Archived'), findsNothing);
+  });
+
+  testWidgets('drawer navigates to archived notes route', (tester) async {
+    await _initPrefs();
+    final noteRepo = FakeNoteRepository(initial: const []);
+    final todoRepo = FakeTodoRepository(initial: const []);
+    final folderRepo = FakeFolderRepository(initial: const []);
+
+    await tester.pumpWidget(
+      _buildNotesApp(
+        noteRepo: noteRepo,
+        todoRepo: todoRepo,
+        folderRepo: folderRepo,
+        searchSeed: const [],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final scaffoldState =
+        tester.firstState<ScaffoldState>(find.byType(Scaffold));
+    scaffoldState.openDrawer();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Archived Notes'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 350));
+
+    expect(find.text('archived-notes'), findsOneWidget);
   });
 }

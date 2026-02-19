@@ -23,6 +23,7 @@ class NoteIsar {
   late bool isCompleted;
   DateTime? reminder;
   late bool isPinned;
+  late bool isArchived;
   late int order;
   int? folderId;
 
@@ -35,6 +36,7 @@ class NoteIsar {
       isCompleted: isCompleted,
       reminder: reminder,
       isPinned: isPinned,
+      isArchived: isArchived,
       order: order,
       folderId: folderId,
     );
@@ -49,6 +51,7 @@ class NoteIsar {
       ..isCompleted = note.isCompleted
       ..reminder = note.reminder
       ..isPinned = note.isPinned
+      ..isArchived = note.isArchived
       ..order = note.order
       ..folderId = note.folderId;
   }

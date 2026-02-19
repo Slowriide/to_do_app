@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 
+enum ArchiveScope { activeOnly, archivedOnly }
+
 /// Cubit responsible for managing note search functionality.
 ///
 /// Holds a list of all notes and emits filtered lists based on the search query.
@@ -10,6 +12,7 @@ class NoteSearchCubit extends Cubit<List<Note>> {
   List<Note> _notes;
   String _query = '';
   FolderFilter _folderFilter = const FolderFilter.all();
+  ArchiveScope _archiveScope = ArchiveScope.activeOnly;
 
   NoteSearchCubit(this._notes) : super(_notes);
 
@@ -36,8 +39,18 @@ class NoteSearchCubit extends Cubit<List<Note>> {
     _emitFiltered();
   }
 
+  void setArchiveScope(ArchiveScope scope) {
+    _archiveScope = scope;
+    _emitFiltered();
+  }
+
   void _emitFiltered() {
     final filtered = _notes.where((note) {
+      final matchesArchive = _archiveScope == ArchiveScope.activeOnly
+          ? !note.isArchived
+          : note.isArchived;
+      if (!matchesArchive) return false;
+
       final matchesQuery = note.text.toLowerCase().contains(_query) ||
           note.title.toLowerCase().contains(_query);
       if (!matchesQuery) return false;
