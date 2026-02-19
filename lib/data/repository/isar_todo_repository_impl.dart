@@ -80,50 +80,77 @@ class IsarTodoRepositoryImpl implements TodoRepository {
 
   @override
   Future<void> updateTodo(Todo todo) async {
-    await db.writeTxn(() async {
-      final existingSubTasks = await db.todoIsars.get(todo.id);
-      if (existingSubTasks != null) {
-        await existingSubTasks.subtasks.load();
-        for (var oldsub in existingSubTasks.subtasks) {
-          await db.todoIsars.delete(oldsub.id);
-        }
-        existingSubTasks.subtasks.clear();
-      }
-
-      final todoIsar = TodoIsar.fromDomain(todo.copyWith(isSubtask: false));
-      await db.todoIsars.put(todoIsar);
-
-      for (var sub in todo.subTasks) {
-        final subIsar = TodoIsar.fromDomain(sub.copyWith(isSubtask: true));
-        await db.todoIsars.put(subIsar);
-        todoIsar.subtasks.add(subIsar);
-      }
-      await todoIsar.subtasks.save();
-    });
+    await updateTodos([todo]);
   }
 
   @override
   Future<void> updateTodos(List<Todo> todos) async {
+    if (todos.isEmpty) return;
+
     await db.writeTxn(() async {
+      final parentIds = todos.map((todo) => todo.id).toList();
+      final existingParents = await db.todoIsars.getAll(parentIds);
+      final existingById = {
+        for (final parent in existingParents.whereType<TodoIsar>())
+          parent.id: parent,
+      };
+
+      final parentsToPut = <TodoIsar>[];
+      final subtasksToPut = <TodoIsar>[];
+      final subtasksToDelete = <Id>[];
+      final subtaskIdsByParent = <Id, List<Id>>{};
+
       for (final todo in todos) {
-        final existingSubTasks = await db.todoIsars.get(todo.id);
-        if (existingSubTasks != null) {
-          await existingSubTasks.subtasks.load();
-          for (var oldsub in existingSubTasks.subtasks) {
-            await db.todoIsars.delete(oldsub.id);
+        final parent = TodoIsar.fromDomain(
+          todo.copyWith(isSubtask: false, subTasks: const <Todo>[]),
+        );
+        parentsToPut.add(parent);
+
+        final incomingSubtasks = todo.subTasks
+            .map((sub) =>
+                sub.copyWith(isSubtask: true, subTasks: const <Todo>[]))
+            .toList();
+        final incomingIds = incomingSubtasks.map((sub) => sub.id).toSet();
+        subtaskIdsByParent[todo.id] =
+            incomingSubtasks.map((sub) => sub.id).toList();
+
+        for (final sub in incomingSubtasks) {
+          subtasksToPut.add(TodoIsar.fromDomain(sub));
+        }
+
+        final existing = existingById[todo.id];
+        if (existing != null) {
+          await existing.subtasks.load();
+          for (final oldSub in existing.subtasks) {
+            if (!incomingIds.contains(oldSub.id)) {
+              subtasksToDelete.add(oldSub.id);
+            }
           }
-          existingSubTasks.subtasks.clear();
         }
+      }
 
-        final todoIsar = TodoIsar.fromDomain(todo.copyWith(isSubtask: false));
-        await db.todoIsars.put(todoIsar);
+      await db.todoIsars.putAll(parentsToPut);
+      if (subtasksToPut.isNotEmpty) {
+        await db.todoIsars.putAll(subtasksToPut);
+      }
+      if (subtasksToDelete.isNotEmpty) {
+        await db.todoIsars.deleteAll(subtasksToDelete);
+      }
 
-        for (var sub in todo.subTasks) {
-          final subIsar = TodoIsar.fromDomain(sub.copyWith(isSubtask: true));
-          await db.todoIsars.put(subIsar);
-          todoIsar.subtasks.add(subIsar);
+      final subById = {
+        for (final sub in subtasksToPut) sub.id: sub,
+      };
+
+      for (final parent in parentsToPut) {
+        parent.subtasks.clear();
+        final subIds = subtaskIdsByParent[parent.id] ?? const <Id>[];
+        for (final subId in subIds) {
+          final sub = subById[subId];
+          if (sub != null) {
+            parent.subtasks.add(sub);
+          }
         }
-        await todoIsar.subtasks.save();
+        await parent.subtasks.save();
       }
     });
   }

@@ -156,6 +156,13 @@ class _NotesViewState extends State<NotesView> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     return Scaffold(
@@ -329,7 +336,7 @@ class _Body extends StatelessWidget {
               },
             ),
           ),
-          FolderChips(),
+          const FolderChips(),
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
