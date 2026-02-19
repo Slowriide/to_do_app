@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_state.dart';
 
 class FakeTodoRepository implements TodoRepository {
   FakeTodoRepository(this._todos);
@@ -86,7 +87,8 @@ void main() {
 
     await _settle();
 
-    expect(cubit.state.map((t) => t.id).toList(), [2, 3, 1]);
+    expect(cubit.state.status, TodoStatus.success);
+    expect(cubit.state.todos.map((t) => t.id).toList(), [2, 3, 1]);
     await cubit.close();
   });
 
@@ -120,12 +122,13 @@ void main() {
     final cubit = TodoCubit(repo);
     await _settle();
 
-    await cubit.reorderTodos([cubit.state[2], cubit.state[0], cubit.state[1]]);
+    await cubit
+        .reorderTodos([cubit.state.todos[2], cubit.state.todos[0], cubit.state.todos[1]]);
 
     expect(repo.updateTodosCalls, 1);
     expect(repo.updateTodoCalls, 0);
-    expect(cubit.state.map((t) => t.id).toList(), [3, 1, 2]);
-    expect(cubit.state.map((t) => t.order).toList(), [0, 1, 2]);
+    expect(cubit.state.todos.map((t) => t.id).toList(), [3, 1, 2]);
+    expect(cubit.state.todos.map((t) => t.order).toList(), [0, 1, 2]);
     await cubit.close();
   });
 
@@ -152,11 +155,11 @@ void main() {
     final cubit = TodoCubit(repo);
     await _settle();
 
-    final before = cubit.state.map((t) => t.id).toList();
+    final before = cubit.state.todos.map((t) => t.id).toList();
     await cubit.reorderTodoByIds(1, 2);
 
     expect(repo.updateTodosCalls, 0);
-    expect(cubit.state.map((t) => t.id).toList(), before);
+    expect(cubit.state.todos.map((t) => t.id).toList(), before);
     await cubit.close();
   });
 }

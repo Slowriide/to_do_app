@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
 
 class FakeNoteRepository implements NoteRepository {
   FakeNoteRepository(this._notes);
@@ -54,7 +55,8 @@ void main() {
 
     await _settle();
 
-    expect(cubit.state.map((n) => n.id).toList(), [4, 2, 3, 1]);
+    expect(cubit.state.status, NoteStatus.success);
+    expect(cubit.state.notes.map((n) => n.id).toList(), [4, 2, 3, 1]);
     await cubit.close();
   });
 
@@ -68,15 +70,15 @@ void main() {
     await _settle();
 
     await cubit.reorderNotes([
-      cubit.state[2],
-      cubit.state[0],
-      cubit.state[1],
+      cubit.state.notes[2],
+      cubit.state.notes[0],
+      cubit.state.notes[1],
     ]);
 
     expect(repo.updateNotesCalls, 1);
     expect(repo.updateNoteCalls, 0);
-    expect(cubit.state.map((n) => n.id).toList(), [3, 1, 2]);
-    expect(cubit.state.map((n) => n.order).toList(), [0, 1, 2]);
+    expect(cubit.state.notes.map((n) => n.id).toList(), [3, 1, 2]);
+    expect(cubit.state.notes.map((n) => n.order).toList(), [0, 1, 2]);
     await cubit.close();
   });
 
@@ -89,11 +91,11 @@ void main() {
     final cubit = NoteCubit(repo);
     await _settle();
 
-    final before = cubit.state.map((n) => n.id).toList();
+    final before = cubit.state.notes.map((n) => n.id).toList();
     await cubit.reorderNoteByIds(1, 2);
 
     expect(repo.updateNotesCalls, 0);
-    expect(cubit.state.map((n) => n.id).toList(), before);
+    expect(cubit.state.notes.map((n) => n.id).toList(), before);
     await cubit.close();
   });
 }

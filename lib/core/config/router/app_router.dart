@@ -48,10 +48,6 @@ final appRouter = GoRouter(
           return TodoPage(repository: repo);
         }),
     GoRoute(
-      path: '/todosview',
-      builder: (context, state) => const NotesView(),
-    ),
-    GoRoute(
       path: '/addtodo',
       builder: (context, state) {
         final reminderMode = state.uri.queryParameters['mode'] == 'reminder';

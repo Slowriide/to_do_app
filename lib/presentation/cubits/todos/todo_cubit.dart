@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_state.dart';
 
 enum TodoFilter {
   all,
@@ -15,27 +16,32 @@ enum TodoFilter {
 /// toggling completion status, and scheduling notifications when reminders exist.
 ///
 /// The state is a list of Todo objects, automatically sorted by pinned status.
-class TodoCubit extends Cubit<List<Todo>> {
+class TodoCubit extends Cubit<TodoState> {
   final TodoRepository repository;
   // TodoFilter _currentFilter = TodoFilter.all;
 
-  TodoCubit(this.repository) : super([]) {
+  TodoCubit(this.repository) : super(const TodoState.loading()) {
     loadTodos();
   }
 
   /// Loads the list of todos from the repository and emits
   /// the list sorted by pinned status.
   Future<void> loadTodos() async {
-    final todosList = await repository.getTodos();
+    emit(TodoState.loading(state.todos));
+    try {
+      final todosList = await repository.getTodos();
 
-    final sortedTodos = [...todosList]..sort(
-        (a, b) {
-          if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
-          return a.isPinned ? -1 : 1;
-        },
-      );
+      final sortedTodos = [...todosList]..sort(
+          (a, b) {
+            if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
+            return a.isPinned ? -1 : 1;
+          },
+        );
 
-    emit(sortedTodos);
+      emit(TodoState.success(sortedTodos));
+    } catch (e) {
+      emit(TodoState.error('Failed to load todos', state.todos));
+    }
   }
 
   /// Adds a new todo with given title, subtasks, optional reminder, and id.
@@ -43,9 +49,10 @@ class TodoCubit extends Cubit<List<Todo>> {
   /// Then reloads the todos list.
   Future<void> addTodo(String title, List<Todo> subtasks,
       {DateTime? reminder, required int id, int? folderId}) async {
-    final nextOrder = state.isEmpty
+    final currentTodos = state.todos;
+    final nextOrder = currentTodos.isEmpty
         ? 0
-        : state.map((t) => t.order).reduce((a, b) => a > b ? a : b) + 1;
+        : currentTodos.map((t) => t.order).reduce((a, b) => a > b ? a : b) + 1;
     final newTodo = Todo(
       id: id,
       title: title,
@@ -135,7 +142,7 @@ class TodoCubit extends Cubit<List<Todo>> {
   /// Reordering is constrained to todos within the same pin group so that
   /// pinned/unpinned sort behavior remains predictable.
   Future<void> reorderTodoByIds(int draggedId, int targetId) async {
-    final todos = [...state];
+    final todos = [...state.todos];
     final from = todos.indexWhere((t) => t.id == draggedId);
     final to = todos.indexWhere((t) => t.id == targetId);
 
@@ -154,7 +161,8 @@ class TodoCubit extends Cubit<List<Todo>> {
   }
 
   Future<void> moveTodosToFolder(List<int> todoIds, int? folderId) async {
-    final selected = state.where((todo) => todoIds.contains(todo.id)).toList();
+    final selected =
+        state.todos.where((todo) => todoIds.contains(todo.id)).toList();
     for (final todo in selected) {
       await repository.updateTodo(todo.copyWith(folderId: folderId));
     }

@@ -10,6 +10,7 @@ import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_state.dart';
 import 'package:to_do_app/presentation/todos/todo_masonry_view.dart';
 
 /// TodosView is the main screen that displays a list of ToDo items.
@@ -69,7 +70,7 @@ class _TodosViewState extends State<TodosView> {
   Future<void> deleteSelectedTodos() async {
     final todoCubit = context.read<TodoCubit>();
 
-    final todosToDelete = todoCubit.state
+    final todosToDelete = todoCubit.state.todos
         .where((todo) => selectedTodos.contains(todo.id))
         .toList();
 
@@ -91,7 +92,7 @@ class _TodosViewState extends State<TodosView> {
   /// If any selected note is unpinned, all are pinned.
   /// Otherwise, all selected notes are unpinned.
   void togglePin() async {
-    final todos = context.read<TodoCubit>().state;
+    final todos = context.read<TodoCubit>().state.todos;
     final selected =
         todos.where((todo) => selectedTodos.contains(todo.id)).toList();
 
@@ -149,8 +150,6 @@ class _TodosViewState extends State<TodosView> {
   void initState() {
     super.initState();
 
-    final todoCubit = context.read<TodoCubit>();
-    todoCubit.loadTodos();
     context
         .read<TodoSearchCubit>()
         .setFolderFilter(context.read<FolderFilterCubit>().state);
@@ -197,7 +196,7 @@ class _TodosViewState extends State<TodosView> {
   /// Animations are used to smoothly transition between the different states.
   SliverAppBar _buildAppbar(ColorScheme theme) {
     final textStyle = Theme.of(context).textTheme;
-    final todos = context.read<TodoCubit>().state;
+    final todos = context.read<TodoCubit>().state.todos;
     final selected =
         todos.where((todo) => selectedTodos.contains(todo.id)).toList();
     final areAllPinned =
@@ -302,6 +301,11 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
+    final allTodos = context.select((TodoCubit cubit) => cubit.state.todos);
+    final todoStatus = context.select((TodoCubit cubit) => cubit.state.status);
+    final folderFilter =
+        context.select((FolderFilterCubit cubit) => cubit.state);
+
     return BlocListener<FolderFilterCubit, FolderFilter>(
       listener: (context, filter) {
         context.read<TodoSearchCubit>().setFolderFilter(filter);
@@ -334,8 +338,20 @@ class _Body extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
               child: BlocBuilder<TodoSearchCubit, List<Todo>>(
                 builder: (context, todos) {
-                  final allTodos = context.watch<TodoCubit>().state;
-                  final folderFilter = context.watch<FolderFilterCubit>().state;
+                  if (todoStatus == TodoStatus.loading && allTodos.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (todoStatus == TodoStatus.error && allTodos.isEmpty) {
+                    return Center(
+                      child: FilledButton.icon(
+                        onPressed: () => context.read<TodoCubit>().loadTodos(),
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Retry loading todos'),
+                      ),
+                    );
+                  }
+
                   final isTrulyEmpty = allTodos.isEmpty;
                   final hasSearch = textController.text.trim().isNotEmpty;
                   final hasFolderFilter =
@@ -352,6 +368,7 @@ class _Body extends StatelessWidget {
                       subtitle:
                           'Create your first task and break it into subtasks.',
                       icon: Icons.playlist_add_check_circle_rounded,
+                      primaryIcon: Icons.playlist_add_rounded,
                       primaryLabel: 'Create first todo',
                       onPrimaryTap: () => context.push('/addtodo'),
                       secondaryLabel: 'Set reminder',

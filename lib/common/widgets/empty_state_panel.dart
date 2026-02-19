@@ -4,6 +4,7 @@ class ActivationEmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
+  final IconData primaryIcon;
   final String primaryLabel;
   final VoidCallback onPrimaryTap;
   final String secondaryLabel;
@@ -14,6 +15,7 @@ class ActivationEmptyState extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.primaryIcon = Icons.add_rounded,
     required this.primaryLabel,
     required this.onPrimaryTap,
     required this.secondaryLabel,
@@ -27,6 +29,7 @@ class ActivationEmptyState extends StatelessWidget {
       secondIcon: Icons.alarm_add_outlined,
       title: title,
       subtitle: subtitle,
+      primaryIcon: primaryIcon,
       primaryLabel: primaryLabel,
       onPrimaryTap: onPrimaryTap,
       secondaryLabel: secondaryLabel,
@@ -38,6 +41,7 @@ class ActivationEmptyState extends StatelessWidget {
 class NoResultsState extends StatelessWidget {
   final String title;
   final String subtitle;
+  final IconData primaryIcon;
   final String primaryLabel;
   final VoidCallback onPrimaryTap;
   final String secondaryLabel;
@@ -47,6 +51,7 @@ class NoResultsState extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
+    this.primaryIcon = Icons.clear_rounded,
     required this.primaryLabel,
     required this.onPrimaryTap,
     required this.secondaryLabel,
@@ -60,6 +65,7 @@ class NoResultsState extends StatelessWidget {
       secondIcon: Icons.folder_copy_outlined,
       title: title,
       subtitle: subtitle,
+      primaryIcon: primaryIcon,
       primaryLabel: primaryLabel,
       onPrimaryTap: onPrimaryTap,
       secondaryLabel: secondaryLabel,
@@ -71,6 +77,7 @@ class NoResultsState extends StatelessWidget {
 class _EmptyStateShell extends StatelessWidget {
   final IconData icon;
   final IconData secondIcon;
+  final IconData primaryIcon;
   final String title;
   final String subtitle;
   final String primaryLabel;
@@ -82,6 +89,7 @@ class _EmptyStateShell extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.primaryIcon,
     required this.primaryLabel,
     required this.onPrimaryTap,
     required this.secondaryLabel,
@@ -127,7 +135,7 @@ class _EmptyStateShell extends StatelessWidget {
               const SizedBox(height: 18),
               FilledButton.icon(
                 onPressed: onPrimaryTap,
-                icon: const Icon(Icons.clear),
+                icon: Icon(primaryIcon),
                 label: Text(primaryLabel),
               ),
               const SizedBox(height: 8),

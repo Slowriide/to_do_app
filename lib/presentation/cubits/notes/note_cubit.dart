@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
 
 /// Cubit that manages the list of notes.
 ///
@@ -10,26 +11,31 @@ import 'package:to_do_app/domain/repository/note_repository.dart';
 /// Supports adding, deleting (single and multiple), updating, and toggling completion of notes.
 ///
 /// Handles scheduling and canceling notifications based on note reminders.
-class NoteCubit extends Cubit<List<Note>> {
+class NoteCubit extends Cubit<NoteState> {
   final NoteRepository repository;
 
-  NoteCubit(this.repository) : super([]) {
+  NoteCubit(this.repository) : super(const NoteState.loading()) {
     loadNotes();
   }
 
   /// Loads all notes from the repository, sorting pinned notes first, then emits the sorted list.
   Future<void> loadNotes() async {
-    final notesList = await repository.getNotes();
+    emit(NoteState.loading(state.notes));
+    try {
+      final notesList = await repository.getNotes();
 
-    // Order pinned first, then by manual order.
-    final sortedNotes = [...notesList]..sort(
-        (a, b) {
-          if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
-          return a.isPinned ? -1 : 1;
-        },
-      );
+      // Order pinned first, then by manual order.
+      final sortedNotes = [...notesList]..sort(
+          (a, b) {
+            if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
+            return a.isPinned ? -1 : 1;
+          },
+        );
 
-    emit(sortedNotes);
+      emit(NoteState.success(sortedNotes));
+    } catch (e) {
+      emit(NoteState.error('Failed to load notes', state.notes));
+    }
   }
 
   /// Adds a new note with given text, title, optional reminder, and id.
@@ -37,9 +43,10 @@ class NoteCubit extends Cubit<List<Note>> {
   /// Saves the note to the repository and reloads the notes.
   Future<void> addNote(String text, String title,
       {DateTime? reminder, required int id, int? folderId}) async {
-    final nextOrder = state.isEmpty
+    final currentNotes = state.notes;
+    final nextOrder = currentNotes.isEmpty
         ? 0
-        : state.map((n) => n.order).reduce((a, b) => a > b ? a : b) + 1;
+        : currentNotes.map((n) => n.order).reduce((a, b) => a > b ? a : b) + 1;
     final newNote = Note(
       id: id,
       title: title,
@@ -123,7 +130,7 @@ class NoteCubit extends Cubit<List<Note>> {
   /// Reordering is constrained to notes within the same pin group so that
   /// pinned/unpinned sort behavior remains predictable.
   Future<void> reorderNoteByIds(int draggedId, int targetId) async {
-    final notes = [...state];
+    final notes = [...state.notes];
     final from = notes.indexWhere((n) => n.id == draggedId);
     final to = notes.indexWhere((n) => n.id == targetId);
 
@@ -142,7 +149,8 @@ class NoteCubit extends Cubit<List<Note>> {
   }
 
   Future<void> moveNotesToFolder(List<int> noteIds, int? folderId) async {
-    final selected = state.where((note) => noteIds.contains(note.id)).toList();
+    final selected =
+        state.notes.where((note) => noteIds.contains(note.id)).toList();
     for (final note in selected) {
       await repository.updateNote(note.copyWith(folderId: folderId));
     }

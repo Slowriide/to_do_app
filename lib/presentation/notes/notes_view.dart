@@ -9,6 +9,7 @@ import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
 
 import 'package:to_do_app/presentation/notes/masonry_view.dart';
 
@@ -70,7 +71,7 @@ class _NotesViewState extends State<NotesView> {
   Future<void> deleteSelectedNotes() async {
     final noteCubit = context.read<NoteCubit>();
 
-    final notesToDelete = noteCubit.state
+    final notesToDelete = noteCubit.state.notes
         .where((note) => selectedNotes.contains(note.id))
         .toList();
 
@@ -92,7 +93,7 @@ class _NotesViewState extends State<NotesView> {
   /// If any selected note is unpinned, all are pinned.
   /// Otherwise, all selected notes are unpinned.
   void togglePin() {
-    final notes = context.read<NoteCubit>().state;
+    final notes = context.read<NoteCubit>().state.notes;
     final selected = notes.where((n) => selectedNotes.contains(n.id)).toList();
 
     final anyUnpinned = selected.any((n) => !n.isPinned);
@@ -149,8 +150,6 @@ class _NotesViewState extends State<NotesView> {
   void initState() {
     super.initState();
 
-    final noteCubit = context.read<NoteCubit>();
-    noteCubit.loadNotes();
     context
         .read<NoteSearchCubit>()
         .setFolderFilter(context.read<FolderFilterCubit>().state);
@@ -198,7 +197,7 @@ class _NotesViewState extends State<NotesView> {
   /// Animations are used to smoothly transition between the different states.
   SliverAppBar _buildAppbar(ColorScheme theme) {
     final textStyle = Theme.of(context).textTheme;
-    final notes = context.read<NoteCubit>().state;
+    final notes = context.read<NoteCubit>().state.notes;
     final selected =
         notes.where((note) => selectedNotes.contains(note.id)).toList();
     final areAllPinned =
@@ -299,6 +298,11 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
+    final allNotes = context.select((NoteCubit cubit) => cubit.state.notes);
+    final noteStatus = context.select((NoteCubit cubit) => cubit.state.status);
+    final folderFilter =
+        context.select((FolderFilterCubit cubit) => cubit.state);
+
     return BlocListener<FolderFilterCubit, FolderFilter>(
       listener: (context, filter) {
         context.read<NoteSearchCubit>().setFolderFilter(filter);
@@ -331,8 +335,20 @@ class _Body extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
               child: BlocBuilder<NoteSearchCubit, List<Note>>(
                 builder: (context, notes) {
-                  final allNotes = context.watch<NoteCubit>().state;
-                  final folderFilter = context.watch<FolderFilterCubit>().state;
+                  if (noteStatus == NoteStatus.loading && allNotes.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (noteStatus == NoteStatus.error && allNotes.isEmpty) {
+                    return Center(
+                      child: FilledButton.icon(
+                        onPressed: () => context.read<NoteCubit>().loadNotes(),
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Retry loading notes'),
+                      ),
+                    );
+                  }
+
                   final isTrulyEmpty = allNotes.isEmpty;
                   final hasSearch = textController.text.trim().isNotEmpty;
                   final hasFolderFilter =
@@ -346,6 +362,7 @@ class _Body extends StatelessWidget {
                       title: 'No notes yet',
                       subtitle: 'Capture your first idea to get started.',
                       icon: Icons.note_add_rounded,
+                      primaryIcon: Icons.note_add_rounded,
                       primaryLabel: 'Create first note',
                       onPrimaryTap: () => context.push('/addNote'),
                       secondaryLabel: 'Set reminder',

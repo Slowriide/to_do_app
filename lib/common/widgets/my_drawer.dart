@@ -317,12 +317,14 @@ class _MyDrawerState extends State<MyDrawer> {
     final noteIds = context
         .read<NoteCubit>()
         .state
+        .notes
         .where((note) => note.folderId == folder.id)
         .map((note) => note.id)
         .toList();
     final todoIds = context
         .read<TodoCubit>()
         .state
+        .todos
         .where((todo) => todo.folderId == folder.id)
         .map((todo) => todo.id)
         .toList();
