@@ -58,7 +58,7 @@ class NoteCubit extends Cubit<NoteState> {
 
     await repository.addNote(newNote);
 
-    loadNotes();
+    await loadNotes();
   }
 
   /// Deletes multiple notes from the repository.
@@ -67,9 +67,9 @@ class NoteCubit extends Cubit<NoteState> {
   Future<void> deleteNotes(List<Note> notesToDelete) async {
     for (final note in notesToDelete) {
       await repository.deleteNote(note);
-      NotificationService().cancelNotification(note.id);
+      await NotificationService().cancelNotification(note.id);
     }
-    loadNotes();
+    await loadNotes();
   }
 
   /// Toggles the completion status of a given note.
@@ -80,7 +80,7 @@ class NoteCubit extends Cubit<NoteState> {
 
     await repository.updateNote(updatedNote);
 
-    loadNotes();
+    await loadNotes();
   }
 
   /// Updates an existing note in the repository.
@@ -88,10 +88,10 @@ class NoteCubit extends Cubit<NoteState> {
   /// Reloads notes and schedules a notification if the note has a reminder.
   Future<void> updateNote(Note updateNote) async {
     await repository.updateNote(updateNote);
-    loadNotes();
+    await loadNotes();
 
     if (updateNote.reminder != null) {
-      NotificationService().showNotification(
+      await NotificationService().showNotification(
         id: updateNote.id,
         title: updateNote.title,
         body: updateNote.text,
@@ -107,14 +107,14 @@ class NoteCubit extends Cubit<NoteState> {
     await repository.updateNotes(notes);
     for (final note in notes) {
       if (note.reminder == null) continue;
-      NotificationService().showNotification(
+      await NotificationService().showNotification(
         id: note.id,
         title: note.title,
         body: note.text,
         scheduledDate: note.reminder!,
       );
     }
-    loadNotes();
+    await loadNotes();
   }
 
   /// Reorders notes based on the UI order and persists it.

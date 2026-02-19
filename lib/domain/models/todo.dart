@@ -6,6 +6,8 @@
 ///
 /// This class is immutable. To modify a task, use [copyWith] or [toggleCompletition].
 class Todo {
+  static const Object _unset = Object();
+
   final int id;
   final String title;
   final bool isCompleted;
@@ -35,9 +37,9 @@ class Todo {
     List<Todo>? subTasks,
     bool? isSubtask,
     int? order,
-    DateTime? reminder,
+    Object? reminder = _unset,
     bool? isPinned,
-    int? folderId,
+    Object? folderId = _unset,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -46,9 +48,11 @@ class Todo {
       subTasks: subTasks ?? this.subTasks,
       isSubtask: isSubtask ?? this.isSubtask,
       order: order ?? this.order,
-      reminder: reminder ?? this.reminder,
+      reminder:
+          identical(reminder, _unset) ? this.reminder : reminder as DateTime?,
       isPinned: isPinned ?? this.isPinned,
-      folderId: folderId ?? this.folderId,
+      folderId:
+          identical(folderId, _unset) ? this.folderId : folderId as int?,
     );
   }
 

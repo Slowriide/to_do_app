@@ -64,7 +64,7 @@ class TodoCubit extends Cubit<TodoState> {
       folderId: folderId,
     );
     await repository.addTodo(newTodo);
-    loadTodos();
+    await loadTodos();
   }
 
   /// Deletes the given todo and cancels its notification.
@@ -72,8 +72,8 @@ class TodoCubit extends Cubit<TodoState> {
   /// Then reloads the todos list.
   Future<void> deleteTodo(Todo todo) async {
     await repository.deleteTodo(todo);
-    loadTodos();
-    NotificationService().cancelNotification(todo.id);
+    await loadTodos();
+    await NotificationService().cancelNotification(todo.id);
   }
 
   /// Updates the given todo and reloads the list.
@@ -81,9 +81,9 @@ class TodoCubit extends Cubit<TodoState> {
   /// If the todo has a reminder, schedules a notification.
   Future<void> updateTodo(Todo todo) async {
     await repository.updateTodo(todo);
-    loadTodos();
+    await loadTodos();
     if (todo.reminder != null) {
-      NotificationService().showNotification(
+      await NotificationService().showNotification(
         id: todo.id,
         title: todo.title,
         scheduledDate: todo.reminder!,
@@ -98,7 +98,7 @@ class TodoCubit extends Cubit<TodoState> {
     await repository.updateTodos(todos);
     for (final todo in todos) {
       if (todo.reminder == null) continue;
-      NotificationService().showNotification(
+      await NotificationService().showNotification(
         id: todo.id,
         title: todo.title,
         scheduledDate: todo.reminder!,
@@ -111,22 +111,22 @@ class TodoCubit extends Cubit<TodoState> {
   Future<void> toggleCompletion(Todo todo) async {
     final updatedTodo = todo.toggleCompletition();
     await repository.updateTodo(updatedTodo);
-    loadTodos();
+    await loadTodos();
   }
 
   /// Deletes multiple todos and cancels their notifications.
   Future<void> deleteMultiples(List<Todo> todosToDelete) async {
     for (final todo in todosToDelete) {
       await repository.deleteTodo(todo);
-      NotificationService().cancelNotification(todo.id);
+      await NotificationService().cancelNotification(todo.id);
     }
-    loadTodos();
+    await loadTodos();
   }
 
   /// Updates a subtask and reloads the list.
   Future<void> updateSubtask(Todo subtask) async {
     await repository.updateSubTask(subtask);
-    loadTodos();
+    await loadTodos();
   }
 
   /// Reorders todos based on the UI order and persists it.

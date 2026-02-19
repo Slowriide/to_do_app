@@ -6,6 +6,8 @@
 ///
 /// This class is immutable. To modify a note, use [copyWith] or [toggleCompletion].
 class Note {
+  static const Object _unset = Object();
+
   final int id;
   final String title;
   final String text;
@@ -43,20 +45,22 @@ class Note {
     String? title,
     String? text,
     bool? isCompleted,
-    DateTime? reminder,
+    Object? reminder = _unset,
     bool? isPinned,
     int? order,
-    int? folderId,
+    Object? folderId = _unset,
   }) {
     return Note(
       id: id,
       title: title ?? this.title,
       text: text ?? this.text,
       isCompleted: isCompleted ?? this.isCompleted,
-      reminder: reminder ?? this.reminder,
+      reminder:
+          identical(reminder, _unset) ? this.reminder : reminder as DateTime?,
       isPinned: isPinned ?? this.isPinned,
       order: order ?? this.order,
-      folderId: folderId ?? this.folderId,
+      folderId:
+          identical(folderId, _unset) ? this.folderId : folderId as int?,
     );
   }
 }

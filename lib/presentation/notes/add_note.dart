@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
@@ -89,7 +90,7 @@ class _AddNoteState extends State<AddNote> {
     if (_formKey.currentState?.validate() ?? false) {
       final title = _titleController.text.trim();
       final text = _textController.text.trim();
-      final uniqueId = DateTime.now().millisecondsSinceEpoch.remainder(1000000);
+      final uniqueId = IdGenerator.next();
 
       if (_reminderDate != null) {
         await NotificationService().showNotification(

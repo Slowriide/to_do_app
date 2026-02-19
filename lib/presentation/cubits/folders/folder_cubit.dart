@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/repository/folder_repository.dart';
 
@@ -29,7 +30,7 @@ class FolderCubit extends Cubit<List<Folder>> {
     if (_isNameTaken(normalized)) return 'Folder name already exists';
 
     final nextOrder = state.isEmpty ? 0 : state.last.order + 1;
-    final id = DateTime.now().millisecondsSinceEpoch.remainder(1000000);
+    final id = IdGenerator.next();
     final folder = Folder(
       id: id,
       name: normalized,

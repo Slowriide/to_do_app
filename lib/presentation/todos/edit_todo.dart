@@ -5,6 +5,7 @@ import 'package:to_do_app/common/utils/editablesubtask.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
@@ -133,7 +134,7 @@ class _EditTodoState extends State<EditTodo> {
     setState(() {
       _editableSubtasks.add(
         EditableSubtask(
-          id: DateTime.now().millisecondsSinceEpoch.remainder(1000000),
+          id: IdGenerator.next(),
           controller: TextEditingController(),
         ),
       );
@@ -272,13 +273,15 @@ class _EditTodoState extends State<EditTodo> {
             pickDateReminderDate();
           }
         },
-        onBackTap: () {
-          _updateTodo();
+        onBackTap: () async {
+          await _updateTodo();
+          if (!mounted) return;
           context.go('/todos');
         },
         actionLabel: 'Save ToDo',
-        onActionTap: () {
-          _updateTodo();
+        onActionTap: () async {
+          await _updateTodo();
+          if (!mounted) return;
           context.go('/todos');
         },
         floatingActionButton: BlocBuilder<FolderCubit, List<Folder>>(

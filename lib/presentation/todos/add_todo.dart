@@ -5,6 +5,7 @@ import 'package:to_do_app/common/utils/editablesubtask.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
@@ -110,12 +111,12 @@ class _AddTodoState extends State<AddTodo> {
     if (_formKey.currentState?.validate() ?? false) {
       final todoCubit = context.read<TodoCubit>();
       final title = _titleController.text.trim();
-      final uniqueId = DateTime.now().millisecondsSinceEpoch.remainder(1000000);
+      final uniqueId = IdGenerator.next();
       final subtasks = _editableSubtasks.asMap().entries.map((entry) {
         final index = entry.key;
         final ctrl = entry.value;
         return Todo(
-          id: DateTime.now().millisecondsSinceEpoch + ctrl.hashCode,
+          id: IdGenerator.next(),
           title: ctrl.controller.text.trim(),
           isCompleted: ctrl.isCompleted,
           subTasks: [],
