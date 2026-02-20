@@ -16,6 +16,7 @@ class Todo {
   final int order;
   final DateTime? reminder;
   final bool isPinned;
+  final bool isArchived;
   final int? folderId;
 
   Todo({
@@ -27,6 +28,7 @@ class Todo {
     required this.order,
     this.reminder,
     this.isPinned = false,
+    this.isArchived = false,
     this.folderId,
   });
 
@@ -39,6 +41,7 @@ class Todo {
     int? order,
     Object? reminder = _unset,
     bool? isPinned,
+    bool? isArchived,
     Object? folderId = _unset,
   }) {
     return Todo(
@@ -51,6 +54,7 @@ class Todo {
       reminder:
           identical(reminder, _unset) ? this.reminder : reminder as DateTime?,
       isPinned: isPinned ?? this.isPinned,
+      isArchived: isArchived ?? this.isArchived,
       folderId:
           identical(folderId, _unset) ? this.folderId : folderId as int?,
     );
@@ -66,6 +70,7 @@ class Todo {
       order: order,
       reminder: reminder,
       isPinned: isPinned,
+      isArchived: isArchived,
       folderId: folderId,
     );
   }

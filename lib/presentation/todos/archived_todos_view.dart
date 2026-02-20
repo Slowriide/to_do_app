@@ -3,41 +3,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/folder_chips.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
-import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
-
-import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_state.dart';
 import 'package:to_do_app/presentation/todos/todo_masonry_view.dart';
 
-/// TodosView is the main screen that displays a list of ToDo items.
-///
-/// It supports viewing, searching, selecting, pinning/unpinning, and deleting ToDos.
-/// Selection mode enables multi-selection to perform batch actions like delete or pin.
-///
-/// Uses TodoCubit to load and manage ToDos, and TodoSearchCubit to filter them by search query.
-/// A floating action button is available to add new ToDos when not in selection mode.
-class TodosView extends StatefulWidget {
-  const TodosView({super.key});
+class ArchivedTodosView extends StatefulWidget {
+  const ArchivedTodosView({super.key});
 
   @override
-  State<TodosView> createState() => _TodosViewState();
+  State<ArchivedTodosView> createState() => _ArchivedTodosViewState();
 }
 
-class _TodosViewState extends State<TodosView> {
-  /// Set of currently selected ToDo IDs.
+class _ArchivedTodosViewState extends State<ArchivedTodosView> {
   Set<int> selectedTodos = {};
-
-  /// Whether selection mode is active (at least one ToDo is selected).
   bool get isSelectionMode => selectedTodos.isNotEmpty;
-
-  /// Controller for the search text input.
   final _searchController = TextEditingController();
 
-  /// Toggles selection for a specific ToDo by its [todoId].
   void toggleSelection(int todoId) {
     setState(() {
       if (selectedTodos.contains(todoId)) {
@@ -48,7 +32,6 @@ class _TodosViewState extends State<TodosView> {
     });
   }
 
-  /// Selects all ToDos, or clears selection if all are already selected.
   void selectAll() {
     final allTodos = context.read<TodoSearchCubit>().state;
     final allTodosIds = allTodos.map((todo) => todo.id).toSet();
@@ -61,19 +44,15 @@ class _TodosViewState extends State<TodosView> {
     });
   }
 
-  /// Clears all current selections.
   void clearSelection() {
     setState(() => selectedTodos.clear());
   }
 
-  /// Deletes all currently selected ToDos.
   Future<void> deleteSelectedTodos() async {
     final todoCubit = context.read<TodoCubit>();
-
     final todosToDelete = todoCubit.state.todos
         .where((todo) => selectedTodos.contains(todo.id))
         .toList();
-
     if (todosToDelete.isEmpty) return;
 
     final confirmed = await showDeleteConfirmationDialog(
@@ -87,81 +66,21 @@ class _TodosViewState extends State<TodosView> {
     clearSelection();
   }
 
-  Future<void> archiveSelectedTodos() async {
+  Future<void> restoreSelectedTodos() async {
     final todoCubit = context.read<TodoCubit>();
-    final selected = todoCubit.state.todos
+    final todosToRestore = todoCubit.state.todos
         .where((todo) => selectedTodos.contains(todo.id))
         .toList();
-    await todoCubit.archiveTodos(selected);
-    clearSelection();
-  }
-
-  /// Toggles pin status of selected notes.
-  ///
-  /// If any selected note is unpinned, all are pinned.
-  /// Otherwise, all selected notes are unpinned.
-  void togglePin() async {
-    final todos = context.read<TodoCubit>().state.todos;
-    final selected =
-        todos.where((todo) => selectedTodos.contains(todo.id)).toList();
-
-    final anyUnpinned = selected.any((todo) => !todo.isPinned);
-    final pinValue = anyUnpinned;
-
-    final updated =
-        selected.map((todo) => todo.copyWith(isPinned: pinValue)).toList();
-
-    await context.read<TodoCubit>().updateTodos(updated);
-    clearSelection();
-  }
-
-  Future<void> moveSelectedTodos() async {
-    final result = await showModalBottomSheet<int>(
-      context: context,
-      builder: (context) {
-        return BlocBuilder<FolderCubit, List<Folder>>(
-          builder: (context, folders) {
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const ListTile(
-                    title: Text('Move selected todos to'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.inbox_outlined),
-                    title: const Text('Inbox'),
-                    onTap: () => Navigator.pop(context, -1),
-                  ),
-                  ...folders.map(
-                    (folder) => ListTile(
-                      leading: const Icon(Icons.folder_outlined),
-                      title: Text(folder.name),
-                      onTap: () => Navigator.pop(context, folder.id),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-    if (result == null) return;
-    final folderId = result == -1 ? null : result;
-    await context
-        .read<TodoCubit>()
-        .moveTodosToFolder(selectedTodos.toList(), folderId);
+    await todoCubit.restoreTodos(todosToRestore);
     clearSelection();
   }
 
   @override
   void initState() {
     super.initState();
-
     context
         .read<TodoSearchCubit>()
-        .setArchiveScope(TodoArchiveScope.activeOnly);
+        .setArchiveScope(TodoArchiveScope.archivedOnly);
     context
         .read<TodoSearchCubit>()
         .setFolderFilter(context.read<FolderFilterCubit>().state);
@@ -170,7 +89,6 @@ class _TodosViewState extends State<TodosView> {
   @override
   void dispose() {
     _searchController.dispose();
-
     super.dispose();
   }
 
@@ -179,8 +97,9 @@ class _TodosViewState extends State<TodosView> {
     final theme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: theme.surface,
-      drawer: MyDrawer(),
+      drawer: const MyDrawer(),
       body: NestedScrollView(
+        physics: const BouncingScrollPhysics(),
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           _buildAppbar(theme),
         ],
@@ -191,35 +110,11 @@ class _TodosViewState extends State<TodosView> {
           textController: _searchController,
         ),
       ),
-      floatingActionButton: isSelectionMode
-          ? null
-          : FloatingActionButton(
-              onPressed: () => context.push('/addtodo'),
-              child: const Icon(Icons.add_rounded, size: 28),
-            ),
     );
   }
 
-  /// Builds the app bar for the notes screen.
-  ///
-  /// The app bar changes its content and actions dynamically based on whether
-  /// the user is in selection mode or not:
-  /// - When notes are selected (selection mode):
-  ///   - Shows the number of selected notes as the title.
-  ///   - Displays action buttons for clearing selection, pinning/unpinning,
-  ///     selecting all notes, and deleting selected notes.
-  /// - When no notes are selected (normal mode):
-  ///   - Displays the default title "Notes".
-  ///   - No leading or action buttons are shown.
-  ///
-  /// Animations are used to smoothly transition between the different states.
   SliverAppBar _buildAppbar(ColorScheme theme) {
     final textStyle = Theme.of(context).textTheme;
-    final todos = context.read<TodoCubit>().state.todos;
-    final selected =
-        todos.where((todo) => selectedTodos.contains(todo.id)).toList();
-    final areAllPinned =
-        selected.isNotEmpty && selected.every((n) => n.isPinned);
 
     return SliverAppBar(
       toolbarHeight: 68,
@@ -249,7 +144,7 @@ class _TodosViewState extends State<TodosView> {
                 key: ValueKey('selected'),
               )
             : Text(
-                'ToDo\'s',
+                'Archived ToDo\'s',
                 key: ValueKey('normal'),
                 style: textStyle.titleMedium?.copyWith(
                   fontSize: 32,
@@ -259,58 +154,41 @@ class _TodosViewState extends State<TodosView> {
       ),
       actions: [
         AnimatedSwitcher(
-            duration: Duration(milliseconds: 300),
-            transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(scale: animation, child: child),
-                ),
-            child: isSelectionMode
-                ? Row(
-                    children: [
-                      MyTooltip(
-                        message: areAllPinned ? 'Unpin Todos' : 'Pin Todos',
-                        icon: areAllPinned
-                            ? Icons.push_pin
-                            : Icons.push_pin_outlined,
-                        onPressed: togglePin,
-                        valueKey: ValueKey('SelectAll'),
-                      ),
-                      MyTooltip(
-                        message: 'Archive',
-                        icon: Icons.archive_outlined,
-                        onPressed: archiveSelectedTodos,
-                        valueKey: ValueKey('Archive'),
-                      ),
-                      MyTooltip(
-                        message: 'Move to Folder',
-                        icon: Icons.drive_file_move_outline,
-                        onPressed: moveSelectedTodos,
-                        valueKey: ValueKey('Move'),
-                      ),
-                      MyTooltip(
-                        message: 'Select All',
-                        icon: Icons.select_all_outlined,
-                        onPressed: selectAll,
-                        valueKey: ValueKey('SelectAll'),
-                      ),
-                      MyTooltip(
-                        message: 'Delete',
-                        icon: Icons.delete_outline_outlined,
-                        onPressed: deleteSelectedTodos,
-                        valueKey: ValueKey('Delete'),
-                      ),
-                    ],
-                  )
-                : null)
+          duration: Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(scale: animation, child: child),
+          ),
+          child: isSelectionMode
+              ? Row(
+                  children: [
+                    MyTooltip(
+                      message: 'Restore',
+                      icon: Icons.unarchive_outlined,
+                      onPressed: restoreSelectedTodos,
+                      valueKey: ValueKey('Restore'),
+                    ),
+                    MyTooltip(
+                      message: 'Select All',
+                      icon: Icons.select_all_outlined,
+                      onPressed: selectAll,
+                      valueKey: ValueKey('SelectAll'),
+                    ),
+                    MyTooltip(
+                      message: 'Delete permanently',
+                      icon: Icons.delete_outline_outlined,
+                      onPressed: deleteSelectedTodos,
+                      valueKey: ValueKey('Delete'),
+                    ),
+                  ],
+                )
+              : null,
+        )
       ],
     );
   }
 }
 
-/// Internal widget that builds the ToDo list and search input.
-///
-/// Displays a search field and a masonry grid of ToDos
-/// filtered by search input from [TodoSearchCubit].
 class _Body extends StatelessWidget {
   final Set<int> selectedTodosId;
   final bool isSelectionMode;
@@ -327,7 +205,7 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     final allTodos = context.select((TodoCubit cubit) => cubit.state.todos);
-    final activeTodos = allTodos.where((todo) => !todo.isArchived).toList();
+    final archivedTodos = allTodos.where((todo) => todo.isArchived).toList();
     final todoStatus = context.select((TodoCubit cubit) => cubit.state.status);
     final folderFilter =
         context.select((FolderFilterCubit cubit) => cubit.state);
@@ -344,7 +222,7 @@ class _Body extends StatelessWidget {
               controller: textController,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
-                hintText: 'Search Todos',
+                hintText: 'Search Archived ToDo\'s',
                 suffixIcon: IconButton(
                   onPressed: () {
                     textController.clear();
@@ -378,7 +256,7 @@ class _Body extends StatelessWidget {
                     );
                   }
 
-                  final isTrulyEmpty = activeTodos.isEmpty;
+                  final isTrulyEmpty = archivedTodos.isEmpty;
                   final hasSearch = textController.text.trim().isNotEmpty;
                   final hasFolderFilter =
                       folderFilter.type != FolderFilterType.all;
@@ -390,16 +268,14 @@ class _Body extends StatelessWidget {
 
                   if (isTrulyEmpty) {
                     return ActivationEmptyState(
-                      title: 'No todos yet',
-                      subtitle:
-                          'Create your first task and break it into subtasks.',
-                      icon: Icons.playlist_add_check_circle_rounded,
-                      primaryIcon: Icons.playlist_add_rounded,
-                      primaryLabel: 'Create first todo',
-                      onPrimaryTap: () => context.push('/addtodo'),
-                      secondaryLabel: 'Set reminder',
-                      onSecondaryTap: () =>
-                          context.push('/addtodo?mode=reminder'),
+                      title: 'No archived todos',
+                      subtitle: 'Archived todos will appear here.',
+                      icon: Icons.archive_outlined,
+                      primaryIcon: Icons.check_box_outlined,
+                      primaryLabel: 'Go to todos',
+                      onPrimaryTap: () => context.go('/todos'),
+                      secondaryLabel: 'Create todo',
+                      onSecondaryTap: () => context.push('/addtodo'),
                     );
                   }
 

@@ -9,3 +9,5 @@ export 'todos/todos_page.dart';
 export 'todos/todos_view.dart';
 export 'todos/add_todo.dart';
 export 'todos/edit_todo.dart';
+export 'todos/archived_todo_page.dart';
+export 'todos/archived_todos_view.dart';

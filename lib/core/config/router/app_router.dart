@@ -52,6 +52,10 @@ final appRouter = GoRouter(
           return TodoPage(repository: repo);
         }),
     GoRoute(
+      path: '/archived-todos',
+      builder: (context, state) => const ArchivedTodoPage(),
+    ),
+    GoRoute(
       path: '/addtodo',
       builder: (context, state) {
         final reminderMode = state.uri.queryParameters['mode'] == 'reminder';

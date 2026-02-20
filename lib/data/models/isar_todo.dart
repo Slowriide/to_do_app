@@ -30,6 +30,7 @@ class TodoIsar {
   late int order;
   DateTime? reminder;
   late bool isPinned;
+  late bool isArchived;
   int? folderId;
 
   Todo toDomain() {
@@ -42,6 +43,7 @@ class TodoIsar {
       order: order,
       reminder: reminder,
       isPinned: isPinned,
+      isArchived: isArchived,
       folderId: folderId,
     );
   }
@@ -55,6 +57,7 @@ class TodoIsar {
       ..order = todo.order
       ..reminder = todo.reminder
       ..isPinned = todo.isPinned
+      ..isArchived = todo.isArchived
       ..folderId = todo.folderId;
     for (var subtask in todo.subTasks) {
       todoIsar.subtasks.add(TodoIsar.fromDomain(subtask));

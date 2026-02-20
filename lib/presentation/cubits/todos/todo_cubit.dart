@@ -168,4 +168,46 @@ class TodoCubit extends Cubit<TodoState> {
     }
     await loadTodos();
   }
+
+  Future<void> archiveTodos(List<Todo> todos) async {
+    if (todos.isEmpty) return;
+    final toArchiveIds = todos.map((todo) => todo.id).toSet();
+
+    final archivedState = state.todos
+        .map((todo) => toArchiveIds.contains(todo.id)
+            ? todo.copyWith(isArchived: true, isPinned: false)
+            : todo)
+        .toList();
+
+    final reflowed = _reflowActiveTodos(archivedState);
+    await repository.updateTodos(reflowed);
+    await loadTodos();
+  }
+
+  Future<void> restoreTodos(List<Todo> todos) async {
+    if (todos.isEmpty) return;
+    final toRestoreIds = todos.map((todo) => todo.id).toSet();
+    final restoredState = state.todos
+        .map((todo) =>
+            toRestoreIds.contains(todo.id) ? todo.copyWith(isArchived: false) : todo)
+        .toList();
+
+    final reflowed = _reflowActiveTodos(restoredState);
+    await repository.updateTodos(reflowed);
+    await loadTodos();
+  }
+
+  List<Todo> _reflowActiveTodos(List<Todo> todos) {
+    final active = todos.where((todo) => !todo.isArchived).toList()
+      ..sort((a, b) {
+        if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
+        return a.isPinned ? -1 : 1;
+      });
+
+    final activeById = {
+      for (var i = 0; i < active.length; i++) active[i].id: active[i].copyWith(order: i),
+    };
+
+    return todos.map((todo) => activeById[todo.id] ?? todo).toList();
+  }
 }

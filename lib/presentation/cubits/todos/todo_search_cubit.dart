@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 
+enum TodoArchiveScope { activeOnly, archivedOnly }
+
 /// Manages the search state for a list of Todo items.
 ///
 /// Holds the complete list of todos and emits filtered results based on the search query.
@@ -10,6 +12,7 @@ class TodoSearchCubit extends Cubit<List<Todo>> {
   List<Todo> _todos;
   String _query = '';
   FolderFilter _folderFilter = const FolderFilter.all();
+  TodoArchiveScope _archiveScope = TodoArchiveScope.activeOnly;
 
   TodoSearchCubit(this._todos) : super(_todos);
 
@@ -37,8 +40,18 @@ class TodoSearchCubit extends Cubit<List<Todo>> {
     _emitFiltered();
   }
 
+  void setArchiveScope(TodoArchiveScope scope) {
+    _archiveScope = scope;
+    _emitFiltered();
+  }
+
   void _emitFiltered() {
     final filtered = _todos.where((todo) {
+      final matchesArchive = _archiveScope == TodoArchiveScope.activeOnly
+          ? !todo.isArchived
+          : todo.isArchived;
+      if (!matchesArchive) return false;
+
       final matchesQuery = todo.title.toLowerCase().contains(_query) ||
           todo.subTasks.any(
             (subtask) => subtask.title.toLowerCase().contains(_query),
