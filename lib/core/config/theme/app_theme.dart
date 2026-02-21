@@ -1,38 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:to_do_app/core/config/theme/app_colors.dart';
+import 'package:to_do_app/core/config/theme/theme_presets.dart';
 
 /// Defines the visual system for both light and dark modes.
 class AppTheme {
   final bool isDarkMode;
-  late final AppColors colors;
-  AppTheme({required this.isDarkMode}) {
-    colors = AppColors(isDarkMode);
-  }
+  final String presetId;
+  final String? customColorHex;
+  final bool useCustomColor;
+  AppTheme({
+    required this.isDarkMode,
+    this.presetId = 'oceanBlue',
+    this.customColorHex,
+    this.useCustomColor = false,
+  });
 
   ThemeData getTheme() => isDarkMode ? _darkTheme : _lightTheme;
 
   ThemeData _buildTheme(Brightness brightness) {
+    final seedColor = _resolveSeedColor();
     final scheme = ColorScheme.fromSeed(
-      seedColor: colors.onPrimary,
+      seedColor: seedColor,
       brightness: brightness,
     ).copyWith(
-        primary: colors.onPrimary,
-        secondary: colors.secondary,
-        surface: colors.surface,
-        onSurface: colors.onSurface,
-        onInverseSurface: colors.surface2);
+      onInverseSurface: brightness == Brightness.dark
+          ? const Color(0xFF1A222D)
+          : const Color(0xFFFFF3D6),
+    );
 
     final baseText = GoogleFonts.notoSansTextTheme().apply(
-      bodyColor: colors.text,
-      displayColor: colors.text,
+      bodyColor: scheme.onSurface,
+      displayColor: scheme.onSurface,
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: colors.surface,
+      scaffoldBackgroundColor: scheme.surface,
       textTheme: baseText.copyWith(
         titleLarge: baseText.titleLarge?.copyWith(
           fontSize: 30,
@@ -54,62 +59,64 @@ class AppTheme {
         bodySmall: baseText.bodySmall?.copyWith(
           fontSize: 13,
           height: 1.3,
-          color: colors.tertiary,
+          color: scheme.tertiary,
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: colors.surface,
-        foregroundColor: colors.onSurface,
+        backgroundColor: scheme.surface,
+        foregroundColor: scheme.onSurface,
         centerTitle: false,
         titleTextStyle: GoogleFonts.notoSans(
           fontSize: 28,
           fontWeight: FontWeight.w700,
-          color: colors.onSurface,
+          color: scheme.onSurface,
         ),
       ),
       cardTheme: CardThemeData(
-        color: colors.primary,
+        color: brightness == Brightness.dark
+            ? scheme.primaryContainer.withValues(alpha: 0.28)
+            : scheme.primaryContainer.withValues(alpha: 0.44),
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
           side: BorderSide(
-            color: colors.tertiary.withValues(alpha: 0.28),
+            color: scheme.tertiary.withValues(alpha: 0.28),
             width: 1,
           ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: colors.onPrimary,
+        backgroundColor: scheme.primary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        hintStyle: TextStyle(color: colors.tertiary),
+        hintStyle: TextStyle(color: scheme.tertiary),
         filled: true,
-        fillColor: colors.surface2.withValues(alpha: 0.78),
+        fillColor: scheme.onInverseSurface.withValues(alpha: 0.78),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         labelStyle: TextStyle(
-          color: colors.onSurface.withValues(alpha: 0.9),
+          color: scheme.onSurface.withValues(alpha: 0.9),
           fontWeight: FontWeight.w600,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-            color: colors.tertiary.withValues(alpha: 0.26),
+            color: scheme.tertiary.withValues(alpha: 0.26),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-            color: colors.tertiary.withValues(alpha: 0.26),
+            color: scheme.tertiary.withValues(alpha: 0.26),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-            color: colors.onPrimary.withValues(alpha: 0.95),
+            color: scheme.primary.withValues(alpha: 0.95),
             width: 1.6,
           ),
         ),
@@ -139,15 +146,15 @@ class AppTheme {
           ),
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
-              return colors.tertiary.withValues(alpha: 0.35);
+              return scheme.tertiary.withValues(alpha: 0.35);
             }
             if (states.contains(WidgetState.pressed)) {
-              return colors.onPrimary.withValues(alpha: 0.85);
+              return scheme.primary.withValues(alpha: 0.85);
             }
             if (states.contains(WidgetState.hovered)) {
-              return colors.onPrimary.withValues(alpha: 0.92);
+              return scheme.primary.withValues(alpha: 0.92);
             }
-            return colors.onPrimary;
+            return scheme.primary;
           }),
           foregroundColor: const WidgetStatePropertyAll(Colors.white),
           elevation: WidgetStateProperty.resolveWith((states) {
@@ -160,86 +167,107 @@ class AppTheme {
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
         textStyle: TextStyle(
-          color: colors.onSurface,
+          color: scheme.onSurface,
           fontSize: 15,
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: colors.surface2.withValues(alpha: 0.78),
+          fillColor: scheme.onInverseSurface.withValues(alpha: 0.78),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide(
-              color: colors.tertiary.withValues(alpha: 0.24),
+              color: scheme.tertiary.withValues(alpha: 0.24),
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide(
-              color: colors.tertiary.withValues(alpha: 0.24),
+              color: scheme.tertiary.withValues(alpha: 0.24),
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide(
-              color: colors.onPrimary.withValues(alpha: 0.95),
+              color: scheme.primary.withValues(alpha: 0.95),
               width: 1.4,
             ),
           ),
         ),
         menuStyle: MenuStyle(
           backgroundColor:
-              WidgetStatePropertyAll(colors.surface2.withValues(alpha: 0.98)),
+              WidgetStatePropertyAll(scheme.onInverseSurface.withValues(alpha: 0.98)),
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           side: WidgetStatePropertyAll(
-            BorderSide(color: colors.tertiary.withValues(alpha: 0.25)),
+            BorderSide(color: scheme.tertiary.withValues(alpha: 0.25)),
           ),
         ),
       ),
       datePickerTheme: DatePickerThemeData(
-        backgroundColor: colors.surface,
+        backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
-        headerForegroundColor: colors.onSurface,
-        dayStyle: TextStyle(color: colors.onSurface),
-        todayBorder: BorderSide(color: colors.onPrimary),
+        headerForegroundColor: scheme.onSurface,
+        dayStyle: TextStyle(color: scheme.onSurface),
+        todayBorder: BorderSide(color: scheme.primary),
         todayBackgroundColor: WidgetStatePropertyAll(
-          colors.onPrimary.withValues(alpha: 0.12),
+          scheme.primary.withValues(alpha: 0.12),
         ),
       ),
       timePickerTheme: TimePickerThemeData(
-        backgroundColor: colors.surface,
-        dialBackgroundColor: colors.surface2,
-        hourMinuteColor: colors.surface2,
-        hourMinuteTextColor: colors.onSurface,
+        backgroundColor: scheme.surface,
+        dialBackgroundColor: scheme.onInverseSurface,
+        hourMinuteColor: scheme.onInverseSurface,
+        hourMinuteTextColor: scheme.onSurface,
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: colors.surface,
+        backgroundColor: scheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       tooltipTheme: TooltipThemeData(
-        textStyle: TextStyle(color: colors.onSurface, fontSize: 13),
+        textStyle: TextStyle(color: scheme.onSurface, fontSize: 13),
         decoration: BoxDecoration(
-          color: colors.surface2,
+          color: scheme.onInverseSurface,
           borderRadius: BorderRadius.circular(10),
         ),
       ),
       navigationDrawerTheme: NavigationDrawerThemeData(
-        backgroundColor: colors.surface,
-        indicatorColor: colors.onPrimary.withValues(alpha: 0.15),
+        backgroundColor: scheme.surface,
+        indicatorColor: scheme.primary.withValues(alpha: 0.15),
         iconTheme:
-            WidgetStatePropertyAll(IconThemeData(color: colors.onSurface)),
+            WidgetStatePropertyAll(IconThemeData(color: scheme.onSurface)),
         labelTextStyle: WidgetStatePropertyAll(
           GoogleFonts.notoSans(
-            color: colors.onSurface,
+            color: scheme.onSurface,
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
     );
+  }
+
+  Color _resolveSeedColor() {
+    if (useCustomColor) {
+      final customColor = _parseHexColor(customColorHex);
+      if (customColor != null) return customColor;
+    }
+    final preset = themePresets.where((item) => item.id == presetId);
+    if (preset.isNotEmpty) return preset.first.seedColor;
+    return themePresets.first.seedColor;
+  }
+
+  Color? _parseHexColor(String? hex) {
+    if (hex == null) return null;
+    final value = hex.trim();
+    if (value.isEmpty) return null;
+    final normalized = value.startsWith('#') ? value.substring(1) : value;
+    if (normalized.length != 6) return null;
+    final parsed = int.tryParse(normalized, radix: 16);
+    if (parsed == null) return null;
+    return Color(0xFF000000 | parsed);
   }
 
   ThemeData get _lightTheme => _buildTheme(Brightness.light);

@@ -72,7 +72,12 @@ class MyApp extends StatelessWidget {
           BlocProvider(create: (context) => ThemeCubit()),
         ],
         child: BlocBuilder<ThemeCubit, ThemeState>(builder: (context, state) {
-          final themeData = AppTheme(isDarkMode: state.isDarkmode).getTheme();
+          final themeData = AppTheme(
+            isDarkMode: state.isDarkmode,
+            presetId: state.presetId,
+            customColorHex: state.customColorHex,
+            useCustomColor: state.activeColorSource == ThemeColorSource.custom,
+          ).getTheme();
 
           return AnimatedTheme(
             data: themeData,

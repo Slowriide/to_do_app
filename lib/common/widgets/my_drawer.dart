@@ -3,12 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
-import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 
 class MyDrawer extends StatefulWidget {
@@ -24,7 +22,6 @@ class _MyDrawerState extends State<MyDrawer> {
     final theme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textTheme;
     final location = GoRouterState.of(context).uri.toString();
-    final themeCubit = context.read<ThemeCubit>().state;
 
     return Drawer(
       child: Column(
@@ -100,15 +97,10 @@ class _MyDrawerState extends State<MyDrawer> {
                 const SizedBox(height: 12),
                 ListTile(
                   leading: const Icon(Icons.dark_mode_outlined),
-                  title: Text(
-                    themeCubit.isDarkmode ? 'Dark Mode' : 'Light Mode',
-                  ),
+                  title: const Text('Appearance'),
                   onTap: () {
                     Navigator.of(context).pop();
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (context) => const MyBottomSheet(),
-                    );
+                    context.go('/settings');
                   },
                 ),
               ],
