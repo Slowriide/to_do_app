@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
+import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
+import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/utils/id_generator.dart';
@@ -22,7 +25,7 @@ class EditTodo extends StatefulWidget {
 class _EditTodoState extends State<EditTodo> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _titleController;
+  late quill.QuillController _titleController;
   DateTime? _selectedReminder;
 
   late List<EditableSubtask> _editableSubtasks = [];
@@ -31,7 +34,13 @@ class _EditTodoState extends State<EditTodo> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.todo.title);
+    _titleController = quill.QuillController(
+      document: NoteRichTextCodec.documentFromRaw(
+        rawDelta: widget.todo.titleRichTextDeltaJson,
+        fallbackPlainText: widget.todo.title,
+      ),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
     _selectedReminder = widget.todo.reminder;
     _selectedFolderId = widget.todo.folderId;
 
@@ -144,7 +153,9 @@ class _EditTodoState extends State<EditTodo> {
   Future<void> _updateTodo() async {
     final todoCubit = context.read<TodoCubit>();
     if (_formKey.currentState?.validate() ?? false) {
-      final title = _titleController.text.trim();
+      final title = NoteRichTextCodec.extractPlainText(_titleController.document);
+      final titleRichTextDeltaJson =
+          NoteRichTextCodec.encodeDelta(_titleController.document);
       final reminderToSave = (_selectedReminder != null &&
               _selectedReminder!.isAfter(DateTime.now()))
           ? _selectedReminder
@@ -165,6 +176,7 @@ class _EditTodoState extends State<EditTodo> {
 
       final updatedTodo = widget.todo.copyWith(
         title: title,
+        titleRichTextDeltaJson: titleRichTextDeltaJson,
         subTasks: updatedSubtask,
         reminder: reminderToSave,
         folderId: _selectedFolderId,
@@ -308,13 +320,38 @@ class _EditTodoState extends State<EditTodo> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      minLines: 1,
-                      maxLines: 3,
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                        hintText: 'What do you need to do?',
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 70),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: quill.QuillEditor.basic(
+                        controller: _titleController,
+                        config: quill.QuillEditorConfig(
+                          placeholder: 'What do you need to do?',
+                          expands: false,
+                          scrollable: false,
+                          contextMenuBuilder: (context, rawEditorState) {
+                            return NoteSelectionContextMenu(
+                              controller: _titleController,
+                              rawEditorState: rawEditorState,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],

@@ -47,8 +47,14 @@ class TodoCubit extends Cubit<TodoState> {
   /// Adds a new todo with given title, subtasks, optional reminder, and id.
   ///
   /// Then reloads the todos list.
-  Future<void> addTodo(String title, List<Todo> subtasks,
-      {DateTime? reminder, required int id, int? folderId}) async {
+  Future<void> addTodo(
+    String title,
+    List<Todo> subtasks, {
+    DateTime? reminder,
+    required int id,
+    int? folderId,
+    String? titleRichTextDeltaJson,
+  }) async {
     final currentTodos = state.todos;
     final nextOrder = currentTodos.isEmpty
         ? 0
@@ -56,6 +62,7 @@ class TodoCubit extends Cubit<TodoState> {
     final newTodo = Todo(
       id: id,
       title: title,
+      titleRichTextDeltaJson: titleRichTextDeltaJson,
       isCompleted: false,
       subTasks: subtasks,
       isSubtask: false,

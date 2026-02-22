@@ -24,6 +24,7 @@ part 'isar_todo.g.dart';
 class TodoIsar {
   Id id = Isar.autoIncrement;
   late String title;
+  String? titleRichTextDeltaJson;
   late bool isCompleted;
   bool isSubtask = false;
   final subtasks = IsarLinks<TodoIsar>();
@@ -37,6 +38,7 @@ class TodoIsar {
     return Todo(
       id: id,
       title: title,
+      titleRichTextDeltaJson: titleRichTextDeltaJson,
       isCompleted: isCompleted,
       subTasks: subtasks.map((subtask) => subtask.toDomain()).toList(),
       isSubtask: isSubtask,
@@ -52,6 +54,7 @@ class TodoIsar {
     final todoIsar = TodoIsar()
       ..id = todo.id
       ..title = todo.title
+      ..titleRichTextDeltaJson = todo.titleRichTextDeltaJson
       ..isSubtask = todo.isSubtask
       ..isCompleted = todo.isCompleted
       ..order = todo.order

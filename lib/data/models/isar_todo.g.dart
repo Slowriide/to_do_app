@@ -56,6 +56,11 @@ const TodoIsarSchema = CollectionSchema(
       id: 7,
       name: r'title',
       type: IsarType.string,
+    ),
+    r'titleRichTextDeltaJson': PropertySchema(
+      id: 8,
+      name: r'titleRichTextDeltaJson',
+      type: IsarType.string,
     )
   },
   estimateSize: _todoIsarEstimateSize,
@@ -86,6 +91,12 @@ int _todoIsarEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.title.length * 3;
+  {
+    final value = object.titleRichTextDeltaJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -103,6 +114,7 @@ void _todoIsarSerialize(
   writer.writeLong(offsets[5], object.order);
   writer.writeDateTime(offsets[6], object.reminder);
   writer.writeString(offsets[7], object.title);
+  writer.writeString(offsets[8], object.titleRichTextDeltaJson);
 }
 
 TodoIsar _todoIsarDeserialize(
@@ -121,6 +133,7 @@ TodoIsar _todoIsarDeserialize(
   object.order = reader.readLong(offsets[5]);
   object.reminder = reader.readDateTimeOrNull(offsets[6]);
   object.title = reader.readString(offsets[7]);
+  object.titleRichTextDeltaJson = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -147,6 +160,8 @@ P _todoIsarDeserializeProp<P>(
       return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
       return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }

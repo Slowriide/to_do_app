@@ -10,6 +10,7 @@ class Todo {
 
   final int id;
   final String title;
+  final String? titleRichTextDeltaJson;
   final bool isCompleted;
   final List<Todo> subTasks;
   final bool isSubtask;
@@ -22,6 +23,7 @@ class Todo {
   Todo({
     required this.id,
     required this.title,
+    this.titleRichTextDeltaJson,
     required this.isCompleted,
     required this.subTasks,
     required this.isSubtask,
@@ -35,6 +37,7 @@ class Todo {
   Todo copyWith({
     int? id,
     String? title,
+    Object? titleRichTextDeltaJson = _unset,
     bool? isCompleted,
     List<Todo>? subTasks,
     bool? isSubtask,
@@ -47,6 +50,9 @@ class Todo {
     return Todo(
       id: id ?? this.id,
       title: title ?? this.title,
+      titleRichTextDeltaJson: identical(titleRichTextDeltaJson, _unset)
+          ? this.titleRichTextDeltaJson
+          : titleRichTextDeltaJson as String?,
       isCompleted: isCompleted ?? this.isCompleted,
       subTasks: subTasks ?? this.subTasks,
       isSubtask: isSubtask ?? this.isSubtask,
@@ -64,6 +70,7 @@ class Todo {
     return Todo(
       id: id,
       title: title,
+      titleRichTextDeltaJson: titleRichTextDeltaJson,
       isCompleted: !isCompleted,
       subTasks: subTasks,
       isSubtask: isSubtask,

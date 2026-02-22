@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
 /// A widget that displays a single todo item with its title and subtasks.
@@ -8,7 +10,7 @@ import 'package:to_do_app/domain/models/todo.dart';
 /// if the item is selected via [isSelected].
 ///
 /// Subtasks are displayed in sorted order based on their order field.
-class TodoItem extends StatelessWidget {
+class TodoItem extends StatefulWidget {
   final Todo todo;
   final bool isSelected;
   final Widget? dragHandle;
@@ -21,7 +23,66 @@ class TodoItem extends StatelessWidget {
   });
 
   @override
+  State<TodoItem> createState() => _TodoItemState();
+}
+
+class _TodoItemState extends State<TodoItem> {
+  static const _titlePreviewMaxHeight = 50.0;
+  static const _previewConfig = quill.QuillEditorConfig(
+    scrollable: false,
+    expands: false,
+    showCursor: false,
+    enableInteractiveSelection: false,
+    padding: EdgeInsets.zero,
+  );
+
+  late final quill.QuillController _titlePreviewController;
+  late final FocusNode _titlePreviewFocusNode;
+  late final ScrollController _titlePreviewScrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titlePreviewController = quill.QuillController(
+      document: NoteRichTextCodec.documentFromRaw(
+        rawDelta: widget.todo.titleRichTextDeltaJson,
+        fallbackPlainText: widget.todo.title,
+      ),
+      selection: const TextSelection.collapsed(offset: 0),
+      readOnly: true,
+    );
+    _titlePreviewFocusNode =
+        FocusNode(skipTraversal: true, canRequestFocus: false);
+    _titlePreviewScrollController = ScrollController();
+  }
+
+  @override
+  void didUpdateWidget(covariant TodoItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final richChanged = oldWidget.todo.titleRichTextDeltaJson !=
+        widget.todo.titleRichTextDeltaJson;
+    final titleChanged = oldWidget.todo.title != widget.todo.title;
+    if (richChanged || titleChanged) {
+      _titlePreviewController.document = NoteRichTextCodec.documentFromRaw(
+        rawDelta: widget.todo.titleRichTextDeltaJson,
+        fallbackPlainText: widget.todo.title,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _titlePreviewController.dispose();
+    _titlePreviewFocusNode.dispose();
+    _titlePreviewScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final todo = widget.todo;
+    final isSelected = widget.isSelected;
+    final dragHandle = widget.dragHandle;
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     final cardColor = _todoTint(todo.id, theme);
@@ -60,11 +121,23 @@ class TodoItem extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    todo.title,
-                    style: textStyle.bodyLarge,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: DefaultTextStyle.merge(
+                    style: textStyle.bodyLarge ?? const TextStyle(fontSize: 16),
+                    child: ClipRect(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: _titlePreviewMaxHeight,
+                        ),
+                        child: IgnorePointer(
+                          child: quill.QuillEditor(
+                            controller: _titlePreviewController,
+                            focusNode: _titlePreviewFocusNode,
+                            scrollController: _titlePreviewScrollController,
+                            config: _previewConfig,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 todo.isPinned
@@ -74,9 +147,9 @@ class TodoItem extends StatelessWidget {
                         color: theme.tertiary,
                       )
                     : const SizedBox.shrink(),
-                if (dragHandle != null) ...[
+                if (dragHandle case final handle?) ...[
                   const SizedBox(width: 6),
-                  dragHandle!,
+                  handle,
                 ],
               ],
             ),

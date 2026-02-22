@@ -106,4 +106,24 @@ void main() {
     expect(updated.reminder, reminder);
     expect(updated.folderId, 9);
   });
+
+  test('Todo.copyWith updates and clears rich title payload', () {
+    final todo = Todo(
+      id: 1,
+      title: 'todo',
+      titleRichTextDeltaJson: '[{"insert":"todo\\n"}]',
+      isCompleted: false,
+      subTasks: const [],
+      isSubtask: false,
+      order: 0,
+    );
+
+    final updated = todo.copyWith(
+      titleRichTextDeltaJson: '[{"insert":"new\\n"}]',
+    );
+    final cleared = updated.copyWith(titleRichTextDeltaJson: null);
+
+    expect(updated.titleRichTextDeltaJson, '[{"insert":"new\\n"}]');
+    expect(cleared.titleRichTextDeltaJson, isNull);
+  });
 }

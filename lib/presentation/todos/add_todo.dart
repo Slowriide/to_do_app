@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
+import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
+import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/utils/id_generator.dart';
@@ -27,7 +30,7 @@ class AddTodo extends StatefulWidget {
 class _AddTodoState extends State<AddTodo> {
   bool _isAlreadysaved = false;
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
+  late quill.QuillController _titleController;
 
   late List<EditableSubtask> _editableSubtasks = [];
 
@@ -37,6 +40,10 @@ class _AddTodoState extends State<AddTodo> {
   @override
   void initState() {
     super.initState();
+    _titleController = quill.QuillController(
+      document: NoteRichTextCodec.documentFromPlainText(''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
     final filter = context.read<FolderFilterCubit>().state;
     _selectedFolderId =
         filter.type == FolderFilterType.custom ? filter.folderId : null;
@@ -110,7 +117,9 @@ class _AddTodoState extends State<AddTodo> {
 
     if (_formKey.currentState?.validate() ?? false) {
       final todoCubit = context.read<TodoCubit>();
-      final title = _titleController.text.trim();
+      final title = NoteRichTextCodec.extractPlainText(_titleController.document);
+      final titleRichTextDeltaJson =
+          NoteRichTextCodec.encodeDelta(_titleController.document);
       final uniqueId = IdGenerator.next();
       final subtasks = _editableSubtasks.asMap().entries.map((entry) {
         final index = entry.key;
@@ -140,6 +149,7 @@ class _AddTodoState extends State<AddTodo> {
           reminder: _reminderDate,
           id: uniqueId,
           folderId: _selectedFolderId,
+          titleRichTextDeltaJson: titleRichTextDeltaJson,
         );
       } else {
         await todoCubit.addTodo(
@@ -147,6 +157,7 @@ class _AddTodoState extends State<AddTodo> {
           subtasks,
           id: uniqueId,
           folderId: _selectedFolderId,
+          titleRichTextDeltaJson: titleRichTextDeltaJson,
         );
       }
       if (mounted) context.go('/todos');
@@ -263,13 +274,38 @@ class _AddTodoState extends State<AddTodo> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      minLines: 1,
-                      maxLines: 3,
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                        hintText: 'What do you need to do?',
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 70),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: quill.QuillEditor.basic(
+                        controller: _titleController,
+                        config: quill.QuillEditorConfig(
+                          placeholder: 'What do you need to do?',
+                          expands: false,
+                          scrollable: false,
+                          contextMenuBuilder: (context, rawEditorState) {
+                            return NoteSelectionContextMenu(
+                              controller: _titleController,
+                              rawEditorState: rawEditorState,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],
