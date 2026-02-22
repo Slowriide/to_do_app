@@ -40,7 +40,7 @@ class AppTheme {
       scaffoldBackgroundColor: scheme.surface,
       textTheme: baseText.copyWith(
         titleLarge: baseText.titleLarge?.copyWith(
-          fontSize: 30,
+          fontSize: 28,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.4,
         ),
@@ -59,7 +59,7 @@ class AppTheme {
         bodySmall: baseText.bodySmall?.copyWith(
           fontSize: 13,
           height: 1.3,
-          color: scheme.tertiary,
+          color: scheme.onSurfaceVariant,
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -67,7 +67,7 @@ class AppTheme {
         foregroundColor: scheme.onSurface,
         centerTitle: false,
         titleTextStyle: GoogleFonts.notoSans(
-          fontSize: 28,
+          fontSize: 24,
           fontWeight: FontWeight.w700,
           color: scheme.onSurface,
         ),

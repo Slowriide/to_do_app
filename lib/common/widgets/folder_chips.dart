@@ -9,6 +9,7 @@ class FolderChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return BlocBuilder<FolderCubit, List<Folder>>(
       builder: (context, folders) {
         return BlocBuilder<FolderFilterCubit, FolderFilter>(
@@ -24,6 +25,18 @@ class FolderChips extends StatelessWidget {
                   children: [
                     ChoiceChip(
                       label: const Text('All'),
+                      showCheckmark: false,
+                      selectedColor:
+                          colors.primaryContainer.withValues(alpha: 0.55),
+                      side: BorderSide(
+                        color: colors.outlineVariant,
+                      ),
+                      labelStyle: TextStyle(
+                        color: filter.type == FolderFilterType.all
+                            ? colors.onPrimaryContainer
+                            : colors.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                       selected: filter.type == FolderFilterType.all,
                       onSelected: (_) =>
                           context.read<FolderFilterCubit>().setAll(),
@@ -31,6 +44,18 @@ class FolderChips extends StatelessWidget {
                     const SizedBox(width: 8),
                     ChoiceChip(
                       label: const Text('Inbox'),
+                      showCheckmark: false,
+                      selectedColor:
+                          colors.primaryContainer.withValues(alpha: 0.55),
+                      side: BorderSide(
+                        color: colors.outlineVariant,
+                      ),
+                      labelStyle: TextStyle(
+                        color: filter.type == FolderFilterType.inbox
+                            ? colors.onPrimaryContainer
+                            : colors.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                       selected: filter.type == FolderFilterType.inbox,
                       onSelected: (_) =>
                           context.read<FolderFilterCubit>().setInbox(),
@@ -41,6 +66,19 @@ class FolderChips extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
                           label: Text(folder.name),
+                          showCheckmark: false,
+                          selectedColor:
+                              colors.primaryContainer.withValues(alpha: 0.55),
+                          side: BorderSide(
+                            color: colors.outlineVariant,
+                          ),
+                          labelStyle: TextStyle(
+                            color: filter.type == FolderFilterType.custom &&
+                                    filter.folderId == folder.id
+                                ? colors.onPrimaryContainer
+                                : colors.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
                           selected: filter.type == FolderFilterType.custom &&
                               filter.folderId == folder.id,
                           onSelected: (_) => context

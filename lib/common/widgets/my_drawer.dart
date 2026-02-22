@@ -43,7 +43,7 @@ class _MyDrawerState extends State<MyDrawer> {
           Expanded(
             child: NavigationDrawer(
               tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-              indicatorColor: theme.onPrimary.withValues(alpha: 0.18),
+              indicatorColor: theme.primaryContainer.withValues(alpha: 0.55),
               selectedIndex: _getSelectedIndex(location),
               onDestinationSelected: (index) async {
                 Navigator.of(context).pop();
@@ -194,7 +194,7 @@ class _MyDrawerState extends State<MyDrawer> {
       leading: Icon(
         Icons.folder_outlined,
         size: 18,
-        color: selected ? theme.onPrimary : theme.tertiary,
+        color: selected ? theme.primary : theme.tertiary,
       ),
       title: Text(
         title,
@@ -203,7 +203,7 @@ class _MyDrawerState extends State<MyDrawer> {
       ),
       trailing: trailing,
       selected: selected,
-      selectedTileColor: theme.onPrimary.withValues(alpha: 0.14),
+      selectedTileColor: theme.primaryContainer.withValues(alpha: 0.42),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: onTap,
     );

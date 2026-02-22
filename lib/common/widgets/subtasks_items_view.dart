@@ -110,7 +110,7 @@ class SubtaskItemsView extends StatelessWidget {
                                 ? Icons.check_box_rounded
                                 : Icons.check_box_outline_blank_rounded,
                             color: item.isCompleted
-                                ? theme.onPrimary
+                                ? theme.primary
                                 : theme.tertiary,
                           ),
                         ),

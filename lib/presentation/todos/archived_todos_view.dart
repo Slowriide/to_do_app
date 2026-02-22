@@ -146,10 +146,7 @@ class _ArchivedTodosViewState extends State<ArchivedTodosView> {
             : Text(
                 'Archived ToDo\'s',
                 key: ValueKey('normal'),
-                style: textStyle.titleMedium?.copyWith(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: textStyle.titleLarge,
               ),
       ),
       actions: [
@@ -218,21 +215,33 @@ class _Body extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-            child: TextField(
-              controller: textController,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
-                hintText: 'Search Archived ToDo\'s',
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    textController.clear();
-                    context.read<TodoSearchCubit>().clearSearch();
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: textController,
+              builder: (context, value, _) {
+                final hasSearchText = value.text.trim().isNotEmpty;
+                return TextField(
+                  controller: textController,
+                  decoration: InputDecoration(
+                    prefixIcon:
+                        Icon(Icons.search_rounded, color: theme.tertiary),
+                    hintText: 'Search Archived ToDo\'s',
+                    suffixIcon: hasSearchText
+                        ? IconButton(
+                            onPressed: () {
+                              textController.clear();
+                              context.read<TodoSearchCubit>().clearSearch();
+                            },
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: theme.tertiary,
+                            ),
+                          )
+                        : null,
+                  ),
+                  onChanged: (searchValue) {
+                    context.read<TodoSearchCubit>().search(searchValue);
                   },
-                  icon: Icon(Icons.close_rounded, color: theme.tertiary),
-                ),
-              ),
-              onChanged: (value) {
-                context.read<TodoSearchCubit>().search(value);
+                );
               },
             ),
           ),

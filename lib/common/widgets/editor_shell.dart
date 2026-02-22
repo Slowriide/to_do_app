@@ -66,9 +66,7 @@ class EditorPageScaffold extends StatelessWidget {
                             children: [
                               Text(
                                 title,
-                                style: textTheme.titleLarge?.copyWith(
-                                  fontSize: 28,
-                                ),
+                                style: textTheme.titleLarge,
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -167,12 +165,12 @@ class ReminderStatusChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: enabled
-                  ? colors.onPrimary.withValues(alpha: 0.16)
+                  ? colors.primaryContainer.withValues(alpha: 0.45)
                   : colors.onInverseSurface.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: enabled
-                    ? colors.onPrimary.withValues(alpha: 0.5)
+                    ? colors.primary.withValues(alpha: 0.4)
                     : colors.tertiary.withValues(alpha: 0.28),
               ),
             ),
@@ -188,7 +186,7 @@ class ReminderStatusChip extends StatelessWidget {
                   Icon(
                     enabled ? Icons.alarm_on_rounded : Icons.alarm_add_rounded,
                     size: 18,
-                    color: enabled ? colors.onPrimary : colors.onSurface,
+                    color: enabled ? colors.primary : colors.onSurface,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -257,7 +255,7 @@ class _EditorPrimaryActionBarState extends State<EditorPrimaryActionBar> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: colors.onPrimary.withValues(
+                      color: colors.primary.withValues(
                         alpha: enabled ? (_hovered ? 0.22 : 0.14) : 0.0,
                       ),
                       blurRadius: _hovered ? 20 : 10,
@@ -273,10 +271,10 @@ class _EditorPrimaryActionBarState extends State<EditorPrimaryActionBar> {
                     minimumSize: const Size.fromHeight(56),
                     backgroundColor: enabled
                         ? (_hovered
-                            ? colors.onPrimary.withValues(alpha: 0.9)
-                            : colors.onPrimary)
+                            ? colors.primary.withValues(alpha: 0.9)
+                            : colors.primary)
                         : colors.tertiary.withValues(alpha: 0.4),
-                    foregroundColor: Colors.white,
+                    foregroundColor: colors.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

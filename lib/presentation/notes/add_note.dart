@@ -139,7 +139,7 @@ class _AddNoteState extends State<AddNote> {
                     leading: Icon(
                       Icons.layers_outlined,
                       color: _selectedFolderId == null
-                          ? Theme.of(context).colorScheme.onPrimary
+                          ? Theme.of(context).colorScheme.primary
                           : null,
                     ),
                     title: const Text('All (default)'),

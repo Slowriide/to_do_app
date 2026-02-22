@@ -75,8 +75,8 @@ class _ThemeOptionTile extends StatelessWidget {
     return ListTile(
       title: Text(title),
       trailing: selected
-          ? Icon(Icons.check_circle, color: theme.onPrimary)
-          : Icon(Icons.circle_outlined, color: theme.onPrimary),
+          ? Icon(Icons.check_circle, color: theme.primary)
+          : Icon(Icons.circle_outlined, color: theme.primary),
       onTap: () {
         onTap();
         context.pop();

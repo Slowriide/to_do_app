@@ -117,7 +117,7 @@ class _EmptyStateShell extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 44, color: colors.onPrimary),
+              Icon(icon, size: 44, color: colors.primary),
               const SizedBox(height: 14),
               Text(
                 title,

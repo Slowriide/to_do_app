@@ -249,10 +249,7 @@ class _NotesViewState extends State<NotesView> {
               )
             : Text('Notes',
                 key: ValueKey('normal'),
-                style: textStyle.titleMedium?.copyWith(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                )),
+                style: textStyle.titleLarge),
       ),
       actions: [
         AnimatedSwitcher(
@@ -335,21 +332,33 @@ class _Body extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-            child: TextField(
-              controller: textController,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search_rounded, color: theme.tertiary),
-                hintText: 'Search Notes',
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    textController.clear();
-                    context.read<NoteSearchCubit>().clearSearch();
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: textController,
+              builder: (context, value, _) {
+                final hasSearchText = value.text.trim().isNotEmpty;
+                return TextField(
+                  controller: textController,
+                  decoration: InputDecoration(
+                    prefixIcon:
+                        Icon(Icons.search_rounded, color: theme.tertiary),
+                    hintText: 'Search Notes',
+                    suffixIcon: hasSearchText
+                        ? IconButton(
+                            onPressed: () {
+                              textController.clear();
+                              context.read<NoteSearchCubit>().clearSearch();
+                            },
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: theme.tertiary,
+                            ),
+                          )
+                        : null,
+                  ),
+                  onChanged: (searchValue) {
+                    context.read<NoteSearchCubit>().search(searchValue);
                   },
-                  icon: Icon(Icons.close_rounded, color: theme.tertiary),
-                ),
-              ),
-              onChanged: (value) {
-                context.read<NoteSearchCubit>().search(value);
+                );
               },
             ),
           ),
