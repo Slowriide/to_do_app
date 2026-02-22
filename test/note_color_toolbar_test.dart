@@ -4,6 +4,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 
 void main() {
+  testWidgets('hides toolbar when selection is collapsed', (tester) async {
+    final controller = quill.QuillController(
+      document: quill.Document.fromJson([
+        {'insert': 'Hello\n'}
+      ]),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: NoteColorToolbar(controller: controller),
+        ),
+      ),
+    );
+
+    expect(find.byTooltip('Toggle bold'), findsNothing);
+    expect(find.byTooltip('Apply #f6c453'), findsNothing);
+  });
+
   testWidgets('applies selected color to text selection', (tester) async {
     final controller = quill.QuillController(
       document: quill.Document.fromJson([

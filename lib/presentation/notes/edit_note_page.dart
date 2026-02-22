@@ -269,8 +269,6 @@ class _EditNotePageState extends State<EditNotePage> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    NoteColorToolbar(controller: _titleController),
-                    const SizedBox(height: 10),
                     Container(
                       constraints: const BoxConstraints(minHeight: 70),
                       padding: const EdgeInsets.symmetric(
@@ -292,10 +290,16 @@ class _EditNotePageState extends State<EditNotePage> {
                       ),
                       child: quill.QuillEditor.basic(
                         controller: _titleController,
-                        config: const quill.QuillEditorConfig(
+                        config: quill.QuillEditorConfig(
                           placeholder: 'What is this note about?',
                           expands: false,
                           scrollable: false,
+                          contextMenuBuilder: (context, rawEditorState) {
+                            return NoteSelectionContextMenu(
+                              controller: _titleController,
+                              rawEditorState: rawEditorState,
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -312,8 +316,6 @@ class _EditNotePageState extends State<EditNotePage> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    NoteColorToolbar(controller: _contentController),
-                    const SizedBox(height: 10),
                     Container(
                       constraints: const BoxConstraints(minHeight: 220),
                       padding: const EdgeInsets.symmetric(
@@ -335,10 +337,16 @@ class _EditNotePageState extends State<EditNotePage> {
                       ),
                       child: quill.QuillEditor.basic(
                         controller: _contentController,
-                        config: const quill.QuillEditorConfig(
+                        config: quill.QuillEditorConfig(
                           placeholder: 'Continue writing...',
                           expands: false,
                           scrollable: false,
+                          contextMenuBuilder: (context, rawEditorState) {
+                            return NoteSelectionContextMenu(
+                              controller: _contentController,
+                              rawEditorState: rawEditorState,
+                            );
+                          },
                         ),
                       ),
                     ),

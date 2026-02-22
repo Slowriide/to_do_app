@@ -24,6 +24,8 @@ class NoteColorToolbar extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
+        final selection = controller.selection;
+        final hasSelection = _hasRangeSelection(selection);
         final selectionAttributes = controller.getSelectionStyle().attributes;
         final selectedColorValue = selectionAttributes['color']?.value;
         final boldEnabled =
@@ -33,85 +35,96 @@ class NoteColorToolbar extends StatelessWidget {
         final strikeEnabled =
             selectionAttributes.containsKey(quill.Attribute.strikeThrough.key);
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          decoration: BoxDecoration(
-            color: colors.onInverseSurface.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: colors.tertiary.withValues(alpha: 0.3),
-            ),
-          ),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              _FormatToggleButton(
-                icon: Icons.format_bold_rounded,
-                tooltip: 'Toggle bold',
-                selected: boldEnabled,
-                onTap: () => _toggleAttribute(
-                  quill.Attribute.bold,
-                  boldEnabled,
-                ),
-              ),
-              _FormatToggleButton(
-                icon: Icons.format_italic_rounded,
-                tooltip: 'Toggle italic',
-                selected: italicEnabled,
-                onTap: () => _toggleAttribute(
-                  quill.Attribute.italic,
-                  italicEnabled,
-                ),
-              ),
-              _FormatToggleButton(
-                icon: Icons.format_strikethrough_rounded,
-                tooltip: 'Toggle strikethrough',
-                selected: strikeEnabled,
-                onTap: () => _toggleAttribute(
-                  quill.Attribute.strikeThrough,
-                  strikeEnabled,
-                ),
-              ),
-              Tooltip(
-                message: 'Clear text color',
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: _clearColor,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: colors.outlineVariant.withValues(alpha: 0.7),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.format_color_reset_rounded,
-                      size: 18,
-                      color: colors.onSurface,
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 140),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          child: !hasSelection
+              ? const SizedBox.shrink()
+              : Container(
+                  key: const ValueKey('selection_toolbar'),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: colors.onInverseSurface.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: colors.tertiary.withValues(alpha: 0.3),
                     ),
                   ),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      _FormatToggleButton(
+                        icon: Icons.format_bold_rounded,
+                        tooltip: 'Toggle bold',
+                        selected: boldEnabled,
+                        onTap: () => _toggleAttribute(
+                          quill.Attribute.bold,
+                          boldEnabled,
+                        ),
+                      ),
+                      _FormatToggleButton(
+                        icon: Icons.format_italic_rounded,
+                        tooltip: 'Toggle italic',
+                        selected: italicEnabled,
+                        onTap: () => _toggleAttribute(
+                          quill.Attribute.italic,
+                          italicEnabled,
+                        ),
+                      ),
+                      _FormatToggleButton(
+                        icon: Icons.format_strikethrough_rounded,
+                        tooltip: 'Toggle strikethrough',
+                        selected: strikeEnabled,
+                        onTap: () => _toggleAttribute(
+                          quill.Attribute.strikeThrough,
+                          strikeEnabled,
+                        ),
+                      ),
+                      Tooltip(
+                        message: 'Clear text color',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: _clearColor,
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: colors.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: colors.outlineVariant
+                                    .withValues(alpha: 0.7),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.format_color_reset_rounded,
+                              size: 18,
+                              color: colors.onSurface,
+                            ),
+                          ),
+                        ),
+                      ),
+                      ..._palette.map(
+                        (color) {
+                          final hex = _toHex(color).toLowerCase();
+                          final isSelected =
+                              selectedColorValue?.toString().toLowerCase() ==
+                                  hex;
+                          return _ColorSwatchButton(
+                            color: color,
+                            tooltip: 'Apply $hex',
+                            selected: isSelected,
+                            onTap: () => _applyColor(hex),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              ..._palette.map(
-                (color) {
-                  final hex = _toHex(color).toLowerCase();
-                  final isSelected =
-                      selectedColorValue?.toString().toLowerCase() == hex;
-                  return _ColorSwatchButton(
-                    color: color,
-                    tooltip: 'Apply $hex',
-                    selected: isSelected,
-                    onTap: () => _applyColor(hex),
-                  );
-                },
-              ),
-            ],
-          ),
         );
       },
     );
@@ -138,6 +151,106 @@ class NoteColorToolbar extends StatelessWidget {
   String _toHex(Color color) {
     final rgb = color.toARGB32() & 0x00FFFFFF;
     return '#${rgb.toRadixString(16).padLeft(6, '0')}';
+  }
+
+  bool _hasRangeSelection(TextSelection selection) {
+    if (!selection.isValid) return false;
+    if (selection.isCollapsed) return false;
+    if (selection.start < 0 || selection.end < 0) return false;
+    return selection.end > selection.start;
+  }
+}
+
+class NoteSelectionContextMenu extends StatelessWidget {
+  final quill.QuillController controller;
+  final quill.QuillRawEditorState rawEditorState;
+
+  const NoteSelectionContextMenu({
+    super.key,
+    required this.controller,
+    required this.rawEditorState,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final maxWidth = MediaQuery.sizeOf(context).width - 24;
+    final anchors = rawEditorState.contextMenuAnchors;
+    final actionButtons = rawEditorState.contextMenuButtonItems;
+    final popup = Material(
+      color: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth < 240 ? 240 : maxWidth,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: actionButtons
+                      .map(
+                        (item) => TextButton(
+                          onPressed: item.onPressed,
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(0, 36),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                          ),
+                          child: Text(
+                            AdaptiveTextSelectionToolbar.getButtonLabel(
+                              context,
+                              item,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.35),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(6),
+                child: NoteColorToolbar(controller: controller),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return TextFieldTapRegion(
+      child: CustomSingleChildLayout(
+        delegate: TextSelectionToolbarLayoutDelegate(
+          anchorAbove: anchors.primaryAnchor,
+          anchorBelow: anchors.secondaryAnchor ?? anchors.primaryAnchor,
+        ),
+        child: popup,
+      ),
+    );
   }
 }
 
