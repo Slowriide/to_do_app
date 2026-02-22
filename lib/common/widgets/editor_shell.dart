@@ -152,6 +152,15 @@ class ReminderStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final chipBackgroundColor = enabled
+        ? colors.primaryContainer.withValues(alpha: 0.52)
+        : colors.secondaryContainer.withValues(alpha: 0.72);
+    final chipForegroundColor =
+        enabled ? colors.onPrimaryContainer : colors.onSecondaryContainer;
+    final chipBorderColor = enabled
+        ? colors.primary.withValues(alpha: 0.4)
+        : colors.outlineVariant.withValues(alpha: 0.7);
+
     return Tooltip(
       message: enabled ? 'Edit reminder' : 'Add reminder',
       child: Material(
@@ -164,14 +173,10 @@ class ReminderStatusChip extends StatelessWidget {
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: enabled
-                  ? colors.primaryContainer.withValues(alpha: 0.45)
-                  : colors.onInverseSurface.withValues(alpha: 0.75),
+              color: chipBackgroundColor,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: enabled
-                    ? colors.primary.withValues(alpha: 0.4)
-                    : colors.tertiary.withValues(alpha: 0.28),
+                color: chipBorderColor,
               ),
             ),
             child: AnimatedSwitcher(
@@ -186,13 +191,13 @@ class ReminderStatusChip extends StatelessWidget {
                   Icon(
                     enabled ? Icons.alarm_on_rounded : Icons.alarm_add_rounded,
                     size: 18,
-                    color: enabled ? colors.primary : colors.onSurface,
+                    color: chipForegroundColor,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     enabled ? enabledLabel : disabledLabel,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.onSurface,
+                          color: chipForegroundColor,
                           fontWeight: FontWeight.w600,
                         ),
                   ),

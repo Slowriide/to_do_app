@@ -122,11 +122,12 @@ class _MyDrawerState extends State<MyDrawer> {
             final isInbox = filter.type == FolderFilterType.inbox;
 
             return Container(
+              margin: EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                color: theme.secondary.withValues(alpha: 0.35),
+                color: theme.surfaceContainerHigh.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: theme.tertiary.withValues(alpha: 0.2),
+                  color: theme.outlineVariant.withValues(alpha: 0.65),
                 ),
               ),
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
@@ -138,12 +139,16 @@ class _MyDrawerState extends State<MyDrawer> {
                       Expanded(
                         child: Text(
                           'Folders',
-                          style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                          style: textStyle.titleMedium?.copyWith(
+                            fontSize: 18,
+                            color: theme.onSurface,
+                          ),
                         ),
                       ),
                       IconButton(
                         onPressed: _createFolder,
                         icon: const Icon(Icons.create_new_folder_outlined),
+                        color: theme.onSurfaceVariant,
                         tooltip: 'Create folder',
                       ),
                     ],
@@ -187,6 +192,8 @@ class _MyDrawerState extends State<MyDrawer> {
     Widget? trailing,
   }) {
     final theme = Theme.of(context).colorScheme;
+    final tileForegroundColor =
+        selected ? theme.onPrimaryContainer : theme.onSurfaceVariant;
     return ListTile(
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -194,16 +201,20 @@ class _MyDrawerState extends State<MyDrawer> {
       leading: Icon(
         Icons.folder_outlined,
         size: 18,
-        color: selected ? theme.primary : theme.tertiary,
+        color: tileForegroundColor,
       ),
       title: Text(
         title,
+        style: TextStyle(
+          color: tileForegroundColor,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       trailing: trailing,
       selected: selected,
-      selectedTileColor: theme.primaryContainer.withValues(alpha: 0.42),
+      selectedTileColor: theme.primaryContainer.withValues(alpha: 0.72),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: onTap,
     );
