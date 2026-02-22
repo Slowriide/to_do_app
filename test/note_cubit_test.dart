@@ -149,4 +149,22 @@ void main() {
     expect(restored.isArchived, isFalse);
     await cubit.close();
   });
+
+  test('addNote stores plain and rich text payload', () async {
+    final repo = FakeNoteRepository([]);
+    final cubit = NoteCubit(repo);
+    await _settle();
+
+    await cubit.addNote(
+      'plain',
+      'title',
+      id: 99,
+      richTextDeltaJson: '[{"insert":"plain\\n"}]',
+    );
+
+    final added = cubit.state.notes.firstWhere((n) => n.id == 99);
+    expect(added.text, 'plain');
+    expect(added.richTextDeltaJson, '[{"insert":"plain\\n"}]');
+    await cubit.close();
+  });
 }

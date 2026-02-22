@@ -47,13 +47,18 @@ const NoteIsarSchema = CollectionSchema(
       name: r'reminder',
       type: IsarType.dateTime,
     ),
-    r'text': PropertySchema(
+    r'richTextDeltaJson': PropertySchema(
       id: 6,
+      name: r'richTextDeltaJson',
+      type: IsarType.string,
+    ),
+    r'text': PropertySchema(
+      id: 7,
       name: r'text',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'title',
       type: IsarType.string,
     )
@@ -78,6 +83,12 @@ int _noteIsarEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.richTextDeltaJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.text.length * 3;
   bytesCount += 3 + object.title.length * 3;
   return bytesCount;
@@ -95,8 +106,9 @@ void _noteIsarSerialize(
   writer.writeBool(offsets[3], object.isPinned);
   writer.writeLong(offsets[4], object.order);
   writer.writeDateTime(offsets[5], object.reminder);
-  writer.writeString(offsets[6], object.text);
-  writer.writeString(offsets[7], object.title);
+  writer.writeString(offsets[6], object.richTextDeltaJson);
+  writer.writeString(offsets[7], object.text);
+  writer.writeString(offsets[8], object.title);
 }
 
 NoteIsar _noteIsarDeserialize(
@@ -113,8 +125,9 @@ NoteIsar _noteIsarDeserialize(
   object.isPinned = reader.readBool(offsets[3]);
   object.order = reader.readLong(offsets[4]);
   object.reminder = reader.readDateTimeOrNull(offsets[5]);
-  object.text = reader.readString(offsets[6]);
-  object.title = reader.readString(offsets[7]);
+  object.richTextDeltaJson = reader.readStringOrNull(offsets[6]);
+  object.text = reader.readString(offsets[7]);
+  object.title = reader.readString(offsets[8]);
   return object;
 }
 
@@ -138,8 +151,10 @@ P _noteIsarDeserializeProp<P>(
     case 5:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -508,6 +523,160 @@ extension NoteIsarQueryFilter
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'richTextDeltaJson',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'richTextDeltaJson',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'richTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'richTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'richTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'richTextDeltaJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'richTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'richTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'richTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'richTextDeltaJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'richTextDeltaJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      richTextDeltaJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'richTextDeltaJson',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> textEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -848,6 +1017,18 @@ extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByRichTextDeltaJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'richTextDeltaJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByRichTextDeltaJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'richTextDeltaJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.asc);
@@ -959,6 +1140,18 @@ extension NoteIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByRichTextDeltaJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'richTextDeltaJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByRichTextDeltaJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'richTextDeltaJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.asc);
@@ -1022,6 +1215,14 @@ extension NoteIsarQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByRichTextDeltaJson(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'richTextDeltaJson',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByText(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1078,6 +1279,13 @@ extension NoteIsarQueryProperty
   QueryBuilder<NoteIsar, DateTime?, QQueryOperations> reminderProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'reminder');
+    });
+  }
+
+  QueryBuilder<NoteIsar, String?, QQueryOperations>
+      richTextDeltaJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'richTextDeltaJson');
     });
   }
 

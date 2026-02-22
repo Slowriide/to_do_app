@@ -45,6 +45,21 @@ void main() {
     expect(restored.isArchived, isFalse);
   });
 
+  test('Note.copyWith can update and clear rich text payload', () {
+    final note = Note(
+      id: 1,
+      title: 'n',
+      text: 't',
+      richTextDeltaJson: '[{"insert":"t\\n"}]',
+    );
+
+    final updated = note.copyWith(richTextDeltaJson: '[{"insert":"x\\n"}]');
+    final cleared = updated.copyWith(richTextDeltaJson: null);
+
+    expect(updated.richTextDeltaJson, '[{"insert":"x\\n"}]');
+    expect(cleared.richTextDeltaJson, isNull);
+  });
+
   test('Todo.copyWith can explicitly clear nullable fields', () {
     final todo = Todo(
       id: 1,

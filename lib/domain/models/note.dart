@@ -11,6 +11,7 @@ class Note {
   final int id;
   final String title;
   final String text;
+  final String? richTextDeltaJson;
   final bool isCompleted;
   final DateTime? reminder;
   final bool isPinned;
@@ -22,6 +23,7 @@ class Note {
     required this.id,
     required this.title,
     required this.text,
+    this.richTextDeltaJson,
     this.isCompleted = false,
     this.reminder,
     this.isPinned = false,
@@ -35,6 +37,7 @@ class Note {
       id: id,
       title: title,
       text: text,
+      richTextDeltaJson: richTextDeltaJson,
       isCompleted: !isCompleted,
       reminder: reminder,
       isPinned: isPinned,
@@ -47,6 +50,7 @@ class Note {
   Note copyWith({
     String? title,
     String? text,
+    Object? richTextDeltaJson = _unset,
     bool? isCompleted,
     Object? reminder = _unset,
     bool? isPinned,
@@ -58,6 +62,9 @@ class Note {
       id: id,
       title: title ?? this.title,
       text: text ?? this.text,
+      richTextDeltaJson: identical(richTextDeltaJson, _unset)
+          ? this.richTextDeltaJson
+          : richTextDeltaJson as String?,
       isCompleted: isCompleted ?? this.isCompleted,
       reminder:
           identical(reminder, _unset) ? this.reminder : reminder as DateTime?,

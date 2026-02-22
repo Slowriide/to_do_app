@@ -41,8 +41,14 @@ class NoteCubit extends Cubit<NoteState> {
   /// Adds a new note with given text, title, optional reminder, and id.
   ///
   /// Saves the note to the repository and reloads the notes.
-  Future<void> addNote(String text, String title,
-      {DateTime? reminder, required int id, int? folderId}) async {
+  Future<void> addNote(
+    String text,
+    String title, {
+    DateTime? reminder,
+    required int id,
+    int? folderId,
+    String? richTextDeltaJson,
+  }) async {
     final currentNotes = state.notes;
     final nextOrder = currentNotes.isEmpty
         ? 0
@@ -51,6 +57,7 @@ class NoteCubit extends Cubit<NoteState> {
       id: id,
       title: title,
       text: text,
+      richTextDeltaJson: richTextDeltaJson,
       reminder: reminder,
       order: nextOrder,
       folderId: folderId,
@@ -196,7 +203,8 @@ class NoteCubit extends Cubit<NoteState> {
       });
 
     final activeById = {
-      for (var i = 0; i < active.length; i++) active[i].id: active[i].copyWith(order: i),
+      for (var i = 0; i < active.length; i++)
+        active[i].id: active[i].copyWith(order: i),
     };
 
     return notes.map((note) => activeById[note.id] ?? note).toList();

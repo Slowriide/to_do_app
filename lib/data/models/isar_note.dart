@@ -20,6 +20,7 @@ class NoteIsar {
   Id id = Isar.autoIncrement;
   late String title;
   late String text;
+  String? richTextDeltaJson;
   late bool isCompleted;
   DateTime? reminder;
   late bool isPinned;
@@ -33,6 +34,7 @@ class NoteIsar {
       id: id,
       title: title,
       text: text,
+      richTextDeltaJson: richTextDeltaJson,
       isCompleted: isCompleted,
       reminder: reminder,
       isPinned: isPinned,
@@ -47,6 +49,7 @@ class NoteIsar {
     return NoteIsar()
       ..id = note.id
       ..text = note.text
+      ..richTextDeltaJson = note.richTextDeltaJson
       ..title = note.title
       ..isCompleted = note.isCompleted
       ..reminder = note.reminder

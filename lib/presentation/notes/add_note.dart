@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
+import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
+import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
@@ -25,7 +28,7 @@ class _AddNoteState extends State<AddNote> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _textController = TextEditingController();
+  late quill.QuillController _contentController;
 
   DateTime? _reminderDate;
   int? _selectedFolderId;
@@ -33,6 +36,10 @@ class _AddNoteState extends State<AddNote> {
   @override
   void initState() {
     super.initState();
+    _contentController = quill.QuillController(
+      document: NoteRichTextCodec.documentFromPlainText(''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
     final filter = context.read<FolderFilterCubit>().state;
     _selectedFolderId =
         filter.type == FolderFilterType.custom ? filter.folderId : null;
@@ -89,7 +96,10 @@ class _AddNoteState extends State<AddNote> {
 
     if (_formKey.currentState?.validate() ?? false) {
       final title = _titleController.text.trim();
-      final text = _textController.text.trim();
+      final text =
+          NoteRichTextCodec.extractPlainText(_contentController.document);
+      final richTextDeltaJson =
+          NoteRichTextCodec.encodeDelta(_contentController.document);
       final uniqueId = IdGenerator.next();
 
       if (_reminderDate != null) {
@@ -108,6 +118,7 @@ class _AddNoteState extends State<AddNote> {
           reminder: _reminderDate,
           id: uniqueId,
           folderId: _selectedFolderId,
+          richTextDeltaJson: richTextDeltaJson,
         );
       } else {
         await noteCubit.addNote(
@@ -115,6 +126,7 @@ class _AddNoteState extends State<AddNote> {
           title,
           id: uniqueId,
           folderId: _selectedFolderId,
+          richTextDeltaJson: richTextDeltaJson,
         );
       }
 
@@ -180,7 +192,7 @@ class _AddNoteState extends State<AddNote> {
   @override
   void dispose() {
     _titleController.dispose();
-    _textController.dispose();
+    _contentController.dispose();
     super.dispose();
   }
 
@@ -250,17 +262,35 @@ class _AddNoteState extends State<AddNote> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      minLines: 10,
-                      maxLines: 16,
-                      controller: _textController,
-                      decoration: const InputDecoration(
-                        alignLabelWithHint: true,
-                        labelText: 'Content',
-                        hintText: 'Start writing your note...',
+                    NoteColorToolbar(controller: _contentController),
+                    const SizedBox(height: 10),
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 220),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: quill.QuillEditor.basic(
+                        controller: _contentController,
+                        config: const quill.QuillEditorConfig(
+                          placeholder: 'Start writing your note...',
+                          expands: false,
+                          scrollable: false,
+                        ),
+                      ),
                     ),
                   ],
                 ),

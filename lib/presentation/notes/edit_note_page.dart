@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
+import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
+import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
@@ -20,7 +23,7 @@ class _EditNotePageState extends State<EditNotePage> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
-  late TextEditingController _textController;
+  late quill.QuillController _contentController;
 
   DateTime? _selectedDateReminder;
   int? _selectedFolderId;
@@ -29,7 +32,10 @@ class _EditNotePageState extends State<EditNotePage> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.note.title);
-    _textController = TextEditingController(text: widget.note.text);
+    _contentController = quill.QuillController(
+      document: NoteRichTextCodec.documentFromNote(widget.note),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
     _selectedDateReminder = widget.note.reminder;
     _selectedFolderId = widget.note.folderId;
   }
@@ -113,7 +119,9 @@ class _EditNotePageState extends State<EditNotePage> {
         : null;
     final updatedNote = widget.note.copyWith(
       title: _titleController.text.trim(),
-      text: _textController.text.trim(),
+      text: NoteRichTextCodec.extractPlainText(_contentController.document),
+      richTextDeltaJson:
+          NoteRichTextCodec.encodeDelta(_contentController.document),
       reminder: reminderToSave,
       folderId: _selectedFolderId,
     );
@@ -199,7 +207,7 @@ class _EditNotePageState extends State<EditNotePage> {
   @override
   void dispose() {
     _titleController.dispose();
-    _textController.dispose();
+    _contentController.dispose();
     super.dispose();
   }
 
@@ -276,17 +284,35 @@ class _EditNotePageState extends State<EditNotePage> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      minLines: 10,
-                      maxLines: 16,
-                      controller: _textController,
-                      decoration: const InputDecoration(
-                        alignLabelWithHint: true,
-                        labelText: 'Content',
-                        hintText: 'Continue writing...',
+                    NoteColorToolbar(controller: _contentController),
+                    const SizedBox(height: 10),
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 220),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: quill.QuillEditor.basic(
+                        controller: _contentController,
+                        config: const quill.QuillEditorConfig(
+                          placeholder: 'Continue writing...',
+                          expands: false,
+                          scrollable: false,
+                        ),
+                      ),
                     ),
                   ],
                 ),
