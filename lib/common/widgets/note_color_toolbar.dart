@@ -24,8 +24,14 @@ class NoteColorToolbar extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        final selectedColorValue =
-            controller.getSelectionStyle().attributes['color']?.value;
+        final selectionAttributes = controller.getSelectionStyle().attributes;
+        final selectedColorValue = selectionAttributes['color']?.value;
+        final boldEnabled =
+            selectionAttributes.containsKey(quill.Attribute.bold.key);
+        final italicEnabled =
+            selectionAttributes.containsKey(quill.Attribute.italic.key);
+        final strikeEnabled =
+            selectionAttributes.containsKey(quill.Attribute.strikeThrough.key);
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -41,6 +47,33 @@ class NoteColorToolbar extends StatelessWidget {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
+              _FormatToggleButton(
+                icon: Icons.format_bold_rounded,
+                tooltip: 'Toggle bold',
+                selected: boldEnabled,
+                onTap: () => _toggleAttribute(
+                  quill.Attribute.bold,
+                  boldEnabled,
+                ),
+              ),
+              _FormatToggleButton(
+                icon: Icons.format_italic_rounded,
+                tooltip: 'Toggle italic',
+                selected: italicEnabled,
+                onTap: () => _toggleAttribute(
+                  quill.Attribute.italic,
+                  italicEnabled,
+                ),
+              ),
+              _FormatToggleButton(
+                icon: Icons.format_strikethrough_rounded,
+                tooltip: 'Toggle strikethrough',
+                selected: strikeEnabled,
+                onTap: () => _toggleAttribute(
+                  quill.Attribute.strikeThrough,
+                  strikeEnabled,
+                ),
+              ),
               Tooltip(
                 message: 'Clear text color',
                 child: InkWell(
@@ -92,9 +125,66 @@ class NoteColorToolbar extends StatelessWidget {
     controller.formatSelection(quill.Attribute.fromKeyValue('color', null));
   }
 
+  void _toggleAttribute(quill.Attribute attribute, bool isEnabled) {
+    if (isEnabled) {
+      controller.formatSelection(
+        quill.Attribute.fromKeyValue(attribute.key, null),
+      );
+      return;
+    }
+    controller.formatSelection(attribute);
+  }
+
   String _toHex(Color color) {
     final rgb = color.toARGB32() & 0x00FFFFFF;
     return '#${rgb.toRadixString(16).padLeft(6, '0')}';
+  }
+}
+
+class _FormatToggleButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FormatToggleButton({
+    required this.icon,
+    required this.tooltip,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: selected
+                ? colors.primaryContainer.withValues(alpha: 0.82)
+                : colors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected
+                  ? colors.primary.withValues(alpha: 0.85)
+                  : colors.outlineVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: selected ? colors.onPrimaryContainer : colors.onSurface,
+          ),
+        ),
+      ),
+    );
   }
 }
 

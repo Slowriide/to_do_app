@@ -5,7 +5,23 @@ import 'package:to_do_app/domain/models/note.dart';
 
 class NoteRichTextCodec {
   static quill.Document documentFromNote(Note note) {
-    final rawDelta = note.richTextDeltaJson;
+    return documentFromRaw(
+      rawDelta: note.richTextDeltaJson,
+      fallbackPlainText: note.text,
+    );
+  }
+
+  static quill.Document titleDocumentFromNote(Note note) {
+    return documentFromRaw(
+      rawDelta: note.titleRichTextDeltaJson,
+      fallbackPlainText: note.title,
+    );
+  }
+
+  static quill.Document documentFromRaw({
+    required String? rawDelta,
+    required String fallbackPlainText,
+  }) {
     if (rawDelta != null && rawDelta.trim().isNotEmpty) {
       try {
         final decoded = jsonDecode(rawDelta);
@@ -16,7 +32,7 @@ class NoteRichTextCodec {
         // Fallback to plain text decoding for malformed rich text payloads.
       }
     }
-    return documentFromPlainText(note.text);
+    return documentFromPlainText(fallbackPlainText);
   }
 
   static quill.Document documentFromPlainText(String text) {

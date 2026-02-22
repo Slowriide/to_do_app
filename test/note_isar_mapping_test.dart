@@ -7,6 +7,7 @@ void main() {
     final note = Note(
       id: 7,
       title: 'title',
+      titleRichTextDeltaJson: '[{"insert":"title\\n"}]',
       text: 'plain',
       richTextDeltaJson: '[{"insert":"plain\\n"}]',
       isPinned: true,
@@ -21,5 +22,6 @@ void main() {
     expect(roundTrip.text, note.text);
     expect(roundTrip.richTextDeltaJson, note.richTextDeltaJson);
     expect(roundTrip.title, note.title);
+    expect(roundTrip.titleRichTextDeltaJson, note.titleRichTextDeltaJson);
   });
 }

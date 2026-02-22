@@ -22,7 +22,7 @@ class EditNotePage extends StatefulWidget {
 class _EditNotePageState extends State<EditNotePage> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _titleController;
+  late quill.QuillController _titleController;
   late quill.QuillController _contentController;
 
   DateTime? _selectedDateReminder;
@@ -31,7 +31,10 @@ class _EditNotePageState extends State<EditNotePage> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.note.title);
+    _titleController = quill.QuillController(
+      document: NoteRichTextCodec.titleDocumentFromNote(widget.note),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
     _contentController = quill.QuillController(
       document: NoteRichTextCodec.documentFromNote(widget.note),
       selection: const TextSelection.collapsed(offset: 0),
@@ -117,8 +120,12 @@ class _EditNotePageState extends State<EditNotePage> {
             _selectedDateReminder!.isAfter(DateTime.now()))
         ? _selectedDateReminder
         : null;
+    final title = NoteRichTextCodec.extractPlainText(_titleController.document);
     final updatedNote = widget.note.copyWith(
-      title: _titleController.text.trim(),
+      title: title,
+      titleRichTextDeltaJson: NoteRichTextCodec.encodeDelta(
+        _titleController.document,
+      ),
       text: NoteRichTextCodec.extractPlainText(_contentController.document),
       richTextDeltaJson:
           NoteRichTextCodec.encodeDelta(_contentController.document),
@@ -262,13 +269,34 @@ class _EditNotePageState extends State<EditNotePage> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      minLines: 1,
-                      maxLines: 3,
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                        hintText: 'What is this note about?',
+                    NoteColorToolbar(controller: _titleController),
+                    const SizedBox(height: 10),
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 70),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: quill.QuillEditor.basic(
+                        controller: _titleController,
+                        config: const quill.QuillEditorConfig(
+                          placeholder: 'What is this note about?',
+                          expands: false,
+                          scrollable: false,
+                        ),
                       ),
                     ),
                   ],

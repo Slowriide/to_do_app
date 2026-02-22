@@ -49,14 +49,23 @@ void main() {
     final note = Note(
       id: 1,
       title: 'n',
+      titleRichTextDeltaJson: '[{"insert":"n\\n"}]',
       text: 't',
       richTextDeltaJson: '[{"insert":"t\\n"}]',
     );
 
-    final updated = note.copyWith(richTextDeltaJson: '[{"insert":"x\\n"}]');
-    final cleared = updated.copyWith(richTextDeltaJson: null);
+    final updated = note.copyWith(
+      titleRichTextDeltaJson: '[{"insert":"n2\\n"}]',
+      richTextDeltaJson: '[{"insert":"x\\n"}]',
+    );
+    final cleared = updated.copyWith(
+      titleRichTextDeltaJson: null,
+      richTextDeltaJson: null,
+    );
 
+    expect(updated.titleRichTextDeltaJson, '[{"insert":"n2\\n"}]');
     expect(updated.richTextDeltaJson, '[{"insert":"x\\n"}]');
+    expect(cleared.titleRichTextDeltaJson, isNull);
     expect(cleared.richTextDeltaJson, isNull);
   });
 

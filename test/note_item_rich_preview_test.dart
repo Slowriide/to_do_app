@@ -10,6 +10,8 @@ void main() {
     final note = Note(
       id: 1,
       title: 'Rich',
+      titleRichTextDeltaJson:
+          '[{"insert":"Rich ","attributes":{"bold":true}},{"insert":"title\\n"}]',
       text: 'Hello world',
       richTextDeltaJson:
           '[{"insert":"Hello ","attributes":{"color":"#f6c453"}},{"insert":"world\\n"}]',
@@ -23,10 +25,14 @@ void main() {
       ),
     );
 
-    final editor =
-        tester.widget<quill.QuillEditor>(find.byType(quill.QuillEditor));
-    expect(editor.controller.readOnly, isTrue);
-    final delta = editor.controller.document.toDelta().toJson();
+    final editors = tester
+        .widgetList<quill.QuillEditor>(find.byType(quill.QuillEditor))
+        .toList();
+    expect(editors.length, 2);
+    final titleDelta = editors.first.controller.document.toDelta().toJson();
+    final delta = editors.last.controller.document.toDelta().toJson();
+    expect(editors.first.controller.readOnly, isTrue);
+    expect(titleDelta.toString(), contains('bold: true'));
     expect(delta.toString(), contains('color: #f6c453'));
   });
 
@@ -47,9 +53,10 @@ void main() {
       ),
     );
 
-    final editor =
-        tester.widget<quill.QuillEditor>(find.byType(quill.QuillEditor));
-    final delta = editor.controller.document.toDelta().toJson();
+    final editors = tester
+        .widgetList<quill.QuillEditor>(find.byType(quill.QuillEditor))
+        .toList();
+    final delta = editors.last.controller.document.toDelta().toJson();
     expect(delta.toString(), contains('insert: Plain fallback'));
   });
 }

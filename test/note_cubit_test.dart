@@ -160,10 +160,13 @@ void main() {
       'title',
       id: 99,
       richTextDeltaJson: '[{"insert":"plain\\n"}]',
+      titleRichTextDeltaJson: '[{"insert":"title\\n"}]',
     );
 
     final added = cubit.state.notes.firstWhere((n) => n.id == 99);
     expect(added.text, 'plain');
+    expect(added.title, 'title');
+    expect(added.titleRichTextDeltaJson, '[{"insert":"title\\n"}]');
     expect(added.richTextDeltaJson, '[{"insert":"plain\\n"}]');
     await cubit.close();
   });

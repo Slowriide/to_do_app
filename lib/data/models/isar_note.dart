@@ -19,6 +19,7 @@ part 'isar_note.g.dart';
 class NoteIsar {
   Id id = Isar.autoIncrement;
   late String title;
+  String? titleRichTextDeltaJson;
   late String text;
   String? richTextDeltaJson;
   late bool isCompleted;
@@ -33,6 +34,7 @@ class NoteIsar {
     return Note(
       id: id,
       title: title,
+      titleRichTextDeltaJson: titleRichTextDeltaJson,
       text: text,
       richTextDeltaJson: richTextDeltaJson,
       isCompleted: isCompleted,
@@ -48,6 +50,7 @@ class NoteIsar {
   static NoteIsar fromDomain(Note note) {
     return NoteIsar()
       ..id = note.id
+      ..titleRichTextDeltaJson = note.titleRichTextDeltaJson
       ..text = note.text
       ..richTextDeltaJson = note.richTextDeltaJson
       ..title = note.title

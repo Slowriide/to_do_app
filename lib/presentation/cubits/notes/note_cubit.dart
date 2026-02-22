@@ -48,6 +48,7 @@ class NoteCubit extends Cubit<NoteState> {
     required int id,
     int? folderId,
     String? richTextDeltaJson,
+    String? titleRichTextDeltaJson,
   }) async {
     final currentNotes = state.notes;
     final nextOrder = currentNotes.isEmpty
@@ -56,6 +57,7 @@ class NoteCubit extends Cubit<NoteState> {
     final newNote = Note(
       id: id,
       title: title,
+      titleRichTextDeltaJson: titleRichTextDeltaJson,
       text: text,
       richTextDeltaJson: richTextDeltaJson,
       reminder: reminder,

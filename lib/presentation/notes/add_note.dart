@@ -27,7 +27,7 @@ class AddNote extends StatefulWidget {
 class _AddNoteState extends State<AddNote> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
+  late quill.QuillController _titleController;
   late quill.QuillController _contentController;
 
   DateTime? _reminderDate;
@@ -36,6 +36,10 @@ class _AddNoteState extends State<AddNote> {
   @override
   void initState() {
     super.initState();
+    _titleController = quill.QuillController(
+      document: NoteRichTextCodec.documentFromPlainText(''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
     _contentController = quill.QuillController(
       document: NoteRichTextCodec.documentFromPlainText(''),
       selection: const TextSelection.collapsed(offset: 0),
@@ -95,7 +99,10 @@ class _AddNoteState extends State<AddNote> {
     _alreadySaved = true;
 
     if (_formKey.currentState?.validate() ?? false) {
-      final title = _titleController.text.trim();
+      final title =
+          NoteRichTextCodec.extractPlainText(_titleController.document);
+      final titleRichTextDeltaJson =
+          NoteRichTextCodec.encodeDelta(_titleController.document);
       final text =
           NoteRichTextCodec.extractPlainText(_contentController.document);
       final richTextDeltaJson =
@@ -119,6 +126,7 @@ class _AddNoteState extends State<AddNote> {
           id: uniqueId,
           folderId: _selectedFolderId,
           richTextDeltaJson: richTextDeltaJson,
+          titleRichTextDeltaJson: titleRichTextDeltaJson,
         );
       } else {
         await noteCubit.addNote(
@@ -127,6 +135,7 @@ class _AddNoteState extends State<AddNote> {
           id: uniqueId,
           folderId: _selectedFolderId,
           richTextDeltaJson: richTextDeltaJson,
+          titleRichTextDeltaJson: titleRichTextDeltaJson,
         );
       }
 
@@ -240,13 +249,34 @@ class _AddNoteState extends State<AddNote> {
                       style: textStyle.titleMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      minLines: 1,
-                      maxLines: 3,
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                        hintText: 'What is this note about?',
+                    NoteColorToolbar(controller: _titleController),
+                    const SizedBox(height: 10),
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 70),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: quill.QuillEditor.basic(
+                        controller: _titleController,
+                        config: const quill.QuillEditorConfig(
+                          placeholder: 'What is this note about?',
+                          expands: false,
+                          scrollable: false,
+                        ),
                       ),
                     ),
                   ],

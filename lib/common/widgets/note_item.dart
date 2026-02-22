@@ -31,6 +31,7 @@ class NoteItem extends StatefulWidget {
 }
 
 class _NoteItemState extends State<NoteItem> {
+  static const _titlePreviewMaxHeight = 50.0;
   static const _previewConfig = quill.QuillEditorConfig(
     scrollable: false,
     expands: false,
@@ -41,8 +42,11 @@ class _NoteItemState extends State<NoteItem> {
   static const _previewMaxHeight = 164.0;
 
   late final quill.QuillController _previewController;
+  late final quill.QuillController _titlePreviewController;
   late final FocusNode _previewFocusNode;
+  late final FocusNode _titlePreviewFocusNode;
   late final ScrollController _previewScrollController;
+  late final ScrollController _titlePreviewScrollController;
 
   @override
   void initState() {
@@ -52,8 +56,16 @@ class _NoteItemState extends State<NoteItem> {
       selection: const TextSelection.collapsed(offset: 0),
       readOnly: true,
     );
+    _titlePreviewController = quill.QuillController(
+      document: NoteRichTextCodec.titleDocumentFromNote(widget.note),
+      selection: const TextSelection.collapsed(offset: 0),
+      readOnly: true,
+    );
     _previewFocusNode = FocusNode(skipTraversal: true, canRequestFocus: false);
+    _titlePreviewFocusNode =
+        FocusNode(skipTraversal: true, canRequestFocus: false);
     _previewScrollController = ScrollController();
+    _titlePreviewScrollController = ScrollController();
   }
 
   @override
@@ -67,13 +79,25 @@ class _NoteItemState extends State<NoteItem> {
         widget.note,
       );
     }
+    final titleRichChanged = oldWidget.note.titleRichTextDeltaJson !=
+        widget.note.titleRichTextDeltaJson;
+    final titleChanged = oldWidget.note.title != widget.note.title;
+    if (titleRichChanged || titleChanged) {
+      _titlePreviewController.document =
+          NoteRichTextCodec.titleDocumentFromNote(
+        widget.note,
+      );
+    }
   }
 
   @override
   void dispose() {
     _previewController.dispose();
+    _titlePreviewController.dispose();
     _previewFocusNode.dispose();
+    _titlePreviewFocusNode.dispose();
     _previewScrollController.dispose();
+    _titlePreviewScrollController.dispose();
     super.dispose();
   }
 
@@ -112,11 +136,23 @@ class _NoteItemState extends State<NoteItem> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    widget.note.title,
-                    style: textStyle.bodyLarge,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: DefaultTextStyle.merge(
+                    style: textStyle.bodyLarge ?? const TextStyle(fontSize: 16),
+                    child: ClipRect(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: _titlePreviewMaxHeight,
+                        ),
+                        child: IgnorePointer(
+                          child: quill.QuillEditor(
+                            controller: _titlePreviewController,
+                            focusNode: _titlePreviewFocusNode,
+                            scrollController: _titlePreviewScrollController,
+                            config: _previewConfig,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 widget.note.isPinned

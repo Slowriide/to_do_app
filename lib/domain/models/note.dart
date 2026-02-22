@@ -10,6 +10,7 @@ class Note {
 
   final int id;
   final String title;
+  final String? titleRichTextDeltaJson;
   final String text;
   final String? richTextDeltaJson;
   final bool isCompleted;
@@ -22,6 +23,7 @@ class Note {
   Note({
     required this.id,
     required this.title,
+    this.titleRichTextDeltaJson,
     required this.text,
     this.richTextDeltaJson,
     this.isCompleted = false,
@@ -36,6 +38,7 @@ class Note {
     return Note(
       id: id,
       title: title,
+      titleRichTextDeltaJson: titleRichTextDeltaJson,
       text: text,
       richTextDeltaJson: richTextDeltaJson,
       isCompleted: !isCompleted,
@@ -49,6 +52,7 @@ class Note {
 
   Note copyWith({
     String? title,
+    Object? titleRichTextDeltaJson = _unset,
     String? text,
     Object? richTextDeltaJson = _unset,
     bool? isCompleted,
@@ -61,6 +65,9 @@ class Note {
     return Note(
       id: id,
       title: title ?? this.title,
+      titleRichTextDeltaJson: identical(titleRichTextDeltaJson, _unset)
+          ? this.titleRichTextDeltaJson
+          : titleRichTextDeltaJson as String?,
       text: text ?? this.text,
       richTextDeltaJson: identical(richTextDeltaJson, _unset)
           ? this.richTextDeltaJson

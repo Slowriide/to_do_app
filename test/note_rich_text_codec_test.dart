@@ -36,4 +36,17 @@ void main() {
 
     expect(NoteRichTextCodec.extractPlainText(doc), 'Line');
   });
+
+  test('titleDocumentFromNote falls back to plain title when payload invalid',
+      () {
+    final note = Note(
+      id: 2,
+      title: 'Title fallback',
+      text: 'Body',
+      titleRichTextDeltaJson: '{invalid',
+    );
+
+    final doc = NoteRichTextCodec.titleDocumentFromNote(note);
+    expect(NoteRichTextCodec.extractPlainText(doc), 'Title fallback');
+  });
 }
