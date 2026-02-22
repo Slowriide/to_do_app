@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 // import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:to_do_app/presentation/cubits/note_cubit.dart';
+import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/domain/models/note.dart';
 
 /// A widget that displays a single note item with its title and text.
@@ -12,7 +14,7 @@ import 'package:to_do_app/domain/models/note.dart';
 ///
 /// This widget does not handle interaction logic; it is purely presentational.
 
-class NoteItem extends StatelessWidget {
+class NoteItem extends StatefulWidget {
   final Note note;
   final bool isSelected;
   final Widget? dragHandle;
@@ -25,10 +27,61 @@ class NoteItem extends StatelessWidget {
   });
 
   @override
+  State<NoteItem> createState() => _NoteItemState();
+}
+
+class _NoteItemState extends State<NoteItem> {
+  static const _previewConfig = quill.QuillEditorConfig(
+    scrollable: false,
+    expands: false,
+    showCursor: false,
+    enableInteractiveSelection: false,
+    padding: EdgeInsets.zero,
+  );
+  static const _previewMaxHeight = 164.0;
+
+  late final quill.QuillController _previewController;
+  late final FocusNode _previewFocusNode;
+  late final ScrollController _previewScrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _previewController = quill.QuillController(
+      document: NoteRichTextCodec.documentFromNote(widget.note),
+      selection: const TextSelection.collapsed(offset: 0),
+      readOnly: true,
+    );
+    _previewFocusNode = FocusNode(skipTraversal: true, canRequestFocus: false);
+    _previewScrollController = ScrollController();
+  }
+
+  @override
+  void didUpdateWidget(covariant NoteItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final richChanged =
+        oldWidget.note.richTextDeltaJson != widget.note.richTextDeltaJson;
+    final textChanged = oldWidget.note.text != widget.note.text;
+    if (richChanged || textChanged) {
+      _previewController.document = NoteRichTextCodec.documentFromNote(
+        widget.note,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _previewController.dispose();
+    _previewFocusNode.dispose();
+    _previewScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
-    final cardColor = _noteTint(note.id, theme);
+    final cardColor = _noteTint(widget.note.id, theme);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 170),
@@ -37,10 +90,10 @@ class NoteItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         border: Border.all(
-          color: isSelected
+          color: widget.isSelected
               ? theme.primary.withValues(alpha: 0.75)
               : theme.tertiary.withValues(alpha: 0.28),
-          width: isSelected ? 1.5 : 1,
+          width: widget.isSelected ? 1.5 : 1,
         ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
@@ -60,33 +113,44 @@ class NoteItem extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    note.title,
+                    widget.note.title,
                     style: textStyle.bodyLarge,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                note.isPinned
+                widget.note.isPinned
                     ? Icon(
                         Icons.push_pin_rounded,
                         size: 18,
                         color: theme.tertiary,
                       )
                     : const SizedBox.shrink(),
-                if (dragHandle != null) ...[
+                if (widget.dragHandle != null) ...[
                   const SizedBox(width: 6),
-                  dragHandle!,
+                  widget.dragHandle!,
                 ],
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-            child: Text(
-              note.text,
-              style: textStyle.bodyMedium,
-              maxLines: 8,
-              overflow: TextOverflow.ellipsis,
+            child: DefaultTextStyle.merge(
+              style: textStyle.bodyMedium ?? const TextStyle(fontSize: 15),
+              child: ClipRect(
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(maxHeight: _previewMaxHeight),
+                  child: IgnorePointer(
+                    child: quill.QuillEditor(
+                      controller: _previewController,
+                      focusNode: _previewFocusNode,
+                      scrollController: _previewScrollController,
+                      config: _previewConfig,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
