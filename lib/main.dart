@@ -77,6 +77,10 @@ class MyApp extends StatelessWidget {
             presetId: state.presetId,
             customColorHex: state.customColorHex,
             useCustomColor: state.activeColorSource == ThemeColorSource.custom,
+            backgroundPresetId: state.backgroundPresetId,
+            customBackgroundHex: state.customBackgroundHex,
+            useCustomBackground:
+                state.activeBackgroundSource == ThemeBackgroundSource.custom,
           ).getTheme();
 
           return AnimatedTheme(

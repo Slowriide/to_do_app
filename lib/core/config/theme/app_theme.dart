@@ -8,17 +8,24 @@ class AppTheme {
   final String presetId;
   final String? customColorHex;
   final bool useCustomColor;
+  final String backgroundPresetId;
+  final String? customBackgroundHex;
+  final bool useCustomBackground;
   AppTheme({
     required this.isDarkMode,
     this.presetId = 'oceanBlue',
     this.customColorHex,
     this.useCustomColor = false,
+    this.backgroundPresetId = 'paper',
+    this.customBackgroundHex,
+    this.useCustomBackground = false,
   });
 
   ThemeData getTheme() => isDarkMode ? _darkTheme : _lightTheme;
 
   ThemeData _buildTheme(Brightness brightness) {
     final seedColor = _resolveSeedColor();
+    final selectedBackground = _resolveBackgroundColor();
     final scheme = ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: brightness,
@@ -26,6 +33,11 @@ class AppTheme {
       onInverseSurface: brightness == Brightness.dark
           ? const Color(0xFF1A222D)
           : const Color(0xFFFFF3D6),
+    );
+    final scaffoldColor = _blendBackgroundWithSurface(
+      selectedBackground: selectedBackground,
+      surfaceColor: scheme.surface,
+      brightness: brightness,
     );
 
     final baseText = GoogleFonts.notoSansTextTheme().apply(
@@ -37,7 +49,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
+      scaffoldBackgroundColor: scaffoldColor,
       textTheme: baseText.copyWith(
         titleLarge: baseText.titleLarge?.copyWith(
           fontSize: 28,
@@ -63,7 +75,7 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: scheme.surface,
+        backgroundColor: scaffoldColor,
         foregroundColor: scheme.onSurface,
         centerTitle: false,
         titleTextStyle: GoogleFonts.notoSans(
@@ -257,6 +269,29 @@ class AppTheme {
     final preset = themePresets.where((item) => item.id == presetId);
     if (preset.isNotEmpty) return preset.first.seedColor;
     return themePresets.first.seedColor;
+  }
+
+  Color _resolveBackgroundColor() {
+    if (useCustomBackground) {
+      final customBackground = _parseHexColor(customBackgroundHex);
+      if (customBackground != null) return customBackground;
+    }
+    final preset =
+        backgroundPresets.where((item) => item.id == backgroundPresetId);
+    if (preset.isNotEmpty) return preset.first.color;
+    return backgroundPresets.first.color;
+  }
+
+  Color _blendBackgroundWithSurface({
+    required Color selectedBackground,
+    required Color surfaceColor,
+    required Brightness brightness,
+  }) {
+    final alpha = brightness == Brightness.dark ? 0.34 : 0.24;
+    return Color.alphaBlend(
+      selectedBackground.withValues(alpha: alpha),
+      surfaceColor,
+    );
   }
 
   Color? _parseHexColor(String? hex) {

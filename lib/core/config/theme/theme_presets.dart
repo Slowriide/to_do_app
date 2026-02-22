@@ -13,6 +13,19 @@ class ThemePreset {
   });
 }
 
+@immutable
+class BackgroundPreset {
+  final String id;
+  final String displayName;
+  final Color color;
+
+  const BackgroundPreset({
+    required this.id,
+    required this.displayName,
+    required this.color,
+  });
+}
+
 const List<ThemePreset> themePresets = [
   ThemePreset(
     id: 'oceanBlue',
@@ -38,5 +51,38 @@ const List<ThemePreset> themePresets = [
     id: 'violetIndigo',
     displayName: 'Violet Indigo',
     seedColor: Color(0xFF5E35B1),
+  ),
+];
+
+const List<BackgroundPreset> backgroundPresets = [
+  BackgroundPreset(
+    id: 'paper',
+    displayName: 'Paper',
+    color: Color(0xFFF7F7F5),
+  ),
+  BackgroundPreset(
+    id: 'mist',
+    displayName: 'Mist',
+    color: Color(0xFFEFF4F8),
+  ),
+  BackgroundPreset(
+    id: 'sand',
+    displayName: 'Sand',
+    color: Color(0xFFF9F1E3),
+  ),
+  BackgroundPreset(
+    id: 'sage',
+    displayName: 'Sage',
+    color: Color(0xFFEAF3EC),
+  ),
+  BackgroundPreset(
+    id: 'slate',
+    displayName: 'Slate',
+    color: Color(0xFF161D28),
+  ),
+  BackgroundPreset(
+    id: 'charcoal',
+    displayName: 'Charcoal',
+    color: Color(0xFF111315),
   ),
 ];

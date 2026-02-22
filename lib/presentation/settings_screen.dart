@@ -27,20 +27,16 @@ class _SettingsState extends State<Settings> {
     return Color(0xFF000000 | value);
   }
 
-  Future<void> _openColorPicker(ThemeState state) async {
-    final presetColor = themePresets
-        .firstWhere(
-          (preset) => preset.id == state.presetId,
-          orElse: () => themePresets.first,
-        )
-        .seedColor;
-    var pickedColor = _parseHexColor(state.customColorHex, presetColor);
-
-    final selectedColor = await showDialog<Color>(
+  Future<Color?> _openColorPickerDialog({
+    required String title,
+    required Color initialColor,
+  }) async {
+    var pickedColor = initialColor;
+    return showDialog<Color>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Pick custom accent'),
+          title: Text(title),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: pickedColor,
@@ -63,9 +59,40 @@ class _SettingsState extends State<Settings> {
         );
       },
     );
+  }
+
+  Future<void> _openAccentColorPicker(ThemeState state) async {
+    final presetColor = themePresets
+        .firstWhere(
+          (preset) => preset.id == state.presetId,
+          orElse: () => themePresets.first,
+        )
+        .seedColor;
+    final selectedColor = await _openColorPickerDialog(
+      title: 'Pick custom accent',
+      initialColor: _parseHexColor(state.customColorHex, presetColor),
+    );
 
     if (selectedColor == null) return;
     context.read<ThemeCubit>().setCustomColorHex(_toHexColor(selectedColor));
+  }
+
+  Future<void> _openBackgroundColorPicker(ThemeState state) async {
+    final presetBackground = backgroundPresets
+        .firstWhere(
+          (preset) => preset.id == state.backgroundPresetId,
+          orElse: () => backgroundPresets.first,
+        )
+        .color;
+    final selectedColor = await _openColorPickerDialog(
+      title: 'Pick custom background',
+      initialColor: _parseHexColor(state.customBackgroundHex, presetBackground),
+    );
+
+    if (selectedColor == null) return;
+    context
+        .read<ThemeCubit>()
+        .setCustomBackgroundHex(_toHexColor(selectedColor));
   }
 
   @override
@@ -84,6 +111,15 @@ class _SettingsState extends State<Settings> {
           final currentCustomColor = _parseHexColor(
             state.customColorHex,
             colors.primary,
+          );
+          final currentCustomBackground = _parseHexColor(
+            state.customBackgroundHex,
+            backgroundPresets
+                .firstWhere(
+                  (preset) => preset.id == state.backgroundPresetId,
+                  orElse: () => backgroundPresets.first,
+                )
+                .color,
           );
 
           return ListView(
@@ -142,10 +178,13 @@ class _SettingsState extends State<Settings> {
                             _PresetSwatch(
                               label: preset.displayName,
                               color: preset.seedColor,
-                              selected: state.activeColorSource == ThemeColorSource.preset &&
+                              selected: state.activeColorSource ==
+                                      ThemeColorSource.preset &&
                                   state.presetId == preset.id,
                               onTap: () {
-                                context.read<ThemeCubit>().selectPreset(preset.id);
+                                context
+                                    .read<ThemeCubit>()
+                                    .selectPreset(preset.id);
                               },
                             ),
                         ],
@@ -164,10 +203,13 @@ class _SettingsState extends State<Settings> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text('Custom Accent', style: theme.textTheme.bodyLarge),
+                            child: Text('Custom Accent',
+                                style: theme.textTheme.bodyLarge),
                           ),
-                          if (state.activeColorSource == ThemeColorSource.custom)
-                            Icon(Icons.check_circle, color: colors.primary, size: 18),
+                          if (state.activeColorSource ==
+                              ThemeColorSource.custom)
+                            Icon(Icons.check_circle,
+                                color: colors.primary, size: 18),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -187,13 +229,14 @@ class _SettingsState extends State<Settings> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              state.customColorHex ?? 'No custom color selected',
+                              state.customColorHex ??
+                                  'No custom color selected',
                               style: theme.textTheme.bodyMedium,
                             ),
                           ),
                           const SizedBox(width: 10),
                           FilledButton.icon(
-                            onPressed: () => _openColorPicker(state),
+                            onPressed: () => _openAccentColorPicker(state),
                             icon: const Icon(Icons.palette_outlined),
                             label: const Text('Pick color'),
                           ),
@@ -211,9 +254,163 @@ class _SettingsState extends State<Settings> {
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Background Presets',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          for (final preset in backgroundPresets)
+                            _ColorDotOption(
+                              label: preset.displayName,
+                              color: preset.color,
+                              selected: state.activeBackgroundSource ==
+                                      ThemeBackgroundSource.preset &&
+                                  state.backgroundPresetId == preset.id,
+                              onTap: () {
+                                context
+                                    .read<ThemeCubit>()
+                                    .selectBackgroundPreset(preset.id);
+                              },
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Custom Background',
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ),
+                          if (state.activeBackgroundSource ==
+                              ThemeBackgroundSource.custom)
+                            Icon(
+                              Icons.check_circle,
+                              color: colors.primary,
+                              size: 18,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: currentCustomBackground,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: colors.tertiary.withValues(alpha: 0.35),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              state.customBackgroundHex ??
+                                  'No custom background selected',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          FilledButton.icon(
+                            onPressed: () => _openBackgroundColorPicker(state),
+                            icon: const Icon(Icons.format_paint_outlined),
+                            label: const Text('Pick color'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () {
+                          context.read<ThemeCubit>().clearCustomBackground();
+                        },
+                        icon: const Icon(Icons.layers_outlined, size: 18),
+                        label: const Text('Use selected preset'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ColorDotOption extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ColorDotOption({
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 170),
+            curve: Curves.easeOutCubic,
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected
+                    ? scheme.primary
+                    : scheme.tertiary.withValues(alpha: 0.36),
+                width: selected ? 2.4 : 1.2,
+              ),
+              boxShadow: [
+                if (selected)
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -246,7 +443,9 @@ class _PresetSwatch extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? scheme.primary : scheme.tertiary.withValues(alpha: 0.3),
+              color: selected
+                  ? scheme.primary
+                  : scheme.tertiary.withValues(alpha: 0.3),
               width: selected ? 2 : 1,
             ),
           ),

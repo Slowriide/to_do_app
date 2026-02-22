@@ -11,6 +11,9 @@ class LocalStorage {
   static const String _themePresetIdKey = 'themePresetId';
   static const String _themeColorSourceKey = 'themeColorSource';
   static const String _customThemeHexKey = 'customThemeHex';
+  static const String _backgroundPresetIdKey = 'backgroundPresetId';
+  static const String _backgroundColorSourceKey = 'backgroundColorSource';
+  static const String _customBackgroundHexKey = 'customBackgroundHex';
 
   static Future<void> configurePrefs() async {
     prefs = await SharedPreferences.getInstance();
@@ -33,5 +36,25 @@ class LocalStorage {
       return;
     }
     prefs.setString(_customThemeHexKey, value);
+  }
+
+  static String get backgroundPresetId =>
+      prefs.getString(_backgroundPresetIdKey) ?? 'paper';
+  static set backgroundPresetId(String value) =>
+      prefs.setString(_backgroundPresetIdKey, value);
+
+  static String get backgroundColorSource =>
+      prefs.getString(_backgroundColorSourceKey) ?? 'preset';
+  static set backgroundColorSource(String value) =>
+      prefs.setString(_backgroundColorSourceKey, value);
+
+  static String? get customBackgroundHex =>
+      prefs.getString(_customBackgroundHexKey);
+  static set customBackgroundHex(String? value) {
+    if (value == null) {
+      prefs.remove(_customBackgroundHexKey);
+      return;
+    }
+    prefs.setString(_customBackgroundHexKey, value);
   }
 }
