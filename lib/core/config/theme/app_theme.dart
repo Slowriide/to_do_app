@@ -94,7 +94,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(color: scheme.tertiary),
         filled: true,
-        fillColor: scheme.onInverseSurface.withValues(alpha: 0.78),
+        fillColor: scheme.primaryContainer.withValues(alpha: 0.55),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         labelStyle: TextStyle(
@@ -196,8 +196,8 @@ class AppTheme {
           ),
         ),
         menuStyle: MenuStyle(
-          backgroundColor:
-              WidgetStatePropertyAll(scheme.onInverseSurface.withValues(alpha: 0.98)),
+          backgroundColor: WidgetStatePropertyAll(
+              scheme.onInverseSurface.withValues(alpha: 0.98)),
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
