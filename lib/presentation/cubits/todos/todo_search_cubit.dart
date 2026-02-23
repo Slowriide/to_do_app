@@ -62,9 +62,11 @@ class TodoSearchCubit extends Cubit<List<Todo>> {
         case FolderFilterType.all:
           return true;
         case FolderFilterType.inbox:
-          return todo.folderId == null;
+          return todo.folderIds.isEmpty;
         case FolderFilterType.custom:
-          return todo.folderId == _folderFilter.folderId;
+          final selectedFolderId = _folderFilter.folderId;
+          if (selectedFolderId == null) return false;
+          return todo.folderIds.contains(selectedFolderId);
       }
     }).toList();
     emit(filtered);

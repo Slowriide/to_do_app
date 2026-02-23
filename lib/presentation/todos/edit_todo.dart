@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
+import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
@@ -32,7 +34,7 @@ class _EditTodoState extends State<EditTodo> {
   DateTime? _selectedReminder;
 
   late List<EditableSubtask> _editableSubtasks = [];
-  int? _selectedFolderId;
+  Set<int> _selectedFolderIds = {};
 
   @override
   void initState() {
@@ -46,7 +48,7 @@ class _EditTodoState extends State<EditTodo> {
     );
     _titleAutoLinker = QuillAutoLinker(_titleController);
     _selectedReminder = widget.todo.reminder;
-    _selectedFolderId = widget.todo.folderId;
+    _selectedFolderIds = widget.todo.folderIds.toSet();
 
     final sortedSubtasks = [...widget.todo.subTasks]
       ..sort((a, b) => a.order.compareTo(b.order));
@@ -172,7 +174,8 @@ class _EditTodoState extends State<EditTodo> {
   Future<void> _updateTodo() async {
     final todoCubit = context.read<TodoCubit>();
     if (_formKey.currentState?.validate() ?? false) {
-      final title = NoteRichTextCodec.extractPlainText(_titleController.document);
+      final title =
+          NoteRichTextCodec.extractPlainText(_titleController.document);
       final titleRichTextDeltaJson =
           NoteRichTextCodec.encodeDelta(_titleController.document);
       final reminderToSave = (_selectedReminder != null &&
@@ -200,7 +203,7 @@ class _EditTodoState extends State<EditTodo> {
         titleRichTextDeltaJson: titleRichTextDeltaJson,
         subTasks: updatedSubtask,
         reminder: reminderToSave,
-        folderId: _selectedFolderId,
+        folderIds: _selectedFolderIds.toList(),
       );
       if (widget.todo.reminder != null) {
         await NotificationService().cancelNotification(widget.todo.id);
@@ -219,58 +222,26 @@ class _EditTodoState extends State<EditTodo> {
   }
 
   Future<void> _pickFolder() async {
-    final selected = await showModalBottomSheet<int?>(
+    final selected = await showNoteFolderPickerModal(
       context: context,
-      builder: (sheetContext) {
-        return BlocBuilder<FolderCubit, List<Folder>>(
-          builder: (context, folders) {
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const ListTile(
-                    title: Text('Choose folder'),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.layers_outlined,
-                      color: _selectedFolderId == null
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: const Text('All (default)'),
-                    trailing: _selectedFolderId == null
-                        ? const Icon(Icons.check_rounded)
-                        : null,
-                    onTap: () => Navigator.pop(sheetContext, null),
-                  ),
-                  ...folders.map(
-                    (folder) => ListTile(
-                      leading: const Icon(Icons.folder_outlined),
-                      title: Text(folder.name),
-                      trailing: _selectedFolderId == folder.id
-                          ? const Icon(Icons.check_rounded)
-                          : null,
-                      onTap: () => Navigator.pop(sheetContext, folder.id),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+      initialSelection: _selectedFolderIds,
+      title: 'Choose folders',
     );
 
-    if (!mounted || selected == _selectedFolderId) return;
-    setState(() => _selectedFolderId = selected);
+    if (!mounted || selected == null) return;
+    if (setEquals(selected, _selectedFolderIds)) return;
+    setState(() => _selectedFolderIds = {...selected});
   }
 
   String _folderLabel(List<Folder> folders) {
-    if (_selectedFolderId == null) return 'All';
-    final selected = folders.where((folder) => folder.id == _selectedFolderId);
-    if (selected.isEmpty) return 'Folder';
-    return selected.first.name;
+    if (_selectedFolderIds.isEmpty) return 'Inbox';
+    final selectedNames = folders
+        .where((folder) => _selectedFolderIds.contains(folder.id))
+        .map((folder) => folder.name)
+        .toList();
+    if (selectedNames.isEmpty) return 'Folders';
+    if (selectedNames.length == 1) return selectedNames.first;
+    return '${selectedNames.length} folders';
   }
 
   @override

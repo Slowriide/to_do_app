@@ -169,7 +169,6 @@ void main() {
         subTasks: const [],
         isSubtask: false,
         order: 0,
-        folderId: null,
       ),
     ];
     final folders = [

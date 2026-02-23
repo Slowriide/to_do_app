@@ -18,7 +18,7 @@ class Todo {
   final DateTime? reminder;
   final bool isPinned;
   final bool isArchived;
-  final int? folderId;
+  final List<int> folderIds;
 
   Todo({
     required this.id,
@@ -31,8 +31,8 @@ class Todo {
     this.reminder,
     this.isPinned = false,
     this.isArchived = false,
-    this.folderId,
-  });
+    List<int>? folderIds,
+  }) : folderIds = List.unmodifiable(folderIds ?? const []);
 
   Todo copyWith({
     int? id,
@@ -45,7 +45,7 @@ class Todo {
     Object? reminder = _unset,
     bool? isPinned,
     bool? isArchived,
-    Object? folderId = _unset,
+    Object? folderIds = _unset,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -61,8 +61,9 @@ class Todo {
           identical(reminder, _unset) ? this.reminder : reminder as DateTime?,
       isPinned: isPinned ?? this.isPinned,
       isArchived: isArchived ?? this.isArchived,
-      folderId:
-          identical(folderId, _unset) ? this.folderId : folderId as int?,
+      folderIds: identical(folderIds, _unset)
+          ? this.folderIds
+          : List<int>.unmodifiable((folderIds as List<int>?) ?? const []),
     );
   }
 
@@ -78,7 +79,7 @@ class Todo {
       reminder: reminder,
       isPinned: isPinned,
       isArchived: isArchived,
-      folderId: folderId,
+      folderIds: folderIds,
     );
   }
 }

@@ -78,13 +78,13 @@ void main() {
       isSubtask: false,
       order: 0,
       reminder: DateTime(2026, 1, 1),
-      folderId: 9,
+      folderIds: const [9],
     );
 
-    final cleared = todo.copyWith(reminder: null, folderId: null);
+    final cleared = todo.copyWith(reminder: null, folderIds: const <int>[]);
 
     expect(cleared.reminder, isNull);
-    expect(cleared.folderId, isNull);
+    expect(cleared.folderIds, isEmpty);
   });
 
   test('Todo.copyWith keeps nullable fields when omitted', () {
@@ -97,14 +97,14 @@ void main() {
       isSubtask: false,
       order: 0,
       reminder: reminder,
-      folderId: 9,
+      folderIds: const [9],
     );
 
     final updated = todo.copyWith(title: 'updated');
 
     expect(updated.title, 'updated');
     expect(updated.reminder, reminder);
-    expect(updated.folderId, 9);
+    expect(updated.folderIds, const [9]);
   });
 
   test('Todo.copyWith updates and clears rich title payload', () {

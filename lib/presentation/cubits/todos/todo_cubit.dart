@@ -52,7 +52,7 @@ class TodoCubit extends Cubit<TodoState> {
     List<Todo> subtasks, {
     DateTime? reminder,
     required int id,
-    int? folderId,
+    List<int>? folderIds,
     String? titleRichTextDeltaJson,
   }) async {
     final currentTodos = state.todos;
@@ -68,7 +68,7 @@ class TodoCubit extends Cubit<TodoState> {
       isSubtask: false,
       order: nextOrder,
       reminder: reminder,
-      folderId: folderId,
+      folderIds: folderIds,
     );
     await repository.addTodo(newTodo);
     await loadTodos();
@@ -138,8 +138,8 @@ class TodoCubit extends Cubit<TodoState> {
 
   /// Reorders todos based on the UI order and persists it.
   Future<void> reorderTodos(List<Todo> orderedTodos) async {
-    final reordered =
-        List<Todo>.generate(orderedTodos.length, (i) => orderedTodos[i].copyWith(order: i));
+    final reordered = List<Todo>.generate(
+        orderedTodos.length, (i) => orderedTodos[i].copyWith(order: i));
     await repository.updateTodos(reordered);
     await loadTodos();
   }
@@ -171,7 +171,31 @@ class TodoCubit extends Cubit<TodoState> {
     final selected =
         state.todos.where((todo) => todoIds.contains(todo.id)).toList();
     for (final todo in selected) {
-      await repository.updateTodo(todo.copyWith(folderId: folderId));
+      await repository.updateTodo(
+        todo.copyWith(folderIds: folderId == null ? const [] : [folderId]),
+      );
+    }
+    await loadTodos();
+  }
+
+  Future<void> moveTodosToFolders(
+      List<int> todoIds, List<int> folderIds) async {
+    final selected =
+        state.todos.where((todo) => todoIds.contains(todo.id)).toList();
+    final normalized = folderIds.toSet().toList();
+    for (final todo in selected) {
+      await repository.updateTodo(todo.copyWith(folderIds: normalized));
+    }
+    await loadTodos();
+  }
+
+  Future<void> removeFolderFromTodos(List<int> todoIds, int folderId) async {
+    final selected =
+        state.todos.where((todo) => todoIds.contains(todo.id)).toList();
+    for (final todo in selected) {
+      final updatedFolderIds =
+          todo.folderIds.where((id) => id != folderId).toList();
+      await repository.updateTodo(todo.copyWith(folderIds: updatedFolderIds));
     }
     await loadTodos();
   }
@@ -195,8 +219,9 @@ class TodoCubit extends Cubit<TodoState> {
     if (todos.isEmpty) return;
     final toRestoreIds = todos.map((todo) => todo.id).toSet();
     final restoredState = state.todos
-        .map((todo) =>
-            toRestoreIds.contains(todo.id) ? todo.copyWith(isArchived: false) : todo)
+        .map((todo) => toRestoreIds.contains(todo.id)
+            ? todo.copyWith(isArchived: false)
+            : todo)
         .toList();
 
     final reflowed = _reflowActiveTodos(restoredState);
@@ -212,7 +237,8 @@ class TodoCubit extends Cubit<TodoState> {
       });
 
     final activeById = {
-      for (var i = 0; i < active.length; i++) active[i].id: active[i].copyWith(order: i),
+      for (var i = 0; i < active.length; i++)
+        active[i].id: active[i].copyWith(order: i),
     };
 
     return todos.map((todo) => activeById[todo.id] ?? todo).toList();

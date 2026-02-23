@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:to_do_app/common/widgets/folder_chips.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
-import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 
-import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
@@ -116,42 +115,29 @@ class _TodosViewState extends State<TodosView> {
   }
 
   Future<void> moveSelectedTodos() async {
-    final result = await showModalBottomSheet<int>(
-      context: context,
-      builder: (context) {
-        return BlocBuilder<FolderCubit, List<Folder>>(
-          builder: (context, folders) {
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const ListTile(
-                    title: Text('Move selected todos to'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.inbox_outlined),
-                    title: const Text('Inbox'),
-                    onTap: () => Navigator.pop(context, -1),
-                  ),
-                  ...folders.map(
-                    (folder) => ListTile(
-                      leading: const Icon(Icons.folder_outlined),
-                      title: Text(folder.name),
-                      onTap: () => Navigator.pop(context, folder.id),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+    final selected = context
+        .read<TodoCubit>()
+        .state
+        .todos
+        .where((todo) => selectedTodos.contains(todo.id))
+        .toList();
+    if (selected.isEmpty) return;
+
+    final commonFolderIds = selected.skip(1).fold<Set<int>>(
+          selected.first.folderIds.toSet(),
+          (acc, todo) => acc.intersection(todo.folderIds.toSet()),
         );
-      },
+
+    final result = await showNoteFolderPickerModal(
+      context: context,
+      initialSelection: commonFolderIds,
+      title: 'Move selected todos to',
     );
+
     if (result == null) return;
-    final folderId = result == -1 ? null : result;
     await context
         .read<TodoCubit>()
-        .moveTodosToFolder(selectedTodos.toList(), folderId);
+        .moveTodosToFolders(selectedTodos.toList(), result.toList());
     clearSelection();
   }
 
