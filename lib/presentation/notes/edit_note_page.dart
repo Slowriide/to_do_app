@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:to_do_app/common/widgets/draggable_note_image_embed_builder.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
@@ -25,6 +25,7 @@ class _EditNotePageState extends State<EditNotePage> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _imagePicker = ImagePicker();
+  late final GlobalKey<quill.EditorState> _contentEditorKey;
   late quill.QuillController _titleController;
   late quill.QuillController _contentController;
 
@@ -43,7 +44,8 @@ class _EditNotePageState extends State<EditNotePage> {
       document: NoteRichTextCodec.documentFromNote(widget.note),
       selection: const TextSelection.collapsed(offset: 0),
     );
-    _embedBuilders = FlutterQuillEmbeds.editorBuilders();
+    _contentEditorKey = GlobalKey<quill.EditorState>();
+    _embedBuilders = buildDraggableNoteImageEmbedBuilders();
     _selectedDateReminder = widget.note.reminder;
     _selectedFolderId = widget.note.folderId;
   }
@@ -131,7 +133,8 @@ class _EditNotePageState extends State<EditNotePage> {
           ? selection.start
           : _contentController.document.length - 1;
       final index = baseIndex.clamp(0, _contentController.document.length - 1);
-      final replaceLength = selection.isValid ? selection.end - selection.start : 0;
+      final replaceLength =
+          selection.isValid ? selection.end - selection.start : 0;
       final source = pickedFile.path;
 
       _contentController.replaceText(
@@ -147,6 +150,34 @@ class _EditNotePageState extends State<EditNotePage> {
         SnackBar(content: Text('Unable to insert image: $e')),
       );
     }
+  }
+
+  void _moveDraggedImage({
+    required DraggedNoteImagePayload payload,
+    required Offset globalDropOffset,
+  }) {
+    final editorState = _contentEditorKey.currentState;
+    if (editorState == null) return;
+
+    final documentLength = _contentController.document.length;
+    if (documentLength <= 1) return;
+
+    final dropOffset =
+        editorState.renderEditor.getPositionForOffset(globalDropOffset).offset;
+    var sourceIndex = payload.sourceIndex.clamp(0, documentLength - 1);
+    var destinationIndex = dropOffset.clamp(0, documentLength - 1);
+    if (destinationIndex > sourceIndex) {
+      destinationIndex -= 1;
+    }
+    if (destinationIndex == sourceIndex) return;
+
+    _contentController.replaceText(sourceIndex, 1, '', null);
+    _contentController.replaceText(
+      destinationIndex,
+      0,
+      quill.BlockEmbed.image(payload.imageSource),
+      TextSelection.collapsed(offset: destinationIndex + 1),
+    );
   }
 
   Future<void> _updateNote() async {
@@ -351,7 +382,8 @@ class _EditNotePageState extends State<EditNotePage> {
                         Expanded(
                           child: Text(
                             'Content',
-                            style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                            style:
+                                textStyle.titleMedium?.copyWith(fontSize: 18),
                           ),
                         ),
                         Tooltip(
@@ -364,40 +396,52 @@ class _EditNotePageState extends State<EditNotePage> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Container(
-                      constraints: const BoxConstraints(minHeight: 220),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primaryContainer
-                            .withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .tertiary
-                              .withValues(alpha: 0.24),
-                        ),
-                      ),
-                      child: quill.QuillEditor.basic(
-                        controller: _contentController,
-                        config: quill.QuillEditorConfig(
-                          placeholder: 'Continue writing...',
-                          expands: false,
-                          scrollable: false,
-                          embedBuilders: _embedBuilders,
-                          contextMenuBuilder: (context, rawEditorState) {
-                            return NoteSelectionContextMenu(
-                              controller: _contentController,
-                              rawEditorState: rawEditorState,
-                            );
-                          },
-                        ),
-                      ),
+                    DragTarget<DraggedNoteImagePayload>(
+                      onWillAcceptWithDetails: (_) => true,
+                      onAcceptWithDetails: (details) {
+                        _moveDraggedImage(
+                          payload: details.data,
+                          globalDropOffset: details.offset,
+                        );
+                      },
+                      builder: (context, _, __) {
+                        return Container(
+                          constraints: const BoxConstraints(minHeight: 220),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer
+                                .withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .tertiary
+                                  .withValues(alpha: 0.24),
+                            ),
+                          ),
+                          child: quill.QuillEditor.basic(
+                            controller: _contentController,
+                            config: quill.QuillEditorConfig(
+                              placeholder: 'Continue writing...',
+                              expands: false,
+                              scrollable: false,
+                              embedBuilders: _embedBuilders,
+                              editorKey: _contentEditorKey,
+                              contextMenuBuilder: (context, rawEditorState) {
+                                return NoteSelectionContextMenu(
+                                  controller: _contentController,
+                                  rawEditorState: rawEditorState,
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
