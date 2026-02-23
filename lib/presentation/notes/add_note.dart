@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -6,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:to_do_app/common/widgets/draggable_note_image_embed_builder.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
+import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
@@ -218,85 +220,14 @@ class _AddNoteState extends State<AddNote> {
   }
 
   Future<void> _pickFolder() async {
-    final selected = await showModalBottomSheet<Set<int>>(
+    final selected = await showNoteFolderPickerModal(
       context: context,
-      builder: (sheetContext) {
-        final draftSelection = {..._selectedFolderIds};
-        return BlocBuilder<FolderCubit, List<Folder>>(
-          builder: (context, folders) {
-            return SafeArea(
-              child: StatefulBuilder(
-                builder: (context, setStateModal) => SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.72,
-                  child: Column(
-                    children: [
-                      const ListTile(
-                        title: Text('Choose folders'),
-                      ),
-                      ListTile(
-                        leading: Icon(
-                          Icons.layers_outlined,
-                          color: draftSelection.isEmpty
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
-                        ),
-                        title: const Text('Inbox (default)'),
-                        trailing: draftSelection.isEmpty
-                            ? const Icon(Icons.check_rounded)
-                            : null,
-                        onTap: () {
-                          setStateModal(draftSelection.clear);
-                        },
-                      ),
-                      Expanded(
-                        child: ListView(
-                          children: folders
-                              .map(
-                                (folder) => CheckboxListTile(
-                                  dense: true,
-                                  controlAffinity:
-                                      ListTileControlAffinity.trailing,
-                                  secondary: const Icon(Icons.folder_outlined),
-                                  title: Text(folder.name),
-                                  value: draftSelection.contains(folder.id),
-                                  onChanged: (checked) {
-                                    setStateModal(() {
-                                      if (checked ?? false) {
-                                        draftSelection.add(folder.id);
-                                      } else {
-                                        draftSelection.remove(folder.id);
-                                      }
-                                    });
-                                  },
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: () {
-                              Navigator.pop(sheetContext, draftSelection);
-                            },
-                            child: const Text('Done'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+      initialSelection: _selectedFolderIds,
+      title: 'Choose folders',
     );
 
     if (!mounted || selected == null) return;
-    if (_areSetsEqual(selected, _selectedFolderIds)) return;
+    if (setEquals(selected, _selectedFolderIds)) return;
     setState(() => _selectedFolderIds = {...selected});
   }
 
@@ -309,14 +240,6 @@ class _AddNoteState extends State<AddNote> {
     if (selectedNames.isEmpty) return 'Folders';
     if (selectedNames.length == 1) return selectedNames.first;
     return '${selectedNames.length} folders';
-  }
-
-  bool _areSetsEqual(Set<int> a, Set<int> b) {
-    if (a.length != b.length) return false;
-    for (final value in a) {
-      if (!b.contains(value)) return false;
-    }
-    return true;
   }
 
   @override

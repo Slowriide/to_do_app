@@ -170,6 +170,16 @@ class NoteCubit extends Cubit<NoteState> {
     await loadNotes();
   }
 
+  Future<void> moveNotesToFolders(List<int> noteIds, List<int> folderIds) async {
+    final selected =
+        state.notes.where((note) => noteIds.contains(note.id)).toList();
+    final normalized = folderIds.toSet().toList();
+    for (final note in selected) {
+      await repository.updateNote(note.copyWith(folderIds: normalized));
+    }
+    await loadNotes();
+  }
+
   Future<void> removeFolderFromNotes(List<int> noteIds, int folderId) async {
     final selected =
         state.notes.where((note) => noteIds.contains(note.id)).toList();

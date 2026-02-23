@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/folder_chips.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
-import 'package:to_do_app/domain/models/folder.dart';
+import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
-import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
@@ -116,42 +115,29 @@ class _NotesViewState extends State<NotesView> {
   }
 
   Future<void> moveSelectedNotes() async {
-    final result = await showModalBottomSheet<int>(
-      context: context,
-      builder: (context) {
-        return BlocBuilder<FolderCubit, List<Folder>>(
-          builder: (context, folders) {
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const ListTile(
-                    title: Text('Move selected notes to'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.inbox_outlined),
-                    title: const Text('Inbox'),
-                    onTap: () => Navigator.pop(context, -1),
-                  ),
-                  ...folders.map(
-                    (folder) => ListTile(
-                      leading: const Icon(Icons.folder_outlined),
-                      title: Text(folder.name),
-                      onTap: () => Navigator.pop(context, folder.id),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+    final selected = context
+        .read<NoteCubit>()
+        .state
+        .notes
+        .where((note) => selectedNotes.contains(note.id))
+        .toList();
+    if (selected.isEmpty) return;
+
+    final commonFolderIds = selected.skip(1).fold<Set<int>>(
+          selected.first.folderIds.toSet(),
+          (acc, note) => acc.intersection(note.folderIds.toSet()),
         );
-      },
+
+    final result = await showNoteFolderPickerModal(
+      context: context,
+      initialSelection: commonFolderIds,
+      title: 'Move selected notes to',
     );
-    if (result == null) return;
-    final folderId = result == -1 ? null : result;
+
+    if (result == null || !mounted) return;
     await context
         .read<NoteCubit>()
-        .moveNotesToFolder(selectedNotes.toList(), folderId);
+        .moveNotesToFolders(selectedNotes.toList(), result.toList());
     clearSelection();
   }
 
@@ -248,8 +234,7 @@ class _NotesViewState extends State<NotesView> {
                 key: ValueKey('selected'),
               )
             : Text('Notes',
-                key: ValueKey('normal'),
-                style: textStyle.titleLarge),
+                key: ValueKey('normal'), style: textStyle.titleLarge),
       ),
       actions: [
         AnimatedSwitcher(
