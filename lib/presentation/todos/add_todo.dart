@@ -4,6 +4,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
+import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
@@ -31,6 +32,8 @@ class _AddTodoState extends State<AddTodo> {
   bool _isAlreadysaved = false;
   final _formKey = GlobalKey<FormState>();
   late quill.QuillController _titleController;
+  late QuillAutoLinker _titleAutoLinker;
+  final Map<int, QuillAutoLinker> _subtaskAutoLinkers = {};
 
   late List<EditableSubtask> _editableSubtasks = [];
 
@@ -44,6 +47,7 @@ class _AddTodoState extends State<AddTodo> {
       document: NoteRichTextCodec.documentFromPlainText(''),
       selection: const TextSelection.collapsed(offset: 0),
     );
+    _titleAutoLinker = QuillAutoLinker(_titleController);
     final filter = context.read<FolderFilterCubit>().state;
     _selectedFolderId =
         filter.type == FolderFilterType.custom ? filter.folderId : null;
@@ -93,15 +97,18 @@ class _AddTodoState extends State<AddTodo> {
   }
 
   void _addSubtask() {
+    final controller = quill.QuillController(
+      document: NoteRichTextCodec.documentFromPlainText(''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    final id = DateTime.now().millisecondsSinceEpoch;
     setState(() {
       _editableSubtasks.add(EditableSubtask(
-        id: DateTime.now().millisecondsSinceEpoch,
-        controller: quill.QuillController(
-          document: NoteRichTextCodec.documentFromPlainText(''),
-          selection: const TextSelection.collapsed(offset: 0),
-        ),
+        id: id,
+        controller: controller,
       ));
     });
+    _subtaskAutoLinkers[id] = QuillAutoLinker(controller);
   }
 
   void _handleReorder(List<EditableSubtask> newOrder) {
@@ -226,6 +233,10 @@ class _AddTodoState extends State<AddTodo> {
 
   @override
   void dispose() {
+    _titleAutoLinker.dispose();
+    for (final linker in _subtaskAutoLinkers.values) {
+      linker.dispose();
+    }
     _titleController.dispose();
     for (final ctrl in _editableSubtasks) {
       ctrl.controller.dispose();
@@ -357,6 +368,8 @@ class _AddTodoState extends State<AddTodo> {
                           });
                         },
                         onDelete: (index) {
+                          final removedId = _editableSubtasks[index].id;
+                          _subtaskAutoLinkers.remove(removedId)?.dispose();
                           setState(() {
                             _editableSubtasks.removeAt(index);
                           });

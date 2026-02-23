@@ -4,6 +4,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/utils/editablesubtask.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
+import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
@@ -26,6 +27,8 @@ class _EditTodoState extends State<EditTodo> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
   late quill.QuillController _titleController;
+  late QuillAutoLinker _titleAutoLinker;
+  final Map<int, QuillAutoLinker> _subtaskAutoLinkers = {};
   DateTime? _selectedReminder;
 
   late List<EditableSubtask> _editableSubtasks = [];
@@ -41,6 +44,7 @@ class _EditTodoState extends State<EditTodo> {
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
+    _titleAutoLinker = QuillAutoLinker(_titleController);
     _selectedReminder = widget.todo.reminder;
     _selectedFolderId = widget.todo.folderId;
 
@@ -62,6 +66,9 @@ class _EditTodoState extends State<EditTodo> {
           ),
         )
         .toList();
+    for (final subtask in _editableSubtasks) {
+      _subtaskAutoLinkers[subtask.id] = QuillAutoLinker(subtask.controller);
+    }
   }
 
   Future<void> _showEditOrDeleteDialog() async {
@@ -146,17 +153,20 @@ class _EditTodoState extends State<EditTodo> {
   }
 
   void _addSubtask() {
+    final controller = quill.QuillController(
+      document: NoteRichTextCodec.documentFromPlainText(''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    final id = IdGenerator.next();
     setState(() {
       _editableSubtasks.add(
         EditableSubtask(
-          id: IdGenerator.next(),
-          controller: quill.QuillController(
-            document: NoteRichTextCodec.documentFromPlainText(''),
-            selection: const TextSelection.collapsed(offset: 0),
-          ),
+          id: id,
+          controller: controller,
         ),
       );
     });
+    _subtaskAutoLinkers[id] = QuillAutoLinker(controller);
   }
 
   Future<void> _updateTodo() async {
@@ -265,6 +275,10 @@ class _EditTodoState extends State<EditTodo> {
 
   @override
   void dispose() {
+    _titleAutoLinker.dispose();
+    for (final linker in _subtaskAutoLinkers.values) {
+      linker.dispose();
+    }
     _titleController.dispose();
     for (final ctrl in _editableSubtasks) {
       ctrl.controller.dispose();
@@ -409,6 +423,8 @@ class _EditTodoState extends State<EditTodo> {
                           });
                         },
                         onDelete: (index) {
+                          final removedId = _editableSubtasks[index].id;
+                          _subtaskAutoLinkers.remove(removedId)?.dispose();
                           setState(() {
                             _editableSubtasks.removeAt(index);
                           });

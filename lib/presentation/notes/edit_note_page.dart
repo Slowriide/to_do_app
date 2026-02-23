@@ -7,6 +7,7 @@ import 'package:to_do_app/common/widgets/draggable_note_image_embed_builder.dart
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
+import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
@@ -28,6 +29,8 @@ class _EditNotePageState extends State<EditNotePage> {
   late final GlobalKey<quill.EditorState> _contentEditorKey;
   late quill.QuillController _titleController;
   late quill.QuillController _contentController;
+  late QuillAutoLinker _titleAutoLinker;
+  late QuillAutoLinker _contentAutoLinker;
 
   DateTime? _selectedDateReminder;
   int? _selectedFolderId;
@@ -44,6 +47,8 @@ class _EditNotePageState extends State<EditNotePage> {
       document: NoteRichTextCodec.documentFromNote(widget.note),
       selection: const TextSelection.collapsed(offset: 0),
     );
+    _titleAutoLinker = QuillAutoLinker(_titleController);
+    _contentAutoLinker = QuillAutoLinker(_contentController);
     _contentEditorKey = GlobalKey<quill.EditorState>();
     _embedBuilders = buildDraggableNoteImageEmbedBuilders();
     _selectedDateReminder = widget.note.reminder;
@@ -279,6 +284,8 @@ class _EditNotePageState extends State<EditNotePage> {
 
   @override
   void dispose() {
+    _titleAutoLinker.dispose();
+    _contentAutoLinker.dispose();
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
