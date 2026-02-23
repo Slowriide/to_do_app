@@ -39,6 +39,7 @@ dependencies:
   flutter_bloc: ^9.1.0
   flutter_local_notifications: ^20.1.0
   flutter_quill: ^11.5.0
+  flutter_quill_extensions: ^11.0.0
   flutter_colorpicker: ^1.1.0
   flutter_staggered_grid_view: ^0.7.0
   flutter_timezone: ^5.0.1
@@ -46,6 +47,7 @@ dependencies:
   go_router: ^17.1.0
   google_fonts: ^8.0.1
   implicitly_animated_reorderable_list_2: ^0.6.0
+  image_picker: ^1.1.2
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   meta: ^1.16.0

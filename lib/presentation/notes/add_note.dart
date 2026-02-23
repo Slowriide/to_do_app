@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
@@ -27,11 +29,13 @@ class AddNote extends StatefulWidget {
 class _AddNoteState extends State<AddNote> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _imagePicker = ImagePicker();
   late quill.QuillController _titleController;
   late quill.QuillController _contentController;
 
   DateTime? _reminderDate;
   int? _selectedFolderId;
+  late final List<quill.EmbedBuilder> _embedBuilders;
 
   @override
   void initState() {
@@ -40,6 +44,7 @@ class _AddNoteState extends State<AddNote> {
       document: NoteRichTextCodec.documentFromPlainText(''),
       selection: const TextSelection.collapsed(offset: 0),
     );
+    _embedBuilders = FlutterQuillEmbeds.editorBuilders();
     _contentController = quill.QuillController(
       document: NoteRichTextCodec.documentFromPlainText(''),
       selection: const TextSelection.collapsed(offset: 0),
@@ -90,6 +95,37 @@ class _AddNoteState extends State<AddNote> {
         time.minute,
       );
     });
+  }
+
+  Future<void> _insertImageIntoContent() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
+      if (!mounted || pickedFile == null) return;
+
+      final selection = _contentController.selection;
+      final baseIndex = selection.isValid
+          ? selection.start
+          : _contentController.document.length - 1;
+      final index = baseIndex.clamp(0, _contentController.document.length - 1);
+      final replaceLength =
+          selection.isValid ? selection.end - selection.start : 0;
+      final source = pickedFile.path;
+
+      _contentController.replaceText(
+        index,
+        replaceLength,
+        quill.BlockEmbed.image(source),
+        null,
+      );
+    } catch (e) {
+      debugPrint('Insert image failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to insert image: $e')),
+      );
+    }
   }
 
   Future<void> _saveNote() async {
@@ -291,9 +327,23 @@ class _AddNoteState extends State<AddNote> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Content',
-                      style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Content',
+                            style:
+                                textStyle.titleMedium?.copyWith(fontSize: 18),
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Insert image',
+                          child: IconButton(
+                            onPressed: _insertImageIntoContent,
+                            icon: const Icon(Icons.image_outlined),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Container(
@@ -321,6 +371,7 @@ class _AddNoteState extends State<AddNote> {
                           placeholder: 'Start writing your note...',
                           expands: false,
                           scrollable: false,
+                          embedBuilders: _embedBuilders,
                           contextMenuBuilder: (context, rawEditorState) {
                             return NoteSelectionContextMenu(
                               controller: _contentController,

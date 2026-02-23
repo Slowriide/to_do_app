@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
@@ -22,11 +24,13 @@ class EditNotePage extends StatefulWidget {
 class _EditNotePageState extends State<EditNotePage> {
   bool _alreadySaved = false;
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _imagePicker = ImagePicker();
   late quill.QuillController _titleController;
   late quill.QuillController _contentController;
 
   DateTime? _selectedDateReminder;
   int? _selectedFolderId;
+  late final List<quill.EmbedBuilder> _embedBuilders;
 
   @override
   void initState() {
@@ -39,6 +43,7 @@ class _EditNotePageState extends State<EditNotePage> {
       document: NoteRichTextCodec.documentFromNote(widget.note),
       selection: const TextSelection.collapsed(offset: 0),
     );
+    _embedBuilders = FlutterQuillEmbeds.editorBuilders();
     _selectedDateReminder = widget.note.reminder;
     _selectedFolderId = widget.note.folderId;
   }
@@ -111,6 +116,36 @@ class _EditNotePageState extends State<EditNotePage> {
           );
         });
       }
+    }
+  }
+
+  Future<void> _insertImageIntoContent() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
+      if (!mounted || pickedFile == null) return;
+
+      final selection = _contentController.selection;
+      final baseIndex = selection.isValid
+          ? selection.start
+          : _contentController.document.length - 1;
+      final index = baseIndex.clamp(0, _contentController.document.length - 1);
+      final replaceLength = selection.isValid ? selection.end - selection.start : 0;
+      final source = pickedFile.path;
+
+      _contentController.replaceText(
+        index,
+        replaceLength,
+        quill.BlockEmbed.image(source),
+        null,
+      );
+    } catch (e) {
+      debugPrint('Insert image failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to insert image: $e')),
+      );
     }
   }
 
@@ -311,9 +346,22 @@ class _EditNotePageState extends State<EditNotePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Content',
-                      style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Content',
+                            style: textStyle.titleMedium?.copyWith(fontSize: 18),
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Insert image',
+                          child: IconButton(
+                            onPressed: _insertImageIntoContent,
+                            icon: const Icon(Icons.image_outlined),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Container(
@@ -341,6 +389,7 @@ class _EditNotePageState extends State<EditNotePage> {
                           placeholder: 'Continue writing...',
                           expands: false,
                           scrollable: false,
+                          embedBuilders: _embedBuilders,
                           contextMenuBuilder: (context, rawEditorState) {
                             return NoteSelectionContextMenu(
                               controller: _contentController,

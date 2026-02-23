@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:to_do_app/core/bootstrap/app_repositories.dart';
 import 'package:to_do_app/core/config/local_storage/local_storage.dart';
 import 'package:to_do_app/core/config/router/app_router.dart';
@@ -92,6 +93,9 @@ class MyApp extends StatelessWidget {
               theme: themeData,
               title: 'ToDo App',
               debugShowCheckedModeBanner: false,
+              localizationsDelegates:
+                  FlutterQuillLocalizations.localizationsDelegates,
+              supportedLocales: FlutterQuillLocalizations.supportedLocales,
             ),
           );
         }),

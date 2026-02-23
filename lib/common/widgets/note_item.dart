@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 
 // import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:to_do_app/presentation/cubits/note_cubit.dart';
@@ -40,6 +41,8 @@ class _NoteItemState extends State<NoteItem> {
     padding: EdgeInsets.zero,
   );
   static const _previewMaxHeight = 164.0;
+  static final List<quill.EmbedBuilder> _previewEmbedBuilders =
+      FlutterQuillEmbeds.editorBuilders();
 
   late final quill.QuillController _previewController;
   late final quill.QuillController _titlePreviewController;
@@ -148,7 +151,9 @@ class _NoteItemState extends State<NoteItem> {
                             controller: _titlePreviewController,
                             focusNode: _titlePreviewFocusNode,
                             scrollController: _titlePreviewScrollController,
-                            config: _previewConfig,
+                            config: _previewConfig.copyWith(
+                              embedBuilders: _previewEmbedBuilders,
+                            ),
                           ),
                         ),
                       ),
@@ -182,7 +187,9 @@ class _NoteItemState extends State<NoteItem> {
                       controller: _previewController,
                       focusNode: _previewFocusNode,
                       scrollController: _previewScrollController,
-                      config: _previewConfig,
+                      config: _previewConfig.copyWith(
+                        embedBuilders: _previewEmbedBuilders,
+                      ),
                     ),
                   ),
                 ),
