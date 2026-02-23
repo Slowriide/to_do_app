@@ -59,9 +59,11 @@ class NoteSearchCubit extends Cubit<List<Note>> {
         case FolderFilterType.all:
           return true;
         case FolderFilterType.inbox:
-          return note.folderId == null;
+          return note.folderIds.isEmpty;
         case FolderFilterType.custom:
-          return note.folderId == _folderFilter.folderId;
+          final selectedFolderId = _folderFilter.folderId;
+          if (selectedFolderId == null) return false;
+          return note.folderIds.contains(selectedFolderId);
       }
     }).toList();
     emit(filtered);

@@ -17,10 +17,10 @@ const NoteIsarSchema = CollectionSchema(
   name: r'NoteIsar',
   id: 513149557421112620,
   properties: {
-    r'folderId': PropertySchema(
+    r'folderIds': PropertySchema(
       id: 0,
-      name: r'folderId',
-      type: IsarType.long,
+      name: r'folderIds',
+      type: IsarType.longList,
     ),
     r'isArchived': PropertySchema(
       id: 1,
@@ -88,6 +88,7 @@ int _noteIsarEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.folderIds.length * 8;
   {
     final value = object.richTextDeltaJson;
     if (value != null) {
@@ -111,7 +112,7 @@ void _noteIsarSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.folderId);
+  writer.writeLongList(offsets[0], object.folderIds);
   writer.writeBool(offsets[1], object.isArchived);
   writer.writeBool(offsets[2], object.isCompleted);
   writer.writeBool(offsets[3], object.isPinned);
@@ -130,7 +131,7 @@ NoteIsar _noteIsarDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = NoteIsar();
-  object.folderId = reader.readLongOrNull(offsets[0]);
+  object.folderIds = reader.readLongList(offsets[0]) ?? [];
   object.id = id;
   object.isArchived = reader.readBool(offsets[1]);
   object.isCompleted = reader.readBool(offsets[2]);
@@ -152,7 +153,7 @@ P _noteIsarDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
@@ -265,72 +266,147 @@ extension NoteIsarQueryWhere on QueryBuilder<NoteIsar, NoteIsar, QWhereClause> {
 
 extension NoteIsarQueryFilter
     on QueryBuilder<NoteIsar, NoteIsar, QFilterCondition> {
-  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'folderId',
-      ));
-    });
-  }
-
-  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'folderId',
-      ));
-    });
-  }
-
-  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdEqualTo(
-      int? value) {
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsElementEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'folderId',
+        property: r'folderIds',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdGreaterThan(
-    int? value, {
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsElementGreaterThan(
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'folderId',
+        property: r'folderIds',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdLessThan(
-    int? value, {
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsElementLessThan(
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'folderId',
+        property: r'folderIds',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdBetween(
-    int? lower,
-    int? upper, {
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsElementBetween(
+    int lower,
+    int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'folderId',
+        property: r'folderIds',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'folderIds',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition> folderIdsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'folderIds',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'folderIds',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'folderIds',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'folderIds',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NoteIsar, NoteIsar, QAfterFilterCondition>
+      folderIdsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'folderIds',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -1116,18 +1192,6 @@ extension NoteIsarQueryLinks
     on QueryBuilder<NoteIsar, NoteIsar, QFilterCondition> {}
 
 extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
-  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByFolderId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'folderId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByFolderIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'folderId', Sort.desc);
-    });
-  }
-
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> sortByIsArchived() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isArchived', Sort.asc);
@@ -1241,18 +1305,6 @@ extension NoteIsarQuerySortBy on QueryBuilder<NoteIsar, NoteIsar, QSortBy> {
 
 extension NoteIsarQuerySortThenBy
     on QueryBuilder<NoteIsar, NoteIsar, QSortThenBy> {
-  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByFolderId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'folderId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenByFolderIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'folderId', Sort.desc);
-    });
-  }
-
   QueryBuilder<NoteIsar, NoteIsar, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1378,9 +1430,9 @@ extension NoteIsarQuerySortThenBy
 
 extension NoteIsarQueryWhereDistinct
     on QueryBuilder<NoteIsar, NoteIsar, QDistinct> {
-  QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByFolderId() {
+  QueryBuilder<NoteIsar, NoteIsar, QDistinct> distinctByFolderIds() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'folderId');
+      return query.addDistinctBy(r'folderIds');
     });
   }
 
@@ -1453,9 +1505,9 @@ extension NoteIsarQueryProperty
     });
   }
 
-  QueryBuilder<NoteIsar, int?, QQueryOperations> folderIdProperty() {
+  QueryBuilder<NoteIsar, List<int>, QQueryOperations> folderIdsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'folderId');
+      return query.addPropertyName(r'folderIds');
     });
   }
 

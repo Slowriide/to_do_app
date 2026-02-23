@@ -27,7 +27,7 @@ class NoteIsar {
   late bool isPinned;
   late bool isArchived;
   late int order;
-  int? folderId;
+  List<int> folderIds = [];
 
 //isar object to pure object
   Note toDomain() {
@@ -42,7 +42,7 @@ class NoteIsar {
       isPinned: isPinned,
       isArchived: isArchived,
       order: order,
-      folderId: folderId,
+      folderIds: folderIds,
     );
   }
 
@@ -59,6 +59,6 @@ class NoteIsar {
       ..isPinned = note.isPinned
       ..isArchived = note.isArchived
       ..order = note.order
-      ..folderId = note.folderId;
+      ..folderIds = note.folderIds;
   }
 }

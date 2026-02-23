@@ -337,7 +337,7 @@ class _MyDrawerState extends State<MyDrawer> {
         .read<NoteCubit>()
         .state
         .notes
-        .where((note) => note.folderId == folder.id)
+        .where((note) => note.folderIds.contains(folder.id))
         .map((note) => note.id)
         .toList();
     final todoIds = context
@@ -348,7 +348,7 @@ class _MyDrawerState extends State<MyDrawer> {
         .map((todo) => todo.id)
         .toList();
 
-    await context.read<NoteCubit>().moveNotesToFolder(noteIds, null);
+    await context.read<NoteCubit>().removeFolderFromNotes(noteIds, folder.id);
     await context.read<TodoCubit>().moveTodosToFolder(todoIds, null);
     await context.read<FolderCubit>().deleteFolder(folder.id);
 

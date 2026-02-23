@@ -669,6 +669,162 @@ extension TodoIsarQueryFilter
       ));
     });
   }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'titleRichTextDeltaJson',
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'titleRichTextDeltaJson',
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'titleRichTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'titleRichTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'titleRichTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'titleRichTextDeltaJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'titleRichTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'titleRichTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'titleRichTextDeltaJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'titleRichTextDeltaJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'titleRichTextDeltaJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterFilterCondition>
+      titleRichTextDeltaJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'titleRichTextDeltaJson',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension TodoIsarQueryObject
@@ -831,6 +987,20 @@ extension TodoIsarQuerySortBy on QueryBuilder<TodoIsar, TodoIsar, QSortBy> {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy>
+      sortByTitleRichTextDeltaJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'titleRichTextDeltaJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy>
+      sortByTitleRichTextDeltaJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'titleRichTextDeltaJson', Sort.desc);
+    });
+  }
 }
 
 extension TodoIsarQuerySortThenBy
@@ -942,6 +1112,20 @@ extension TodoIsarQuerySortThenBy
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy>
+      thenByTitleRichTextDeltaJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'titleRichTextDeltaJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QAfterSortBy>
+      thenByTitleRichTextDeltaJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'titleRichTextDeltaJson', Sort.desc);
+    });
+  }
 }
 
 extension TodoIsarQueryWhereDistinct
@@ -992,6 +1176,14 @@ extension TodoIsarQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TodoIsar, TodoIsar, QDistinct> distinctByTitleRichTextDeltaJson(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'titleRichTextDeltaJson',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -1049,6 +1241,13 @@ extension TodoIsarQueryProperty
   QueryBuilder<TodoIsar, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<TodoIsar, String?, QQueryOperations>
+      titleRichTextDeltaJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'titleRichTextDeltaJson');
     });
   }
 }

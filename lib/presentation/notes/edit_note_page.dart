@@ -33,7 +33,7 @@ class _EditNotePageState extends State<EditNotePage> {
   late QuillAutoLinker _contentAutoLinker;
 
   DateTime? _selectedDateReminder;
-  int? _selectedFolderId;
+  Set<int> _selectedFolderIds = {};
   late final List<quill.EmbedBuilder> _embedBuilders;
 
   @override
@@ -52,7 +52,7 @@ class _EditNotePageState extends State<EditNotePage> {
     _contentEditorKey = GlobalKey<quill.EditorState>();
     _embedBuilders = buildDraggableNoteImageEmbedBuilders();
     _selectedDateReminder = widget.note.reminder;
-    _selectedFolderId = widget.note.folderId;
+    _selectedFolderIds = widget.note.folderIds.toSet();
   }
 
   Future<void> _showEditOrDeleteDialog() async {
@@ -201,7 +201,7 @@ class _EditNotePageState extends State<EditNotePage> {
       richTextDeltaJson:
           NoteRichTextCodec.encodeDelta(_contentController.document),
       reminder: reminderToSave,
-      folderId: _selectedFolderId,
+      folderIds: _selectedFolderIds.toList(),
     );
     if (widget.note.reminder != null) {
       await NotificationService().cancelNotification(widget.note.id);
@@ -228,42 +228,74 @@ class _EditNotePageState extends State<EditNotePage> {
   }
 
   Future<void> _pickFolder() async {
-    final selected = await showModalBottomSheet<int?>(
+    final selected = await showModalBottomSheet<Set<int>>(
       context: context,
       builder: (sheetContext) {
+        final draftSelection = {..._selectedFolderIds};
         return BlocBuilder<FolderCubit, List<Folder>>(
           builder: (context, folders) {
             return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const ListTile(
-                    title: Text('Choose folder'),
+              child: StatefulBuilder(
+                builder: (context, setStateModal) => SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.72,
+                  child: Column(
+                    children: [
+                      const ListTile(
+                        title: Text('Choose folders'),
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.layers_outlined,
+                          color: draftSelection.isEmpty
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        title: const Text('Inbox (default)'),
+                        trailing: draftSelection.isEmpty
+                            ? const Icon(Icons.check_rounded)
+                            : null,
+                        onTap: () => setStateModal(draftSelection.clear),
+                      ),
+                      Expanded(
+                        child: ListView(
+                          children: folders
+                              .map(
+                                (folder) => CheckboxListTile(
+                                  dense: true,
+                                  controlAffinity:
+                                      ListTileControlAffinity.trailing,
+                                  secondary: const Icon(Icons.folder_outlined),
+                                  title: Text(folder.name),
+                                  value: draftSelection.contains(folder.id),
+                                  onChanged: (checked) {
+                                    setStateModal(() {
+                                      if (checked ?? false) {
+                                        draftSelection.add(folder.id);
+                                      } else {
+                                        draftSelection.remove(folder.id);
+                                      }
+                                    });
+                                  },
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () {
+                              Navigator.pop(sheetContext, draftSelection);
+                            },
+                            child: const Text('Done'),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.layers_outlined,
-                      color: _selectedFolderId == null
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: const Text('All (default)'),
-                    trailing: _selectedFolderId == null
-                        ? const Icon(Icons.check_rounded)
-                        : null,
-                    onTap: () => Navigator.pop(sheetContext, null),
-                  ),
-                  ...folders.map(
-                    (folder) => ListTile(
-                      leading: const Icon(Icons.folder_outlined),
-                      title: Text(folder.name),
-                      trailing: _selectedFolderId == folder.id
-                          ? const Icon(Icons.check_rounded)
-                          : null,
-                      onTap: () => Navigator.pop(sheetContext, folder.id),
-                    ),
-                  ),
-                ],
+                ),
               ),
             );
           },
@@ -271,15 +303,28 @@ class _EditNotePageState extends State<EditNotePage> {
       },
     );
 
-    if (!mounted || selected == _selectedFolderId) return;
-    setState(() => _selectedFolderId = selected);
+    if (!mounted || selected == null) return;
+    if (_areSetsEqual(selected, _selectedFolderIds)) return;
+    setState(() => _selectedFolderIds = {...selected});
   }
 
   String _folderLabel(List<Folder> folders) {
-    if (_selectedFolderId == null) return 'All';
-    final selected = folders.where((folder) => folder.id == _selectedFolderId);
-    if (selected.isEmpty) return 'Folder';
-    return selected.first.name;
+    if (_selectedFolderIds.isEmpty) return 'Inbox';
+    final selectedNames = folders
+        .where((folder) => _selectedFolderIds.contains(folder.id))
+        .map((folder) => folder.name)
+        .toList();
+    if (selectedNames.isEmpty) return 'Folders';
+    if (selectedNames.length == 1) return selectedNames.first;
+    return '${selectedNames.length} folders';
+  }
+
+  bool _areSetsEqual(Set<int> a, Set<int> b) {
+    if (a.length != b.length) return false;
+    for (final value in a) {
+      if (!b.contains(value)) return false;
+    }
+    return true;
   }
 
   @override

@@ -18,7 +18,7 @@ class Note {
   final bool isPinned;
   final bool isArchived;
   final int order;
-  final int? folderId;
+  final List<int> folderIds;
 
   Note({
     required this.id,
@@ -31,8 +31,8 @@ class Note {
     this.isPinned = false,
     this.isArchived = false,
     this.order = 0,
-    this.folderId,
-  });
+    List<int>? folderIds,
+  }) : folderIds = List.unmodifiable(folderIds ?? const []);
 
   Note toggleCompletion() {
     return Note(
@@ -46,7 +46,7 @@ class Note {
       isPinned: isPinned,
       isArchived: isArchived,
       order: order,
-      folderId: folderId,
+      folderIds: folderIds,
     );
   }
 
@@ -60,7 +60,7 @@ class Note {
     bool? isPinned,
     bool? isArchived,
     int? order,
-    Object? folderId = _unset,
+    Object? folderIds = _unset,
   }) {
     return Note(
       id: id,
@@ -78,7 +78,9 @@ class Note {
       isPinned: isPinned ?? this.isPinned,
       isArchived: isArchived ?? this.isArchived,
       order: order ?? this.order,
-      folderId: identical(folderId, _unset) ? this.folderId : folderId as int?,
+      folderIds: identical(folderIds, _unset)
+          ? this.folderIds
+          : List<int>.unmodifiable((folderIds as List<int>?) ?? const []),
     );
   }
 }

@@ -161,7 +161,7 @@ void main() {
       (tester) async {
     await _initPrefs();
     final notes = [
-      Note(id: 1, title: 'Inbox note', text: 'inbox', folderId: null),
+      Note(id: 1, title: 'Inbox note', text: 'inbox'),
     ];
     final folders = [
       Folder(

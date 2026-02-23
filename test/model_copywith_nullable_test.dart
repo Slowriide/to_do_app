@@ -9,13 +9,13 @@ void main() {
       title: 'n',
       text: 't',
       reminder: DateTime(2026, 1, 1),
-      folderId: 42,
+      folderIds: const [42],
     );
 
-    final cleared = note.copyWith(reminder: null, folderId: null);
+    final cleared = note.copyWith(reminder: null, folderIds: const <int>[]);
 
     expect(cleared.reminder, isNull);
-    expect(cleared.folderId, isNull);
+    expect(cleared.folderIds, isEmpty);
   });
 
   test('Note.copyWith keeps nullable fields when omitted', () {
@@ -25,14 +25,14 @@ void main() {
       title: 'n',
       text: 't',
       reminder: reminder,
-      folderId: 42,
+      folderIds: const [42],
     );
 
     final updated = note.copyWith(title: 'new');
 
     expect(updated.title, 'new');
     expect(updated.reminder, reminder);
-    expect(updated.folderId, 42);
+    expect(updated.folderIds, const [42]);
   });
 
   test('Note.copyWith updates archived flag', () {

@@ -46,7 +46,7 @@ class NoteCubit extends Cubit<NoteState> {
     String title, {
     DateTime? reminder,
     required int id,
-    int? folderId,
+    List<int>? folderIds,
     String? richTextDeltaJson,
     String? titleRichTextDeltaJson,
   }) async {
@@ -62,7 +62,7 @@ class NoteCubit extends Cubit<NoteState> {
       richTextDeltaJson: richTextDeltaJson,
       reminder: reminder,
       order: nextOrder,
-      folderId: folderId,
+      folderIds: folderIds,
     );
 
     await repository.addNote(newNote);
@@ -163,7 +163,20 @@ class NoteCubit extends Cubit<NoteState> {
     final selected =
         state.notes.where((note) => noteIds.contains(note.id)).toList();
     for (final note in selected) {
-      await repository.updateNote(note.copyWith(folderId: folderId));
+      await repository.updateNote(
+        note.copyWith(folderIds: folderId == null ? const [] : [folderId]),
+      );
+    }
+    await loadNotes();
+  }
+
+  Future<void> removeFolderFromNotes(List<int> noteIds, int folderId) async {
+    final selected =
+        state.notes.where((note) => noteIds.contains(note.id)).toList();
+    for (final note in selected) {
+      final updatedFolderIds =
+          note.folderIds.where((id) => id != folderId).toList();
+      await repository.updateNote(note.copyWith(folderIds: updatedFolderIds));
     }
     await loadNotes();
   }
