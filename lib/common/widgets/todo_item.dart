@@ -93,6 +93,7 @@ class _TodoItemState extends State<TodoItem> {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     final cardColor = _todoTint(todo.id, theme);
+    final createdAtLabel = _formatCreatedAt(context, todo.id);
 
     final sortedSubtasks = [...todo.subTasks];
     sortedSubtasks.sort(
@@ -164,7 +165,7 @@ class _TodoItemState extends State<TodoItem> {
           const SizedBox(height: 8),
           if (todo.subTasks.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
               child: Column(
                 children: sortedSubtasks
                     .take(5)
@@ -216,10 +217,46 @@ class _TodoItemState extends State<TodoItem> {
                     )
                     .toList(),
               ),
-            )
+            ),
+          if (createdAtLabel != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+              child: Text(
+                createdAtLabel,
+                style: textStyle.labelSmall?.copyWith(
+                  color: theme.onSurfaceVariant.withValues(alpha: 0.78),
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  String? _formatCreatedAt(BuildContext context, int id) {
+    final createdAt = _createdAtFromId(id);
+    if (createdAt == null) return null;
+
+    final localizations = MaterialLocalizations.of(context);
+    final use24h =
+        MediaQuery.maybeOf(context)?.alwaysUse24HourFormat ?? false;
+    final date = localizations.formatShortDate(createdAt);
+    final time = localizations.formatTimeOfDay(
+      TimeOfDay.fromDateTime(createdAt),
+      alwaysUse24HourFormat: use24h,
+    );
+    return '$date $time';
+  }
+
+  DateTime? _createdAtFromId(int id) {
+    if (id <= 0) return null;
+    try {
+      final date = DateTime.fromMicrosecondsSinceEpoch(id);
+      if (date.year < 2000 || date.year > 2100) return null;
+      return date;
+    } catch (_) {
+      return null;
+    }
   }
 
   Color _todoTint(int id, ColorScheme theme) {
