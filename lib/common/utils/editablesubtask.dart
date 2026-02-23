@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 /// Model representing an editable subtask in the UI.
 ///
@@ -9,7 +10,7 @@ import 'package:flutter/widgets.dart';
 /// This class only manages the UI state and local data for each editable subtask.
 class EditableSubtask {
   final int id;
-  final TextEditingController controller;
+  final quill.QuillController controller;
   bool isCompleted;
   int order;
 

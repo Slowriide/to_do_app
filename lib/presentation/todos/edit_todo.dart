@@ -50,7 +50,13 @@ class _EditTodoState extends State<EditTodo> {
         .map(
           (sub) => EditableSubtask(
             id: sub.id,
-            controller: TextEditingController(text: sub.title),
+            controller: quill.QuillController(
+              document: NoteRichTextCodec.documentFromRaw(
+                rawDelta: sub.titleRichTextDeltaJson,
+                fallbackPlainText: sub.title,
+              ),
+              selection: const TextSelection.collapsed(offset: 0),
+            ),
             isCompleted: sub.isCompleted,
             order: sub.order,
           ),
@@ -144,7 +150,10 @@ class _EditTodoState extends State<EditTodo> {
       _editableSubtasks.add(
         EditableSubtask(
           id: IdGenerator.next(),
-          controller: TextEditingController(),
+          controller: quill.QuillController(
+            document: NoteRichTextCodec.documentFromPlainText(''),
+            selection: const TextSelection.collapsed(offset: 0),
+          ),
         ),
       );
     });
@@ -166,7 +175,9 @@ class _EditTodoState extends State<EditTodo> {
         final ctrl = entry.value;
         return Todo(
           id: ctrl.id,
-          title: ctrl.controller.text.trim(),
+          title: NoteRichTextCodec.extractPlainText(ctrl.controller.document),
+          titleRichTextDeltaJson:
+              NoteRichTextCodec.encodeDelta(ctrl.controller.document),
           isCompleted: ctrl.isCompleted,
           subTasks: [],
           isSubtask: true,

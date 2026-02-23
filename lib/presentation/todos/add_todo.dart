@@ -96,7 +96,10 @@ class _AddTodoState extends State<AddTodo> {
     setState(() {
       _editableSubtasks.add(EditableSubtask(
         id: DateTime.now().millisecondsSinceEpoch,
-        controller: TextEditingController(),
+        controller: quill.QuillController(
+          document: NoteRichTextCodec.documentFromPlainText(''),
+          selection: const TextSelection.collapsed(offset: 0),
+        ),
       ));
     });
   }
@@ -126,7 +129,9 @@ class _AddTodoState extends State<AddTodo> {
         final ctrl = entry.value;
         return Todo(
           id: IdGenerator.next(),
-          title: ctrl.controller.text.trim(),
+          title: NoteRichTextCodec.extractPlainText(ctrl.controller.document),
+          titleRichTextDeltaJson:
+              NoteRichTextCodec.encodeDelta(ctrl.controller.document),
           isCompleted: ctrl.isCompleted,
           subTasks: [],
           isSubtask: true,

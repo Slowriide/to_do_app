@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:to_do_app/common/utils/editablesubtask.dart';
+import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 
 /// Displays a list of editable subtasks with drag-and-drop support.
 ///
@@ -82,44 +84,66 @@ class SubtaskItemsView extends StatelessWidget {
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 180),
                     opacity: item.isCompleted ? 0.72 : 1,
-                    child: TextFormField(
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: theme.onSurface,
-                        decoration: item.isCompleted
-                            ? TextDecoration.lineThrough
-                            : null,
-                        decorationColor: theme.tertiary,
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 42),
+                      decoration: BoxDecoration(
+                        color: theme.surface.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.outlineVariant.withValues(alpha: 0.28),
+                        ),
                       ),
-                      controller: item.controller,
-                      decoration: InputDecoration(
-                        hintText: 'Subtask',
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 10,
-                        ),
-                        prefixIcon: IconButton(
-                          onPressed: onToggleComplete == null
-                              ? null
-                              : () => onToggleComplete!(index),
-                          tooltip: item.isCompleted
-                              ? 'Mark as pending'
-                              : 'Mark as complete',
-                          icon: Icon(
-                            item.isCompleted
-                                ? Icons.check_box_rounded
-                                : Icons.check_box_outline_blank_rounded,
-                            color: item.isCompleted
-                                ? theme.primary
-                                : theme.tertiary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: onToggleComplete == null
+                                ? null
+                                : () => onToggleComplete!(index),
+                            tooltip: item.isCompleted
+                                ? 'Mark as pending'
+                                : 'Mark as complete',
+                            icon: Icon(
+                              item.isCompleted
+                                  ? Icons.check_box_rounded
+                                  : Icons.check_box_outline_blank_rounded,
+                              color:
+                                  item.isCompleted ? theme.primary : theme.tertiary,
+                            ),
                           ),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close_rounded),
-                          tooltip: 'Delete subtask',
-                          onPressed:
-                              onDelete == null ? null : () => onDelete!(index),
-                        ),
+                          Expanded(
+                            child: DefaultTextStyle.merge(
+                              style: textTheme.bodyMedium?.copyWith(
+                                    color: theme.onSurface,
+                                  ) ??
+                                  TextStyle(color: theme.onSurface),
+                              child: quill.QuillEditor.basic(
+                                controller: item.controller,
+                                config: quill.QuillEditorConfig(
+                                  placeholder: 'Subtask',
+                                  expands: false,
+                                  scrollable: false,
+                                  padding: EdgeInsets.zero,
+                                  contextMenuBuilder: (context, rawEditorState) {
+                                    return NoteSelectionContextMenu(
+                                      controller: item.controller,
+                                      rawEditorState: rawEditorState,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded),
+                            tooltip: 'Delete subtask',
+                            onPressed:
+                                onDelete == null ? null : () => onDelete!(index),
+                          ),
+                        ],
                       ),
                     ),
                   ),

@@ -28,6 +28,7 @@ class TodoItem extends StatefulWidget {
 
 class _TodoItemState extends State<TodoItem> {
   static const _titlePreviewMaxHeight = 50.0;
+  static const _subtaskPreviewMaxHeight = 30.0;
   static const _previewConfig = quill.QuillEditorConfig(
     scrollable: false,
     expands: false,
@@ -39,6 +40,7 @@ class _TodoItemState extends State<TodoItem> {
   late final quill.QuillController _titlePreviewController;
   late final FocusNode _titlePreviewFocusNode;
   late final ScrollController _titlePreviewScrollController;
+  final Map<int, _SubtaskPreviewControllers> _subtaskControllers = {};
 
   @override
   void initState() {
@@ -54,6 +56,7 @@ class _TodoItemState extends State<TodoItem> {
     _titlePreviewFocusNode =
         FocusNode(skipTraversal: true, canRequestFocus: false);
     _titlePreviewScrollController = ScrollController();
+    _syncSubtaskControllers(widget.todo.subTasks);
   }
 
   @override
@@ -68,6 +71,7 @@ class _TodoItemState extends State<TodoItem> {
         fallbackPlainText: widget.todo.title,
       );
     }
+    _syncSubtaskControllers(widget.todo.subTasks);
   }
 
   @override
@@ -75,6 +79,9 @@ class _TodoItemState extends State<TodoItem> {
     _titlePreviewController.dispose();
     _titlePreviewFocusNode.dispose();
     _titlePreviewScrollController.dispose();
+    for (final bundle in _subtaskControllers.values) {
+      bundle.dispose();
+    }
     super.dispose();
   }
 
@@ -177,10 +184,30 @@ class _TodoItemState extends State<TodoItem> {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
-                                subtask.title,
-                                style: textStyle.bodyMedium,
-                                overflow: TextOverflow.ellipsis,
+                              child: DefaultTextStyle.merge(
+                                style: textStyle.bodyMedium ??
+                                    const TextStyle(fontSize: 14),
+                                child: ClipRect(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxHeight: _subtaskPreviewMaxHeight,
+                                    ),
+                                    child: IgnorePointer(
+                                      child: quill.QuillEditor(
+                                        controller: _subtaskControllers[
+                                                subtask.id]!
+                                            .controller,
+                                        focusNode: _subtaskControllers[
+                                                subtask.id]!
+                                            .focusNode,
+                                        scrollController:
+                                            _subtaskControllers[subtask.id]!
+                                                .scrollController,
+                                        config: _previewConfig,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -218,5 +245,56 @@ class _TodoItemState extends State<TodoItem> {
       tints[id.abs() % tints.length].withValues(alpha: isDark ? 0.42 : 0.28),
       theme.surface,
     );
+  }
+
+  void _syncSubtaskControllers(List<Todo> subtasks) {
+    final currentIds = subtasks.map((subtask) => subtask.id).toSet();
+
+    final removedIds = _subtaskControllers.keys
+        .where((id) => !currentIds.contains(id))
+        .toList();
+    for (final id in removedIds) {
+      _subtaskControllers.remove(id)?.dispose();
+    }
+
+    for (final subtask in subtasks) {
+      final existing = _subtaskControllers[subtask.id];
+      if (existing == null) {
+        _subtaskControllers[subtask.id] = _SubtaskPreviewControllers(
+          document: NoteRichTextCodec.documentFromRaw(
+            rawDelta: subtask.titleRichTextDeltaJson,
+            fallbackPlainText: subtask.title,
+          ),
+        );
+        continue;
+      }
+
+      existing.controller.document = NoteRichTextCodec.documentFromRaw(
+        rawDelta: subtask.titleRichTextDeltaJson,
+        fallbackPlainText: subtask.title,
+      );
+    }
+  }
+}
+
+class _SubtaskPreviewControllers {
+  final quill.QuillController controller;
+  final FocusNode focusNode;
+  final ScrollController scrollController;
+
+  _SubtaskPreviewControllers({
+    required quill.Document document,
+  })  : controller = quill.QuillController(
+          document: document,
+          selection: const TextSelection.collapsed(offset: 0),
+          readOnly: true,
+        ),
+        focusNode = FocusNode(skipTraversal: true, canRequestFocus: false),
+        scrollController = ScrollController();
+
+  void dispose() {
+    controller.dispose();
+    focusNode.dispose();
+    scrollController.dispose();
   }
 }
