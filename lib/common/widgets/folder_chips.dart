@@ -42,25 +42,6 @@ class FolderChips extends StatelessWidget {
                           context.read<FolderFilterCubit>().setAll(),
                     ),
                     const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: const Text('Inbox'),
-                      showCheckmark: false,
-                      selectedColor:
-                          colors.primaryContainer.withValues(alpha: 0.55),
-                      side: BorderSide(
-                        color: colors.outlineVariant,
-                      ),
-                      labelStyle: TextStyle(
-                        color: filter.type == FolderFilterType.inbox
-                            ? colors.onPrimaryContainer
-                            : colors.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      selected: filter.type == FolderFilterType.inbox,
-                      onSelected: (_) =>
-                          context.read<FolderFilterCubit>().setInbox(),
-                    ),
-                    const SizedBox(width: 8),
                     ...folders.map(
                       (folder) => Padding(
                         padding: const EdgeInsets.only(right: 8),

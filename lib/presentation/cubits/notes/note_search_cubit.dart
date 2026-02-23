@@ -58,8 +58,6 @@ class NoteSearchCubit extends Cubit<List<Note>> {
       switch (_folderFilter.type) {
         case FolderFilterType.all:
           return true;
-        case FolderFilterType.inbox:
-          return note.folderIds.isEmpty;
         case FolderFilterType.custom:
           final selectedFolderId = _folderFilter.folderId;
           if (selectedFolderId == null) return false;

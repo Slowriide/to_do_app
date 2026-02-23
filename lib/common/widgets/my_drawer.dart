@@ -119,7 +119,6 @@ class _MyDrawerState extends State<MyDrawer> {
         return BlocBuilder<FolderFilterCubit, FolderFilter>(
           builder: (context, filter) {
             final isAll = filter.type == FolderFilterType.all;
-            final isInbox = filter.type == FolderFilterType.inbox;
 
             return Container(
               margin: EdgeInsets.symmetric(horizontal: 10),
@@ -157,11 +156,6 @@ class _MyDrawerState extends State<MyDrawer> {
                     title: 'All',
                     selected: isAll,
                     onTap: () => _selectFolder(const FolderFilter.all()),
-                  ),
-                  _folderTile(
-                    title: 'Inbox',
-                    selected: isInbox,
-                    onTap: () => _selectFolder(const FolderFilter.inbox()),
                   ),
                   ...folders.map(
                     (folder) => _folderTile(
@@ -228,7 +222,7 @@ class _MyDrawerState extends State<MyDrawer> {
         title: const Text('Create Folder'),
         content: TextField(
           controller: controller,
-          maxLength: 32,
+          maxLength: 100,
           decoration: const InputDecoration(hintText: 'Folder name'),
         ),
         actions: [
@@ -287,7 +281,7 @@ class _MyDrawerState extends State<MyDrawer> {
         title: const Text('Rename Folder'),
         content: TextField(
           controller: controller,
-          maxLength: 32,
+          maxLength: 100,
           decoration: const InputDecoration(hintText: 'Folder name'),
         ),
         actions: [
@@ -317,7 +311,7 @@ class _MyDrawerState extends State<MyDrawer> {
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder'),
         content: Text(
-          'Items in "${folder.name}" will be moved to Inbox. Continue?',
+          'Items in "${folder.name}" will be removed from this folder. Continue?',
         ),
         actions: [
           TextButton(
@@ -355,7 +349,7 @@ class _MyDrawerState extends State<MyDrawer> {
     final filter = context.read<FolderFilterCubit>().state;
     if (filter.type == FolderFilterType.custom &&
         filter.folderId == folder.id) {
-      context.read<FolderFilterCubit>().setInbox();
+      context.read<FolderFilterCubit>().setAll();
     }
   }
 
@@ -364,9 +358,6 @@ class _MyDrawerState extends State<MyDrawer> {
     switch (filter.type) {
       case FolderFilterType.all:
         folderFilterCubit.setAll();
-        break;
-      case FolderFilterType.inbox:
-        folderFilterCubit.setInbox();
         break;
       case FolderFilterType.custom:
         folderFilterCubit.setCustom(filter.folderId!);

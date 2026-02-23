@@ -61,8 +61,6 @@ class TodoSearchCubit extends Cubit<List<Todo>> {
       switch (_folderFilter.type) {
         case FolderFilterType.all:
           return true;
-        case FolderFilterType.inbox:
-          return todo.folderIds.isEmpty;
         case FolderFilterType.custom:
           final selectedFolderId = _folderFilter.folderId;
           if (selectedFolderId == null) return false;

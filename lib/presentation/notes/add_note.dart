@@ -232,7 +232,7 @@ class _AddNoteState extends State<AddNote> {
   }
 
   String _folderLabel(List<Folder> folders) {
-    if (_selectedFolderIds.isEmpty) return 'Inbox';
+    if (_selectedFolderIds.isEmpty) return 'All';
     final selectedNames = folders
         .where((folder) => _selectedFolderIds.contains(folder.id))
         .map((folder) => folder.name)

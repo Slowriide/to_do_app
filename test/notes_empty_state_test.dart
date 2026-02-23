@@ -43,9 +43,7 @@ Widget _buildNotesApp({
               BlocProvider(
                 create: (_) {
                   final cubit = FolderFilterCubit();
-                  if (initialFilter.type == FolderFilterType.inbox) {
-                    cubit.setInbox();
-                  } else if (initialFilter.type == FolderFilterType.custom) {
+                  if (initialFilter.type == FolderFilterType.custom) {
                     cubit.setCustom(initialFilter.folderId!);
                   }
                   return cubit;

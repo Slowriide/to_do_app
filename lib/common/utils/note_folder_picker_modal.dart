@@ -28,7 +28,7 @@ Future<Set<int>?> showNoteFolderPickerModal({
                             ? Theme.of(context).colorScheme.primary
                             : null,
                       ),
-                      title: const Text('Inbox (default)'),
+                      title: const Text('All (default)'),
                       trailing: draftSelection.isEmpty
                           ? const Icon(Icons.check_rounded)
                           : null,
