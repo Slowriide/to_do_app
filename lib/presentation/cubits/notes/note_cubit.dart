@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/storage/note_sketch_storage_service.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
@@ -13,8 +14,13 @@ import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
 /// Handles scheduling and canceling notifications based on note reminders.
 class NoteCubit extends Cubit<NoteState> {
   final NoteRepository repository;
+  final NoteSketchStorageService sketchStorage;
 
-  NoteCubit(this.repository) : super(const NoteState.loading()) {
+  NoteCubit(
+    this.repository, {
+    NoteSketchStorageService? sketchStorage,
+  })  : sketchStorage = sketchStorage ?? createNoteSketchStorageService(),
+        super(const NoteState.loading()) {
     loadNotes();
   }
 
@@ -74,12 +80,17 @@ class NoteCubit extends Cubit<NoteState> {
   ///
   /// Cancels their notifications if any, then reloads the notes.
   Future<void> deleteNotes(List<Note> notesToDelete) async {
+    final sketchPaths = <String>{};
     for (final note in notesToDelete) {
+      sketchPaths.addAll(
+        sketchStorage.extractOwnedSketchPathsFromDelta(note.richTextDeltaJson),
+      );
       await repository.deleteNote(note);
       if (note.reminder != null) {
         await NotificationService().cancelNotification(note.id);
       }
     }
+    await sketchStorage.deleteFiles(sketchPaths);
     await loadNotes();
   }
 

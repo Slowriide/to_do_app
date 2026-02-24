@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:to_do_app/core/storage/note_sketch_storage_service_base.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
@@ -36,6 +39,18 @@ class FakeNoteRepository implements NoteRepository {
     final byId = {for (final n in notes) n.id: n};
     _notes = _notes.map((n) => byId[n.id] ?? n).toList();
   }
+}
+
+class FakeSketchStorageService extends NoteSketchStorageService {
+  final List<String> deletedPaths = [];
+
+  @override
+  Future<void> deleteFiles(Iterable<String> paths) async {
+    deletedPaths.addAll(paths);
+  }
+
+  @override
+  Future<String> savePng(Uint8List bytes) async => 'saved.png';
 }
 
 Future<void> _settle() async {
@@ -168,6 +183,33 @@ void main() {
     expect(added.title, 'title');
     expect(added.titleRichTextDeltaJson, '[{"insert":"title\\n"}]');
     expect(added.richTextDeltaJson, '[{"insert":"plain\\n"}]');
+    await cubit.close();
+  });
+
+  test('deleteNotes removes only owned sketch files', () async {
+    final repo = FakeNoteRepository([
+      Note(
+        id: 1,
+        title: 'a',
+        text: 'a',
+        richTextDeltaJson:
+            '[{"insert":{"image":"C:/app/note_sketches/sketch_1.png"}}]',
+      ),
+      Note(
+        id: 2,
+        title: 'b',
+        text: 'b',
+        richTextDeltaJson: '[{"insert":{"image":"C:/Users/me/photo.png"}}]',
+      ),
+    ]);
+    final storage = FakeSketchStorageService();
+    final cubit = NoteCubit(repo, sketchStorage: storage);
+    await _settle();
+
+    await cubit.deleteNotes([...cubit.state.notes]);
+
+    expect(storage.deletedPaths, ['C:/app/note_sketches/sketch_1.png']);
+    expect(cubit.state.notes, isEmpty);
     await cubit.close();
   });
 }

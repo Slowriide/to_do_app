@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'dart:typed_data';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:to_do_app/core/storage/note_sketch_storage_service.dart';
 import 'package:to_do_app/common/widgets/draggable_note_image_embed_builder.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
@@ -15,6 +17,7 @@ import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
+import 'package:to_do_app/presentation/notes/sketch_canvas_page.dart';
 
 class EditNotePage extends StatefulWidget {
   final Note note;
@@ -37,6 +40,7 @@ class _EditNotePageState extends State<EditNotePage> {
   DateTime? _selectedDateReminder;
   Set<int> _selectedFolderIds = {};
   late final List<quill.EmbedBuilder> _embedBuilders;
+  late final NoteSketchStorageService _sketchStorage;
 
   @override
   void initState() {
@@ -53,6 +57,7 @@ class _EditNotePageState extends State<EditNotePage> {
     _contentAutoLinker = QuillAutoLinker(_contentController);
     _contentEditorKey = GlobalKey<quill.EditorState>();
     _embedBuilders = buildDraggableNoteImageEmbedBuilders();
+    _sketchStorage = createNoteSketchStorageService();
     _selectedDateReminder = widget.note.reminder;
     _selectedFolderIds = widget.note.folderIds.toSet();
   }
@@ -142,19 +147,60 @@ class _EditNotePageState extends State<EditNotePage> {
       final index = baseIndex.clamp(0, _contentController.document.length - 1);
       final replaceLength =
           selection.isValid ? selection.end - selection.start : 0;
-      final source = pickedFile.path;
-
-      _contentController.replaceText(
-        index,
-        replaceLength,
-        quill.BlockEmbed.image(source),
-        null,
+      _insertImageSourceIntoContent(
+        source: pickedFile.path,
+        index: index,
+        replaceLength: replaceLength,
       );
     } catch (e) {
       debugPrint('Insert image failed: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to insert image: $e')),
+      );
+    }
+  }
+
+  void _insertImageSourceIntoContent({
+    required String source,
+    required int index,
+    required int replaceLength,
+  }) {
+    _contentController.replaceText(
+      index,
+      replaceLength,
+      quill.BlockEmbed.image(source),
+      null,
+    );
+  }
+
+  Future<void> _insertSketchIntoContent() async {
+    if (kIsWeb) return;
+    try {
+      final result = await Navigator.of(context).push<Uint8List>(
+        MaterialPageRoute(
+          builder: (_) => const SketchCanvasPage(),
+        ),
+      );
+      if (!mounted || result == null) return;
+
+      final source = await _sketchStorage.savePng(result);
+      final selection = _contentController.selection;
+      final baseIndex = selection.isValid
+          ? selection.start
+          : _contentController.document.length - 1;
+      final index = baseIndex.clamp(0, _contentController.document.length - 1);
+      final replaceLength =
+          selection.isValid ? selection.end - selection.start : 0;
+      _insertImageSourceIntoContent(
+        source: source,
+        index: index,
+        replaceLength: replaceLength,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to save sketch: $e')),
       );
     }
   }
@@ -370,6 +416,14 @@ class _EditNotePageState extends State<EditNotePage> {
                             icon: const Icon(Icons.image_outlined),
                           ),
                         ),
+                        if (!kIsWeb)
+                          Tooltip(
+                            message: 'Draw sketch',
+                            child: IconButton(
+                              onPressed: _insertSketchIntoContent,
+                              icon: const Icon(Icons.draw_outlined),
+                            ),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 12),
