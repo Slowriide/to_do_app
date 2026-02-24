@@ -8,6 +8,8 @@ import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
+import 'package:to_do_app/presentation/notes/note_list_view.dart';
 import 'package:to_do_app/presentation/notes/masonry_view.dart';
 
 class ArchivedNotesView extends StatefulWidget {
@@ -93,13 +95,14 @@ class _ArchivedNotesViewState extends State<ArchivedNotesView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
+    final viewMode = context.select((NoteViewModeCubit cubit) => cubit.state);
     return Scaffold(
       backgroundColor: theme.surface,
       drawer: const MyDrawer(),
       body: NestedScrollView(
         physics: const BouncingScrollPhysics(),
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          _buildAppbar(theme),
+          _buildAppbar(theme, viewMode),
         ],
         body: _Body(
           isSelectionMode: isSelectionMode,
@@ -111,7 +114,7 @@ class _ArchivedNotesViewState extends State<ArchivedNotesView> {
     );
   }
 
-  SliverAppBar _buildAppbar(ColorScheme theme) {
+  SliverAppBar _buildAppbar(ColorScheme theme, NoteViewMode viewMode) {
     final textStyle = Theme.of(context).textTheme;
 
     return SliverAppBar(
@@ -177,7 +180,17 @@ class _ArchivedNotesViewState extends State<ArchivedNotesView> {
                     ),
                   ],
                 )
-              : null,
+              : MyTooltip(
+                  message: viewMode == NoteViewMode.grid
+                      ? 'Show list view'
+                      : 'Show grid view',
+                  icon: viewMode == NoteViewMode.grid
+                      ? Icons.view_list_rounded
+                      : Icons.grid_view_rounded,
+                  onPressed: () =>
+                      context.read<NoteViewModeCubit>().toggle(),
+                  valueKey: const ValueKey('toggleViewMode'),
+                ),
         )
       ],
     );
@@ -204,6 +217,7 @@ class _Body extends StatelessWidget {
     final noteStatus = context.select((NoteCubit cubit) => cubit.state.status);
     final folderFilter =
         context.select((FolderFilterCubit cubit) => cubit.state);
+    final viewMode = context.select((NoteViewModeCubit cubit) => cubit.state);
 
     return BlocListener<FolderFilterCubit, FolderFilter>(
       listener: (context, filter) {
@@ -300,7 +314,23 @@ class _Body extends StatelessWidget {
                     );
                   }
 
+                  if (viewMode == NoteViewMode.list) {
+                    return NoteListView(
+                      key: const ValueKey('notes_list_mode'),
+                      notes: notes,
+                      isSelectionMode: isSelectionMode,
+                      selectedNoteIds: selectedNotesId,
+                      onToggleSelect: toggleSelection,
+                      onReorder: (draggedId, targetId) {
+                        context
+                            .read<NoteCubit>()
+                            .reorderNoteByIds(draggedId, targetId);
+                      },
+                    );
+                  }
+
                   return MasonryView(
+                    key: const ValueKey('notes_grid_mode'),
                     notes: notes,
                     isSelectionMode: isSelectionMode,
                     selectedNoteIds: selectedNotesId,

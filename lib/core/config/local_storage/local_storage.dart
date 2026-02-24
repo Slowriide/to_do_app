@@ -14,6 +14,7 @@ class LocalStorage {
   static const String _backgroundPresetIdKey = 'backgroundPresetId';
   static const String _backgroundColorSourceKey = 'backgroundColorSource';
   static const String _customBackgroundHexKey = 'customBackgroundHex';
+  static const String _notesViewModeKey = 'notesViewMode';
 
   static Future<void> configurePrefs() async {
     prefs = await SharedPreferences.getInstance();
@@ -56,5 +57,19 @@ class LocalStorage {
       return;
     }
     prefs.setString(_customBackgroundHexKey, value);
+  }
+
+  static String get notesViewMode {
+    final value = prefs.getString(_notesViewModeKey) ?? 'grid';
+    if (value == 'grid' || value == 'list') return value;
+    return 'grid';
+  }
+
+  static set notesViewMode(String value) {
+    if (value == 'grid' || value == 'list') {
+      prefs.setString(_notesViewModeKey, value);
+      return;
+    }
+    prefs.setString(_notesViewModeKey, 'grid');
   }
 }

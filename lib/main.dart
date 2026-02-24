@@ -13,6 +13,7 @@ import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
@@ -69,6 +70,7 @@ class MyApp extends StatelessWidget {
           BlocProvider(create: (context) => FolderCubit(folderRepo)),
           BlocProvider(create: (context) => FolderFilterCubit()),
           BlocProvider(create: (context) => NoteSearchCubit([])),
+          BlocProvider(create: (context) => NoteViewModeCubit()),
           BlocProvider(create: (context) => TodoSearchCubit([])),
           BlocProvider(create: (context) => ThemeCubit()),
         ],

@@ -11,6 +11,7 @@ import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/notes/notes_view.dart';
@@ -50,6 +51,7 @@ Widget _buildNotesApp({
                 },
               ),
               BlocProvider(create: (_) => NoteSearchCubit(searchSeed)),
+              BlocProvider(create: (_) => NoteViewModeCubit()),
               BlocProvider(create: (_) => ThemeCubit()),
             ],
             child: const NotesView(),

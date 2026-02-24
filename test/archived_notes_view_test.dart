@@ -10,6 +10,7 @@ import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/notes/archived_note_page.dart';
@@ -40,6 +41,7 @@ Widget _buildArchivedApp({
               BlocProvider(create: (_) => FolderCubit(folderRepo)),
               BlocProvider(create: (_) => FolderFilterCubit()),
               BlocProvider(create: (_) => NoteSearchCubit(searchSeed)),
+              BlocProvider(create: (_) => NoteViewModeCubit()),
               BlocProvider(create: (_) => ThemeCubit()),
             ],
             child: const ArchivedNotePage(),
