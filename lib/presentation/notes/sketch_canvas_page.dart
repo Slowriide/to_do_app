@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter/rendering.dart';
 import 'package:scribble/scribble.dart';
 
@@ -15,6 +16,7 @@ class SketchCanvasPage extends StatefulWidget {
 class _SketchCanvasPageState extends State<SketchCanvasPage> {
   late final ScribbleNotifier _notifier;
   final GlobalKey _exportBoundaryKey = GlobalKey();
+  bool _isEyedropperMode = false;
 
   Color _lastSelectedColor = Colors.black;
   double _strokeWidth = 6.0;
@@ -103,6 +105,87 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
     setState(() => _backgroundColor = color);
   }
 
+  Future<void> _pickCustomPaintColor() async {
+    var picked = _lastSelectedColor;
+    final selected = await showDialog<Color>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Pick paint color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: picked,
+              onColorChanged: (color) => picked = color,
+              enableAlpha: false,
+              labelTypes: const [],
+              pickerAreaHeightPercent: 0.75,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(picked),
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (selected == null) return;
+    setState(() {
+      _lastSelectedColor = selected;
+    });
+    _notifier.setColor(selected);
+  }
+
+  void _toggleEyedropper() {
+    setState(() {
+      _isEyedropperMode = !_isEyedropperMode;
+    });
+  }
+
+  Future<void> _pickColorFromCanvas(TapDownDetails details) async {
+    final boundaryContext = _exportBoundaryKey.currentContext;
+    if (boundaryContext == null) return;
+
+    final boundary = boundaryContext.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return;
+
+    final box = boundaryContext.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final local = box.globalToLocal(details.globalPosition);
+
+    final image = await boundary.toImage(pixelRatio: 1);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (bytes == null) {
+      image.dispose();
+      return;
+    }
+
+    final width = image.width;
+    final height = image.height;
+    final x = local.dx.round().clamp(0, width - 1);
+    final y = local.dy.round().clamp(0, height - 1);
+    final offset = (y * width + x) * 4;
+
+    final r = bytes.getUint8(offset);
+    final g = bytes.getUint8(offset + 1);
+    final b = bytes.getUint8(offset + 2);
+    image.dispose();
+
+    final color = Color.fromARGB(0xFF, r, g, b);
+    if (!mounted) return;
+    setState(() {
+      _lastSelectedColor = color;
+      _isEyedropperMode = false;
+    });
+    _notifier.setColor(color);
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -150,6 +233,14 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
                 ),
               ),
               IconButton(
+                tooltip: 'Eyedropper',
+                onPressed: _toggleEyedropper,
+                icon: Icon(
+                  Icons.colorize_rounded,
+                  color: _isEyedropperMode ? scheme.primary : null,
+                ),
+              ),
+              IconButton(
                 tooltip: 'Clear',
                 onPressed: _notifier.clear,
                 icon: const Icon(Icons.delete_sweep_rounded),
@@ -183,6 +274,13 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
                           },
                         ),
                       ),
+                    Tooltip(
+                      message: 'Custom color',
+                      child: IconButton(
+                        onPressed: _pickCustomPaintColor,
+                        icon: const Icon(Icons.palette_outlined),
+                      ),
+                    ),
 
                     const SizedBox(width: 10),
                     Container(
@@ -249,12 +347,46 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
               Expanded(
                 child: RepaintBoundary(
                   key: _exportBoundaryKey,
-                  child: ColoredBox(
-                    color: _backgroundColor,
-                    child: Scribble(
-                      notifier: _notifier,
-                      drawPen: true,
-                    ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: ColoredBox(
+                          color: _backgroundColor,
+                          child: Scribble(
+                            notifier: _notifier,
+                            drawPen: true,
+                          ),
+                        ),
+                      ),
+                      if (_isEyedropperMode)
+                        Positioned.fill(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTapDown: _pickColorFromCanvas,
+                            child: Container(
+                              color: Colors.transparent,
+                              alignment: Alignment.topCenter,
+                              padding: const EdgeInsets.only(top: 10),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.55),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  child: Text(
+                                    'Tap canvas to pick color',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
