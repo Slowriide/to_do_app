@@ -26,7 +26,7 @@ class FolderCubit extends Cubit<List<Folder>> {
   Future<String?> createFolder(String name) async {
     final normalized = name.trim();
     if (normalized.isEmpty) return 'Folder name cannot be empty';
-    if (normalized.length > 32) return 'Folder name must be at most 32 chars';
+    if (normalized.length > 100) return 'Folder name must be at most 100 chars';
     if (_isNameTaken(normalized)) return 'Folder name already exists';
 
     final nextOrder = state.isEmpty ? 0 : state.last.order + 1;
@@ -45,7 +45,7 @@ class FolderCubit extends Cubit<List<Folder>> {
   Future<String?> renameFolder(int id, String newName) async {
     final normalized = newName.trim();
     if (normalized.isEmpty) return 'Folder name cannot be empty';
-    if (normalized.length > 32) return 'Folder name must be at most 32 chars';
+    if (normalized.length > 100) return 'Folder name must be at most 100 chars';
     if (_isNameTaken(normalized, excludingId: id)) {
       return 'Folder name already exists';
     }
