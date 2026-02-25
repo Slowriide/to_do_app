@@ -10,6 +10,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  static const int _maxSigned32Bit = 0x7fffffff;
 
   bool _isInit = false;
 
@@ -66,15 +67,16 @@ class NotificationService {
     String? body,
     required DateTime scheduledDate,
   }) async {
+    final notificationId = _normalizeNotificationId(id);
     final now = DateTime.now();
 
     if (scheduledDate.isBefore(now)) {
       return;
     }
-    await _notificationsPlugin.cancel(id: id);
+    await _notificationsPlugin.cancel(id: notificationId);
 
     await _notificationsPlugin.zonedSchedule(
-      id: id,
+      id: notificationId,
       title: title,
       body: body,
       scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
@@ -97,6 +99,14 @@ class NotificationService {
 
   /// Cancels a notification with the given [id], if any exists.
   Future<void> cancelNotification(int id) async {
-    await _notificationsPlugin.cancel(id: id);
+    await _notificationsPlugin.cancel(id: _normalizeNotificationId(id));
+  }
+
+  int _normalizeNotificationId(int rawId) {
+    var normalized = rawId & _maxSigned32Bit;
+    if (normalized == 0) {
+      normalized = 1;
+    }
+    return normalized;
   }
 }
