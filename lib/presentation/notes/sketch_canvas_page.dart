@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter/rendering.dart';
 import 'package:scribble/scribble.dart';
+import 'package:to_do_app/presentation/notes/sketch_crop_page.dart';
 
 class SketchCanvasPage extends StatefulWidget {
   const SketchCanvasPage({super.key});
@@ -79,20 +80,187 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
       return;
     }
 
-    final image = await boundary.toImage(pixelRatio: 3);
-    final png = await image.toByteData(format: ui.ImageByteFormat.png);
-    if (png == null) {
+    final mode = await _pickExportMode();
+    if (!mounted || mode == null) return;
+
+    Uint8List? bytes;
+    switch (mode) {
+      case _SketchExportMode.autoTrim:
+        bytes = await _exportAutoTrimmed(boundary);
+        break;
+      case _SketchExportMode.manualCrop:
+        final fullPng = await _exportFullPng(boundary);
+        if (!mounted || fullPng == null) return;
+        bytes = await Navigator.of(context).push<Uint8List>(
+          MaterialPageRoute(
+            builder: (_) => SketchCropPage(imageBytes: fullPng),
+          ),
+        );
+        break;
+    }
+
+    if (bytes == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to export sketch as PNG.')),
+        const SnackBar(content: Text('Unable to export sketch right now.')),
       );
       return;
     }
     if (!mounted) return;
-
-    final bytes =
-        Uint8List.view(png.buffer, png.offsetInBytes, png.lengthInBytes);
     Navigator.of(context).pop<Uint8List>(bytes);
+  }
+
+  Future<_SketchExportMode?> _pickExportMode() {
+    return showModalBottomSheet<_SketchExportMode>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.auto_fix_high_rounded),
+                title: const Text('Auto trim'),
+                subtitle:
+                    const Text('Detect drawing bounds and remove blank space.'),
+                onTap: () =>
+                    Navigator.of(context).pop(_SketchExportMode.autoTrim),
+              ),
+              ListTile(
+                leading: const Icon(Icons.crop_rounded),
+                title: const Text('Manual crop'),
+                subtitle: const Text('Adjust the crop area before saving.'),
+                onTap: () =>
+                    Navigator.of(context).pop(_SketchExportMode.manualCrop),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Uint8List?> _exportFullPng(RenderRepaintBoundary boundary) async {
+    final image = await boundary.toImage(pixelRatio: 3);
+    try {
+      final png = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (png == null) return null;
+      return Uint8List.view(png.buffer, png.offsetInBytes, png.lengthInBytes);
+    } finally {
+      image.dispose();
+    }
+  }
+
+  Future<Uint8List?> _exportAutoTrimmed(RenderRepaintBoundary boundary) async {
+    final image = await boundary.toImage(pixelRatio: 3);
+    try {
+      final rgba = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (rgba == null) return null;
+
+      final bounds = _findContentBounds(
+        rgba: rgba,
+        width: image.width,
+        height: image.height,
+        background: _backgroundColor,
+      );
+      if (bounds == null) {
+        final full = await image.toByteData(format: ui.ImageByteFormat.png);
+        if (full == null) return null;
+        return Uint8List.view(
+          full.buffer,
+          full.offsetInBytes,
+          full.lengthInBytes,
+        );
+      }
+
+      final padding = (_strokeWidth * 3).round().clamp(8, 64);
+      final paddedBounds = bounds.expand(
+        padding: padding,
+        maxWidth: image.width,
+        maxHeight: image.height,
+      );
+
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final src = Rect.fromLTWH(
+        paddedBounds.left.toDouble(),
+        paddedBounds.top.toDouble(),
+        paddedBounds.width.toDouble(),
+        paddedBounds.height.toDouble(),
+      );
+      final dst = Rect.fromLTWH(
+        0,
+        0,
+        paddedBounds.width.toDouble(),
+        paddedBounds.height.toDouble(),
+      );
+      canvas.drawImageRect(image, src, dst, Paint());
+
+      final cropped = await recorder
+          .endRecording()
+          .toImage(paddedBounds.width, paddedBounds.height);
+      try {
+        final png = await cropped.toByteData(format: ui.ImageByteFormat.png);
+        if (png == null) return null;
+        return Uint8List.view(
+          png.buffer,
+          png.offsetInBytes,
+          png.lengthInBytes,
+        );
+      } finally {
+        cropped.dispose();
+      }
+    } finally {
+      image.dispose();
+    }
+  }
+
+  _PixelBounds? _findContentBounds({
+    required ByteData rgba,
+    required int width,
+    required int height,
+    required Color background,
+  }) {
+    const tolerance = 14;
+    const alphaThreshold = 16;
+    final bgR = background.red;
+    final bgG = background.green;
+    final bgB = background.blue;
+
+    int minX = width;
+    int minY = height;
+    int maxX = -1;
+    int maxY = -1;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        final offset = (y * width + x) * 4;
+        final r = rgba.getUint8(offset);
+        final g = rgba.getUint8(offset + 1);
+        final b = rgba.getUint8(offset + 2);
+        final a = rgba.getUint8(offset + 3);
+        if (a < alphaThreshold) continue;
+
+        final isBackgroundPixel = (r - bgR).abs() <= tolerance &&
+            (g - bgG).abs() <= tolerance &&
+            (b - bgB).abs() <= tolerance;
+        if (isBackgroundPixel) continue;
+
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+
+    if (maxX < minX || maxY < minY) return null;
+    return _PixelBounds(
+      left: minX,
+      top: minY,
+      right: maxX,
+      bottom: maxY,
+    );
   }
 
   void _setStroke(double value) {
@@ -152,7 +320,8 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
     final boundaryContext = _exportBoundaryKey.currentContext;
     if (boundaryContext == null) return;
 
-    final boundary = boundaryContext.findRenderObject() as RenderRepaintBoundary?;
+    final boundary =
+        boundaryContext.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return;
 
     final box = boundaryContext.findRenderObject() as RenderBox?;
@@ -394,6 +563,42 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
           ),
         );
       },
+    );
+  }
+}
+
+enum _SketchExportMode { autoTrim, manualCrop }
+
+class _PixelBounds {
+  const _PixelBounds({
+    required this.left,
+    required this.top,
+    required this.right,
+    required this.bottom,
+  });
+
+  final int left;
+  final int top;
+  final int right;
+  final int bottom;
+
+  int get width => right - left + 1;
+  int get height => bottom - top + 1;
+
+  _PixelBounds expand({
+    required int padding,
+    required int maxWidth,
+    required int maxHeight,
+  }) {
+    final newLeft = (left - padding).clamp(0, maxWidth - 1);
+    final newTop = (top - padding).clamp(0, maxHeight - 1);
+    final newRight = (right + padding).clamp(0, maxWidth - 1);
+    final newBottom = (bottom + padding).clamp(0, maxHeight - 1);
+    return _PixelBounds(
+      left: newLeft,
+      top: newTop,
+      right: newRight,
+      bottom: newBottom,
     );
   }
 }
