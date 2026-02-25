@@ -6,7 +6,7 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="to_do_app"
+        android:label="Daily Notes – ToDo &amp; Draw"
         android:usesCleartextTraffic="true">
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
