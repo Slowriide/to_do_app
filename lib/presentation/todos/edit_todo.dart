@@ -282,15 +282,17 @@ class _EditTodoState extends State<EditTodo> {
           }
         },
         onBackTap: () async {
+          final router = GoRouter.of(context);
           await _updateTodo();
           if (!mounted) return;
-          context.go('/todos');
+          router.go('/todos');
         },
         actionLabel: 'Save ToDo',
         onActionTap: () async {
+          final router = GoRouter.of(context);
           await _updateTodo();
           if (!mounted) return;
-          context.go('/todos');
+          router.go('/todos');
         },
         floatingActionButton: BlocBuilder<FolderCubit, List<Folder>>(
           builder: (context, folders) {

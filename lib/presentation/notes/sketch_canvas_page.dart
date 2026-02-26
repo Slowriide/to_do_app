@@ -224,9 +224,9 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
   }) {
     const tolerance = 14;
     const alphaThreshold = 16;
-    final bgR = background.red;
-    final bgG = background.green;
-    final bgB = background.blue;
+    final bgR = (background.r * 255.0).round().clamp(0, 255);
+    final bgG = (background.g * 255.0).round().clamp(0, 255);
+    final bgB = (background.b * 255.0).round().clamp(0, 255);
 
     int minX = width;
     int minY = height;
@@ -436,7 +436,8 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
                         child: _ColorDot(
                           color: color,
                           selected:
-                              !isErasing && selectedColor.value == color.value,
+                              !isErasing &&
+                              selectedColor.toARGB32() == color.toARGB32(),
                           onTap: () {
                             _lastSelectedColor = color;
                             _notifier.setColor(color);
@@ -465,7 +466,8 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
                         padding: const EdgeInsets.only(right: 10),
                         child: _BackgroundDot(
                           color: bg,
-                          selected: _backgroundColor.value == bg.value,
+                          selected:
+                              _backgroundColor.toARGB32() == bg.toARGB32(),
                           onTap: () => _setBackground(bg),
                         ),
                       ),

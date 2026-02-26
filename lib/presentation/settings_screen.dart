@@ -80,6 +80,9 @@ class _SettingsState extends State<Settings> {
 
   Future<void> _importBackup() async {
     final backupService = _resolveBackupService();
+    final folderCubit = context.read<FolderCubit>();
+    final noteCubit = context.read<NoteCubit>();
+    final todoCubit = context.read<TodoCubit>();
     if (backupService == null) {
       _showSnack('Backup is not available on this platform.');
       return;
@@ -95,9 +98,9 @@ class _SettingsState extends State<Settings> {
       _showSnack('Importing backup...');
       await backupService.importBackup(pickedFile, mode: mode);
       if (!mounted) return;
-      await context.read<FolderCubit>().loadFolders();
-      await context.read<NoteCubit>().loadNotes();
-      await context.read<TodoCubit>().loadTodos();
+      await folderCubit.loadFolders();
+      await noteCubit.loadNotes();
+      await todoCubit.loadTodos();
       _showSnack('Backup import completed.');
     } catch (e) {
       _showSnack('Import failed: $e');
@@ -105,7 +108,7 @@ class _SettingsState extends State<Settings> {
   }
 
   String _toHexColor(Color color) {
-    final rgb = color.value & 0x00FFFFFF;
+    final rgb = color.toARGB32() & 0x00FFFFFF;
     return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
   }
 
@@ -164,7 +167,7 @@ class _SettingsState extends State<Settings> {
       initialColor: _parseHexColor(state.customColorHex, presetColor),
     );
 
-    if (selectedColor == null) return;
+    if (!mounted || selectedColor == null) return;
     context.read<ThemeCubit>().setCustomColorHex(_toHexColor(selectedColor));
   }
 
@@ -180,7 +183,7 @@ class _SettingsState extends State<Settings> {
       initialColor: _parseHexColor(state.customBackgroundHex, presetBackground),
     );
 
-    if (selectedColor == null) return;
+    if (!mounted || selectedColor == null) return;
     context
         .read<ThemeCubit>()
         .setCustomBackgroundHex(_toHexColor(selectedColor));

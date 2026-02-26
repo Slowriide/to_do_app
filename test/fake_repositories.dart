@@ -8,7 +8,7 @@ import 'package:to_do_app/domain/repository/todo_repository.dart';
 class FakeNoteRepository implements NoteRepository {
   FakeNoteRepository({List<Note>? initial}) : _notes = [...?initial];
 
-  List<Note> _notes;
+  final List<Note> _notes;
 
   @override
   Future<void> addNote(Note newNote) async {
@@ -113,7 +113,7 @@ class FakeTodoRepository implements TodoRepository {
 class FakeFolderRepository implements FolderRepository {
   FakeFolderRepository({List<Folder>? initial}) : _folders = [...?initial];
 
-  List<Folder> _folders;
+  final List<Folder> _folders;
 
   @override
   Future<void> addFolder(Folder folder) async {

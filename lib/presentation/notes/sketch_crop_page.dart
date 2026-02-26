@@ -58,8 +58,8 @@ class _SketchCropPageState extends State<SketchCropPage> {
     final dx = (viewport.width - scaledW) / 2;
     final dy = (viewport.height - scaledH) / 2;
     return Matrix4.identity()
-      ..translate(dx, dy)
-      ..scale(scale, scale);
+      ..translateByDouble(dx, dy, 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
   }
 
   Future<void> _finishCrop() async {
