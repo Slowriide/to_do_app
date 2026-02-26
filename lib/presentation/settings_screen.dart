@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:to_do_app/common/widgets/my_drawer.dart';
+import 'package:to_do_app/core/backup/backup_service.dart';
 import 'package:to_do_app/core/config/theme/theme_presets.dart';
+import 'package:to_do_app/data/repository/isar_note_repository_impl.dart';
+import 'package:to_do_app/domain/repository/note_repository.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
+import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
+import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -13,6 +19,91 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
+  BackupService? _resolveBackupService() {
+    final noteRepository = context.read<NoteRepository>();
+    if (noteRepository is IsarNoteRepositoryImpl) {
+      return createBackupService(noteRepository.db);
+    }
+    return null;
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<ImportMode?> _showImportModeDialog() {
+    return showDialog<ImportMode>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Import backup'),
+          content: const Text('Choose how the backup should be imported.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.of(context).pop(ImportMode.merge),
+              child: const Text('Merge'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(ImportMode.replace),
+              child: const Text('Replace'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _exportBackup() async {
+    final backupService = _resolveBackupService();
+    if (backupService == null) {
+      _showSnack('Backup is not available on this platform.');
+      return;
+    }
+
+    try {
+      _showSnack('Exporting backup...');
+      final zipFile = await backupService.exportBackup(includeMedia: true);
+      if (!mounted) return;
+      await shareBackupZip(zipFile);
+      _showSnack('Backup exported: ${zipFile.path}');
+    } catch (e) {
+      _showSnack('Export failed: $e');
+    }
+  }
+
+  Future<void> _importBackup() async {
+    final backupService = _resolveBackupService();
+    if (backupService == null) {
+      _showSnack('Backup is not available on this platform.');
+      return;
+    }
+
+    final pickedFile = await pickBackupZip();
+    if (pickedFile == null) return;
+
+    final mode = await _showImportModeDialog();
+    if (mode == null) return;
+
+    try {
+      _showSnack('Importing backup...');
+      await backupService.importBackup(pickedFile, mode: mode);
+      if (!mounted) return;
+      await context.read<FolderCubit>().loadFolders();
+      await context.read<NoteCubit>().loadNotes();
+      await context.read<TodoCubit>().loadTodos();
+      _showSnack('Backup import completed.');
+    } catch (e) {
+      _showSnack('Import failed: $e');
+    }
+  }
+
   String _toHexColor(Color color) {
     final rgb = color.value & 0x00FFFFFF;
     return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
@@ -350,6 +441,50 @@ class _SettingsState extends State<Settings> {
                         },
                         icon: const Icon(Icons.layers_outlined, size: 18),
                         label: const Text('Use selected preset'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text('Data', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 14),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Backup & Restore', style: theme.textTheme.bodyLarge),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Export notes, folders, todos and owned sketch media into a ZIP backup. '
+                        'Import can merge or replace existing data.',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: _exportBackup,
+                              icon: const Icon(Icons.upload_file_outlined),
+                              label: const Text('Export backup'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.tonalIcon(
+                              onPressed: _importBackup,
+                              icon: const Icon(Icons.download_outlined),
+                              label: const Text('Import backup'),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
