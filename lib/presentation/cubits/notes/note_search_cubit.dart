@@ -12,6 +12,7 @@ class NoteSearchCubit extends Cubit<List<Note>> {
   List<Note> _notes;
   String _query = '';
   FolderFilter _folderFilter = const FolderFilter.all();
+  Set<int>? _folderScopeIds;
   ArchiveScope _archiveScope = ArchiveScope.activeOnly;
 
   NoteSearchCubit(this._notes) : super(_notes);
@@ -34,8 +35,9 @@ class NoteSearchCubit extends Cubit<List<Note>> {
     _emitFiltered();
   }
 
-  void setFolderFilter(FolderFilter filter) {
+  void setFolderFilter(FolderFilter filter, {Set<int>? folderScopeIds}) {
     _folderFilter = filter;
+    _folderScopeIds = folderScopeIds;
     _emitFiltered();
   }
 
@@ -59,9 +61,13 @@ class NoteSearchCubit extends Cubit<List<Note>> {
         case FolderFilterType.all:
           return true;
         case FolderFilterType.custom:
-          final selectedFolderId = _folderFilter.folderId;
-          if (selectedFolderId == null) return false;
-          return note.folderIds.contains(selectedFolderId);
+          final scope = _folderScopeIds;
+          if (scope == null || scope.isEmpty) {
+            final selectedFolderId = _folderFilter.folderId;
+            if (selectedFolderId == null) return false;
+            return note.folderIds.contains(selectedFolderId);
+          }
+          return note.folderIds.any(scope.contains);
       }
     }).toList();
     emit(filtered);

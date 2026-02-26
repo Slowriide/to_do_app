@@ -12,6 +12,10 @@ class FolderChips extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return BlocBuilder<FolderCubit, List<Folder>>(
       builder: (context, folders) {
+        final rootFolders = folders
+            .where((folder) => folder.parentId == null)
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
         return BlocBuilder<FolderFilterCubit, FolderFilter>(
           builder: (context, filter) {
             return Padding(
@@ -42,7 +46,7 @@ class FolderChips extends StatelessWidget {
                           context.read<FolderFilterCubit>().setAll(),
                     ),
                     const SizedBox(width: 8),
-                    ...folders.map(
+                    ...rootFolders.map(
                       (folder) => Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(

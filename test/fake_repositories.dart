@@ -127,7 +127,29 @@ class FakeFolderRepository implements FolderRepository {
   }
 
   @override
+  Future<void> deleteFolderSubtree(int folderId) async {
+    final descendants = await getDescendantIds(folderId);
+    final all = <int>{folderId, ...descendants};
+    _folders.removeWhere((folder) => all.contains(folder.id));
+  }
+
+  @override
   Future<List<Folder>> getFolders() async => List<Folder>.from(_folders);
+
+  @override
+  Future<Set<int>> getDescendantIds(int folderId) async {
+    final result = <int>{};
+    final queue = <int>[folderId];
+    while (queue.isNotEmpty) {
+      final current = queue.removeLast();
+      for (final folder in _folders.where((f) => f.parentId == current)) {
+        if (result.add(folder.id)) {
+          queue.add(folder.id);
+        }
+      }
+    }
+    return result;
+  }
 
   @override
   Future<void> updateFolder(Folder folder) async {
@@ -137,5 +159,19 @@ class FakeFolderRepository implements FolderRepository {
       return;
     }
     _folders[index] = folder;
+  }
+
+  @override
+  Future<void> moveFolder({
+    required int folderId,
+    required int? newParentId,
+    required int newOrder,
+  }) async {
+    final index = _folders.indexWhere((item) => item.id == folderId);
+    if (index < 0) return;
+    _folders[index] = _folders[index].copyWith(
+      parentId: newParentId,
+      order: newOrder,
+    );
   }
 }

@@ -15,7 +15,7 @@ import 'package:to_do_app/data/models/isar_note.dart';
 import 'package:to_do_app/data/models/isar_todo.dart';
 
 class BackupServiceImpl extends BackupService {
-  static const int _schemaVersion = 1;
+  static const int _schemaVersion = 2;
 
   final Isar db;
   final NoteSketchStorageService sketchStorage;
@@ -283,6 +283,7 @@ class BackupServiceImpl extends BackupService {
     return <String, dynamic>{
       'id': folder.id,
       'name': folder.name,
+      'parentId': folder.parentId,
       'order': folder.order,
       'createdAt': folder.createdAt.toUtc().toIso8601String(),
     };
@@ -296,6 +297,8 @@ class BackupServiceImpl extends BackupService {
     return FolderIsar()
       ..id = _readInt(raw, 'id')
       ..name = _readString(raw, 'name')
+      ..nameNormalized = _readString(raw, 'name').trim().toLowerCase()
+      ..parentId = _readNullableInt(raw['parentId'], field: 'parentId')
       ..order = _readInt(raw, 'order')
       ..createdAt = _readDateTime(raw['createdAt'], field: 'createdAt');
   }
@@ -402,9 +405,9 @@ class BackupServiceImpl extends BackupService {
     if (schemaVersion is! int) {
       throw BackupSchemaException('metadata.schemaVersion must be an integer.');
     }
-    if (schemaVersion != _schemaVersion) {
+    if (schemaVersion != 1 && schemaVersion != _schemaVersion) {
       throw BackupSchemaException(
-        'Unsupported schemaVersion $schemaVersion. Supported: $_schemaVersion.',
+        'Unsupported schemaVersion $schemaVersion. Supported: 1, $_schemaVersion.',
       );
     }
   }
@@ -672,6 +675,12 @@ class BackupServiceImpl extends BackupService {
   DateTime? _readNullableDateTime(dynamic value, {required String field}) {
     if (value == null) return null;
     return _readDateTime(value, field: field);
+  }
+
+  int? _readNullableInt(dynamic value, {required String field}) {
+    if (value == null) return null;
+    if (value is int) return value;
+    throw BackupFormatException('Field "$field" must be an integer or null.');
   }
 
   List<int> _readIntList(dynamic value, {required String field}) {

@@ -17,6 +17,8 @@ class MyDrawer extends StatefulWidget {
 }
 
 class _MyDrawerState extends State<MyDrawer> {
+  final Set<int> _expandedFolderIds = <int>{};
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
@@ -119,9 +121,10 @@ class _MyDrawerState extends State<MyDrawer> {
         return BlocBuilder<FolderFilterCubit, FolderFilter>(
           builder: (context, filter) {
             final isAll = filter.type == FolderFilterType.all;
+            final tree = context.read<FolderCubit>().tree;
 
             return Container(
-              margin: EdgeInsets.symmetric(horizontal: 10),
+              margin: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                 color: theme.surfaceContainerHigh.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(18),
@@ -145,7 +148,7 @@ class _MyDrawerState extends State<MyDrawer> {
                         ),
                       ),
                       IconButton(
-                        onPressed: _createFolder,
+                        onPressed: () => _createFolder(),
                         icon: const Icon(Icons.create_new_folder_outlined),
                         color: theme.onSurfaceVariant,
                         tooltip: 'Create folder',
@@ -157,17 +160,11 @@ class _MyDrawerState extends State<MyDrawer> {
                     selected: isAll,
                     onTap: () => _selectFolder(const FolderFilter.all()),
                   ),
-                  ...folders.map(
-                    (folder) => _folderTile(
-                      title: folder.name,
-                      selected: filter.type == FolderFilterType.custom &&
-                          filter.folderId == folder.id,
-                      trailing: IconButton(
-                        onPressed: () => _showFolderMenu(folder),
-                        icon: const Icon(Icons.more_vert_rounded),
-                      ),
-                      onTap: () =>
-                          _selectFolder(FolderFilter.custom(folder.id)),
+                  ...tree.map(
+                    (node) => _buildFolderNodeTile(
+                      node: node,
+                      filter: filter,
+                      depth: 0,
                     ),
                   ),
                 ],
@@ -179,18 +176,78 @@ class _MyDrawerState extends State<MyDrawer> {
     );
   }
 
+  Widget _buildFolderNodeTile({
+    required FolderNode node,
+    required FolderFilter filter,
+    required int depth,
+  }) {
+    final hasChildren = node.children.isNotEmpty;
+    final isExpanded = _expandedFolderIds.contains(node.folder.id);
+
+    return Column(
+      children: [
+        _folderTile(
+          title: node.folder.name,
+          selected: filter.type == FolderFilterType.custom &&
+              filter.folderId == node.folder.id,
+          leadingPadding: depth * 14.0,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (hasChildren)
+                IconButton(
+                  iconSize: 18,
+                  onPressed: () {
+                    setState(() {
+                      if (isExpanded) {
+                        _expandedFolderIds.remove(node.folder.id);
+                      } else {
+                        _expandedFolderIds.add(node.folder.id);
+                      }
+                    });
+                  },
+                  icon: Icon(
+                    isExpanded
+                        ? Icons.expand_more_rounded
+                        : Icons.chevron_right_rounded,
+                  ),
+                ),
+              IconButton(
+                onPressed: () => _showFolderMenu(node.folder),
+                icon: const Icon(Icons.more_vert_rounded),
+              ),
+            ],
+          ),
+          onTap: () => _selectFolder(FolderFilter.custom(node.folder.id)),
+        ),
+        if (hasChildren && isExpanded)
+          ...node.children.map(
+            (child) => _buildFolderNodeTile(
+              node: child,
+              filter: filter,
+              depth: depth + 1,
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _folderTile({
     required String title,
     required bool selected,
     required VoidCallback onTap,
     Widget? trailing,
+    double leadingPadding = 0,
   }) {
     final theme = Theme.of(context).colorScheme;
     final tileForegroundColor =
         selected ? theme.onPrimaryContainer : theme.onSurfaceVariant;
     return ListTile(
       dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      contentPadding: EdgeInsets.only(
+        left: 8 + leadingPadding,
+        right: 8,
+      ),
       minLeadingWidth: 20,
       leading: Icon(
         Icons.folder_outlined,
@@ -214,12 +271,12 @@ class _MyDrawerState extends State<MyDrawer> {
     );
   }
 
-  Future<void> _createFolder() async {
+  Future<void> _createFolder({int? parentId}) async {
     final controller = TextEditingController();
     final value = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create Folder'),
+        title: Text(parentId == null ? 'Create Folder' : 'Create Subfolder'),
         content: TextField(
           controller: controller,
           maxLength: 100,
@@ -238,7 +295,9 @@ class _MyDrawerState extends State<MyDrawer> {
       ),
     );
     if (value == null) return;
-    final error = await context.read<FolderCubit>().createFolder(value);
+    final error = await context
+        .read<FolderCubit>()
+        .createFolder(value, parentId: parentId);
     if (error != null && mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error)));
@@ -253,20 +312,34 @@ class _MyDrawerState extends State<MyDrawer> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.create_new_folder_outlined),
+              title: const Text('Create subfolder'),
+              onTap: () => Navigator.pop(context, 'createSubfolder'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.drive_file_move_outline),
+              title: const Text('Move'),
+              onTap: () => Navigator.pop(context, 'move'),
+            ),
+            ListTile(
               leading: const Icon(Icons.drive_file_rename_outline),
               title: const Text('Rename'),
               onTap: () => Navigator.pop(context, 'rename'),
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline),
-              title: const Text('Delete'),
+              title: const Text('Delete subtree'),
               onTap: () => Navigator.pop(context, 'delete'),
             ),
           ],
         ),
       ),
     );
-    if (action == 'rename') {
+    if (action == 'createSubfolder') {
+      await _createFolder(parentId: folder.id);
+    } else if (action == 'move') {
+      await _moveFolder(folder);
+    } else if (action == 'rename') {
       await _renameFolder(folder);
     } else if (action == 'delete') {
       await _deleteFolder(folder);
@@ -305,13 +378,86 @@ class _MyDrawerState extends State<MyDrawer> {
     }
   }
 
+  Future<void> _moveFolder(Folder folder) async {
+    final parentId = await _pickParentFolderId(folder);
+    if (parentId == null || parentId == _MoveCanceled.value) return;
+    final targetParentId = parentId == _MoveToRoot.value ? null : parentId;
+
+    final error = await context.read<FolderCubit>().moveFolder(
+          folderId: folder.id,
+          newParentId: targetParentId,
+        );
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  Future<int?> _pickParentFolderId(Folder folder) async {
+    final cubit = context.read<FolderCubit>();
+    final descendants = cubit.folderScopeForFilter(folder.id);
+
+    final candidates = context
+        .read<FolderCubit>()
+        .state
+        .where((item) => !descendants.contains(item.id))
+        .toList(growable: false)
+      ..sort((a, b) {
+        final parentCompare = (a.parentId ?? -1).compareTo(b.parentId ?? -1);
+        if (parentCompare != 0) return parentCompare;
+        return a.order.compareTo(b.order);
+      });
+
+    final selected = await showModalBottomSheet<int?>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(title: Text('Move folder to')),
+              ListTile(
+                leading: const Icon(Icons.folder_outlined),
+                title: const Text('Root'),
+                onTap: () => Navigator.pop(context, _MoveToRoot.value),
+              ),
+              ...candidates.map(
+                (candidate) => ListTile(
+                  leading: const Icon(Icons.folder_outlined),
+                  title: Text(candidate.name),
+                  subtitle: Text(candidate.parentId == null
+                      ? 'Root'
+                      : 'Inside folder ${candidate.parentId}'),
+                  onTap: () => Navigator.pop(context, candidate.id),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close_rounded),
+                title: const Text('Cancel'),
+                onTap: () => Navigator.pop(context, _MoveCanceled.value),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    return selected;
+  }
+
   Future<void> _deleteFolder(Folder folder) async {
+    final descendants =
+        await context.read<FolderCubit>().getDescendantIds(folder.id);
+    final allIds = <int>{folder.id, ...descendants};
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Folder'),
+        title: const Text('Delete Folder Subtree'),
         content: Text(
-          'Items in "${folder.name}" will be removed from this folder. Continue?',
+          'Delete "${folder.name}" and ${descendants.length} subfolder(s)? '
+          'Notes and todos will be detached from these folders.',
         ),
         actions: [
           TextButton(
@@ -327,28 +473,14 @@ class _MyDrawerState extends State<MyDrawer> {
     );
     if (confirm != true) return;
 
-    final noteIds = context
-        .read<NoteCubit>()
-        .state
-        .notes
-        .where((note) => note.folderIds.contains(folder.id))
-        .map((note) => note.id)
-        .toList();
-    final todoIds = context
-        .read<TodoCubit>()
-        .state
-        .todos
-        .where((todo) => todo.folderIds.contains(folder.id))
-        .map((todo) => todo.id)
-        .toList();
-
-    await context.read<NoteCubit>().removeFolderFromNotes(noteIds, folder.id);
-    await context.read<TodoCubit>().removeFolderFromTodos(todoIds, folder.id);
     await context.read<FolderCubit>().deleteFolder(folder.id);
+    await context.read<NoteCubit>().loadNotes();
+    await context.read<TodoCubit>().loadTodos();
 
     final filter = context.read<FolderFilterCubit>().state;
     if (filter.type == FolderFilterType.custom &&
-        filter.folderId == folder.id) {
+        filter.folderId != null &&
+        allIds.contains(filter.folderId)) {
       context.read<FolderFilterCubit>().setAll();
     }
   }
@@ -381,4 +513,12 @@ class _MyDrawerState extends State<MyDrawer> {
     if (location == '/settings') return 4;
     return 0;
   }
+}
+
+abstract class _MoveCanceled {
+  static const int value = -999999999;
+}
+
+abstract class _MoveToRoot {
+  static const int value = -999999998;
 }

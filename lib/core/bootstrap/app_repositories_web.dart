@@ -154,8 +154,30 @@ class InMemoryFolderRepository implements FolderRepository {
   }
 
   @override
+  Future<void> deleteFolderSubtree(int folderId) async {
+    final descendants = await getDescendantIds(folderId);
+    final all = <int>{folderId, ...descendants};
+    _folders.removeWhere((f) => all.contains(f.id));
+  }
+
+  @override
   Future<List<Folder>> getFolders() async {
     return List<Folder>.from(_folders);
+  }
+
+  @override
+  Future<Set<int>> getDescendantIds(int folderId) async {
+    final result = <int>{};
+    final queue = <int>[folderId];
+    while (queue.isNotEmpty) {
+      final current = queue.removeLast();
+      for (final folder in _folders.where((f) => f.parentId == current)) {
+        if (result.add(folder.id)) {
+          queue.add(folder.id);
+        }
+      }
+    }
+    return result;
   }
 
   @override
@@ -166,6 +188,20 @@ class InMemoryFolderRepository implements FolderRepository {
       return;
     }
     _folders.add(folder);
+  }
+
+  @override
+  Future<void> moveFolder({
+    required int folderId,
+    required int? newParentId,
+    required int newOrder,
+  }) async {
+    final index = _folders.indexWhere((f) => f.id == folderId);
+    if (index < 0) return;
+    _folders[index] = _folders[index].copyWith(
+      parentId: newParentId,
+      order: newOrder,
+    );
   }
 }
 

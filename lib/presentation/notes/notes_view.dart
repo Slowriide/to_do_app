@@ -5,6 +5,7 @@ import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/domain/models/note.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
@@ -148,9 +149,15 @@ class _NotesViewState extends State<NotesView> {
     super.initState();
 
     context.read<NoteSearchCubit>().setArchiveScope(ArchiveScope.activeOnly);
-    context
-        .read<NoteSearchCubit>()
-        .setFolderFilter(context.read<FolderFilterCubit>().state);
+    final filter = context.read<FolderFilterCubit>().state;
+    context.read<NoteSearchCubit>().setFolderFilter(
+          filter,
+          folderScopeIds: filter.type == FolderFilterType.custom
+              ? context
+                  .read<FolderCubit>()
+                  .folderScopeForFilter(filter.folderId!)
+              : null,
+        );
   }
 
   @override
@@ -325,7 +332,14 @@ class _Body extends StatelessWidget {
 
     return BlocListener<FolderFilterCubit, FolderFilter>(
       listener: (context, filter) {
-        context.read<NoteSearchCubit>().setFolderFilter(filter);
+        context.read<NoteSearchCubit>().setFolderFilter(
+              filter,
+              folderScopeIds: filter.type == FolderFilterType.custom
+                  ? context
+                      .read<FolderCubit>()
+                      .folderScopeForFilter(filter.folderId!)
+                  : null,
+            );
       },
       child: Column(
         children: [

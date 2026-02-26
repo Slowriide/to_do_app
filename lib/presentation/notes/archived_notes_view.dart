@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/folder_chips.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/note.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
@@ -81,9 +82,15 @@ class _ArchivedNotesViewState extends State<ArchivedNotesView> {
   void initState() {
     super.initState();
     context.read<NoteSearchCubit>().setArchiveScope(ArchiveScope.archivedOnly);
-    context
-        .read<NoteSearchCubit>()
-        .setFolderFilter(context.read<FolderFilterCubit>().state);
+    final filter = context.read<FolderFilterCubit>().state;
+    context.read<NoteSearchCubit>().setFolderFilter(
+          filter,
+          folderScopeIds: filter.type == FolderFilterType.custom
+              ? context
+                  .read<FolderCubit>()
+                  .folderScopeForFilter(filter.folderId!)
+              : null,
+        );
   }
 
   @override
@@ -221,7 +228,14 @@ class _Body extends StatelessWidget {
 
     return BlocListener<FolderFilterCubit, FolderFilter>(
       listener: (context, filter) {
-        context.read<NoteSearchCubit>().setFolderFilter(filter);
+        context.read<NoteSearchCubit>().setFolderFilter(
+              filter,
+              folderScopeIds: filter.type == FolderFilterType.custom
+                  ? context
+                      .read<FolderCubit>()
+                      .folderScopeForFilter(filter.folderId!)
+                  : null,
+            );
       },
       child: Column(
         children: [

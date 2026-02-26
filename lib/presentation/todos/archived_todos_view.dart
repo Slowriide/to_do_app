@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:to_do_app/common/widgets/folder_chips.dart';
 import 'package:to_do_app/common/widgets/widgets.dart';
 import 'package:to_do_app/domain/models/todo.dart';
+import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
@@ -81,9 +82,15 @@ class _ArchivedTodosViewState extends State<ArchivedTodosView> {
     context
         .read<TodoSearchCubit>()
         .setArchiveScope(TodoArchiveScope.archivedOnly);
-    context
-        .read<TodoSearchCubit>()
-        .setFolderFilter(context.read<FolderFilterCubit>().state);
+    final filter = context.read<FolderFilterCubit>().state;
+    context.read<TodoSearchCubit>().setFolderFilter(
+          filter,
+          folderScopeIds: filter.type == FolderFilterType.custom
+              ? context
+                  .read<FolderCubit>()
+                  .folderScopeForFilter(filter.folderId!)
+              : null,
+        );
   }
 
   @override
@@ -209,7 +216,14 @@ class _Body extends StatelessWidget {
 
     return BlocListener<FolderFilterCubit, FolderFilter>(
       listener: (context, filter) {
-        context.read<TodoSearchCubit>().setFolderFilter(filter);
+        context.read<TodoSearchCubit>().setFolderFilter(
+              filter,
+              folderScopeIds: filter.type == FolderFilterType.custom
+                  ? context
+                      .read<FolderCubit>()
+                      .folderScopeForFilter(filter.folderId!)
+                  : null,
+            );
       },
       child: Column(
         children: [

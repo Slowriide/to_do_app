@@ -13,7 +13,19 @@ Future<Set<int>?> showNoteFolderPickerModal({
     builder: (sheetContext) {
       final draftSelection = {...initialSelection};
       return BlocBuilder<FolderCubit, List<Folder>>(
-        builder: (context, folders) {
+        builder: (context, _) {
+          final tree = context.read<FolderCubit>().tree;
+          final entries = <({Folder folder, int depth})>[];
+
+          void flatten(List<FolderNode> nodes, int depth) {
+            for (final node in nodes) {
+              entries.add((folder: node.folder, depth: depth));
+              flatten(node.children, depth + 1);
+            }
+          }
+
+          flatten(tree, 0);
+
           return SafeArea(
             child: StatefulBuilder(
               builder: (context, setStateModal) => SizedBox(
@@ -36,21 +48,28 @@ Future<Set<int>?> showNoteFolderPickerModal({
                     ),
                     Expanded(
                       child: ListView(
-                        children: folders
+                        children: entries
                             .map(
-                              (folder) => CheckboxListTile(
+                              (entry) => CheckboxListTile(
                                 dense: true,
                                 controlAffinity:
                                     ListTileControlAffinity.trailing,
-                                secondary: const Icon(Icons.folder_outlined),
-                                title: Text(folder.name),
-                                value: draftSelection.contains(folder.id),
+                                secondary: Padding(
+                                  padding:
+                                      EdgeInsets.only(left: entry.depth * 12.0),
+                                  child: const Icon(Icons.folder_outlined),
+                                ),
+                                title: Padding(
+                                  padding: EdgeInsets.only(left: 12.0),
+                                  child: Text(entry.folder.name),
+                                ),
+                                value: draftSelection.contains(entry.folder.id),
                                 onChanged: (checked) {
                                   setStateModal(() {
                                     if (checked ?? false) {
-                                      draftSelection.add(folder.id);
+                                      draftSelection.add(entry.folder.id);
                                     } else {
-                                      draftSelection.remove(folder.id);
+                                      draftSelection.remove(entry.folder.id);
                                     }
                                   });
                                 },

@@ -12,6 +12,7 @@ class TodoSearchCubit extends Cubit<List<Todo>> {
   List<Todo> _todos;
   String _query = '';
   FolderFilter _folderFilter = const FolderFilter.all();
+  Set<int>? _folderScopeIds;
   TodoArchiveScope _archiveScope = TodoArchiveScope.activeOnly;
 
   TodoSearchCubit(this._todos) : super(_todos);
@@ -35,8 +36,9 @@ class TodoSearchCubit extends Cubit<List<Todo>> {
     _emitFiltered();
   }
 
-  void setFolderFilter(FolderFilter filter) {
+  void setFolderFilter(FolderFilter filter, {Set<int>? folderScopeIds}) {
     _folderFilter = filter;
+    _folderScopeIds = folderScopeIds;
     _emitFiltered();
   }
 
@@ -62,9 +64,13 @@ class TodoSearchCubit extends Cubit<List<Todo>> {
         case FolderFilterType.all:
           return true;
         case FolderFilterType.custom:
-          final selectedFolderId = _folderFilter.folderId;
-          if (selectedFolderId == null) return false;
-          return todo.folderIds.contains(selectedFolderId);
+          final scope = _folderScopeIds;
+          if (scope == null || scope.isEmpty) {
+            final selectedFolderId = _folderFilter.folderId;
+            if (selectedFolderId == null) return false;
+            return todo.folderIds.contains(selectedFolderId);
+          }
+          return todo.folderIds.any(scope.contains);
       }
     }).toList();
     emit(filtered);
