@@ -11,6 +11,7 @@ import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
@@ -27,6 +28,7 @@ class EditTodo extends StatefulWidget {
 
 class _EditTodoState extends State<EditTodo> {
   bool _alreadySaved = false;
+  bool _isPinnedToHomeWidget = false;
   final _formKey = GlobalKey<FormState>();
   late quill.QuillController _titleController;
   late QuillAutoLinker _titleAutoLinker;
@@ -49,6 +51,7 @@ class _EditTodoState extends State<EditTodo> {
     _titleAutoLinker = QuillAutoLinker(_titleController);
     _selectedReminder = widget.todo.reminder;
     _selectedFolderIds = widget.todo.folderIds.toSet();
+    _loadPinnedWidgetState();
 
     final sortedSubtasks = [...widget.todo.subTasks]
       ..sort((a, b) => a.order.compareTo(b.order));
@@ -71,6 +74,12 @@ class _EditTodoState extends State<EditTodo> {
     for (final subtask in _editableSubtasks) {
       _subtaskAutoLinkers[subtask.id] = QuillAutoLinker(subtask.controller);
     }
+  }
+
+  Future<void> _loadPinnedWidgetState() async {
+    final isPinned = await PinnedNoteWidgetService.isPinnedTodo(widget.todo.id);
+    if (!mounted) return;
+    setState(() => _isPinnedToHomeWidget = isPinned);
   }
 
   Future<void> _showEditOrDeleteDialog() async {
@@ -244,6 +253,46 @@ class _EditTodoState extends State<EditTodo> {
     return '${selectedNames.length} folders';
   }
 
+  Future<void> _togglePinToHomeWidget() async {
+    if (_isPinnedToHomeWidget) {
+      await PinnedNoteWidgetService.clearPinnedTodo();
+      if (!mounted) return;
+      setState(() => _isPinnedToHomeWidget = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Removed pinned todo from home widget')),
+      );
+      return;
+    }
+
+    final updatedSubtask = _editableSubtasks.map((editable) {
+      return Todo(
+        id: editable.id,
+        title: NoteRichTextCodec.extractPlainText(editable.controller.document),
+        titleRichTextDeltaJson:
+            NoteRichTextCodec.encodeDelta(editable.controller.document),
+        isCompleted: editable.isCompleted,
+        subTasks: const [],
+        isSubtask: true,
+        order: editable.order,
+      );
+    }).toList();
+
+    final snapshot = widget.todo.copyWith(
+      title: NoteRichTextCodec.extractPlainText(_titleController.document),
+      titleRichTextDeltaJson: NoteRichTextCodec.encodeDelta(_titleController.document),
+      subTasks: updatedSubtask,
+      reminder: _selectedReminder,
+      folderIds: _selectedFolderIds.toList(),
+    );
+
+    await PinnedNoteWidgetService.pinTodo(snapshot);
+    if (!mounted) return;
+    setState(() => _isPinnedToHomeWidget = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pinned todo to home widget')),
+    );
+  }
+
   @override
   void dispose() {
     _titleAutoLinker.dispose();
@@ -281,6 +330,21 @@ class _EditTodoState extends State<EditTodo> {
             pickDateReminderDate();
           }
         },
+        appBarActions: [
+          Tooltip(
+            message: _isPinnedToHomeWidget
+                ? 'Unpin from Home Widget'
+                : 'Pin to Home Widget',
+            child: IconButton(
+              onPressed: _togglePinToHomeWidget,
+              icon: Icon(
+                _isPinnedToHomeWidget
+                    ? Icons.push_pin
+                    : Icons.push_pin_outlined,
+              ),
+            ),
+          ),
+        ],
         onBackTap: () async {
           final router = GoRouter.of(context);
           await _updateTodo();

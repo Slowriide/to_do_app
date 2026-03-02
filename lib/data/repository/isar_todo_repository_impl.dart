@@ -57,6 +57,14 @@ class IsarTodoRepositoryImpl implements TodoRepository {
   }
 
   @override
+  Future<Todo?> getTodoById(int id) async {
+    final todo = await db.todoIsars.get(id);
+    if (todo == null || todo.isSubtask) return null;
+    await todo.subtasks.load();
+    return todo.toDomain();
+  }
+
+  @override
   Future<void> addSubTask(Todo subtask, int todoId) async {
     final todoIsarById = await db.todoIsars.get(todoId); //get todo by id
 

@@ -48,6 +48,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="todoapp" android:host="note" />
+                <data android:scheme="todoapp" android:host="todo" />
             </intent-filter>
         </activity>
 
@@ -60,6 +61,16 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/pinned_note_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".PinnedTodoHomeWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pinned_todo_widget_info" />
         </receiver>
 
         <meta-data

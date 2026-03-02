@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pinned_note_widget_description">Pinned note widget</string>
+    <string name="pinned_todo_widget_description">Pinned todo widget</string>
 </resources>

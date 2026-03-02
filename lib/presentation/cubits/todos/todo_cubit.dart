@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_state.dart';
@@ -39,6 +40,9 @@ class TodoCubit extends Cubit<TodoState> {
         );
 
       emit(TodoState.success(sortedTodos));
+      try {
+        await PinnedNoteWidgetService.refreshFromTodos(sortedTodos);
+      } catch (_) {}
     } catch (e) {
       emit(TodoState.error('Failed to load todos', state.todos));
     }

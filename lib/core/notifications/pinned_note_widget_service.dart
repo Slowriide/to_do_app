@@ -1,16 +1,30 @@
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:to_do_app/domain/models/note.dart';
+import 'package:to_do_app/domain/models/todo.dart';
 
 class PinnedNoteWidgetService {
-  static const String _androidWidgetName = 'PinnedNoteHomeWidgetProvider';
-  static const String _iosWidgetName = 'PinnedNoteHomeWidget';
+  static const String _noteAndroidWidgetName = 'PinnedNoteHomeWidgetProvider';
+  static const String _noteIosWidgetName = 'PinnedNoteHomeWidget';
+  static const String _todoAndroidWidgetName = 'PinnedTodoHomeWidgetProvider';
+  static const String _todoIosWidgetName = 'PinnedTodoHomeWidget';
   static const String _appGroupId = 'group.com.example.to_do_app';
 
-  static const String pinnedNoteIdKey = 'pinnedNoteId';
-  static const String pinnedNoteTitleKey = 'pinnedNoteTitle';
-  static const String pinnedNotePreviewKey = 'pinnedNotePreview';
-  static const String pinnedNoteUpdatedAtKey = 'pinnedNoteUpdatedAt';
+  static const String _noteIdKey = 'pinnedNoteId';
+  static const String _noteTitleKey = 'pinnedNoteTitle';
+  static const String _notePreviewKey = 'pinnedNotePreview';
+  static const String _noteUpdatedAtKey = 'pinnedNoteUpdatedAt';
+
+  static const String _todoIdKey = 'pinnedTodoId';
+  static const String _todoTitleKey = 'pinnedTodoTitle';
+  static const String _todoPreviewKey = 'pinnedTodoPreview';
+  static const String _todoUpdatedAtKey = 'pinnedTodoUpdatedAt';
+
+  // Legacy generic keys migrated to dedicated note/todo keys.
+  static const String _legacyPinnedItemTypeKey = 'pinnedItemType';
+  static const String _legacyPinnedItemIdKey = 'pinnedItemId';
+  static const String _legacyPinnedItemTitleKey = 'pinnedItemTitle';
+  static const String _legacyPinnedItemPreviewKey = 'pinnedItemPreview';
 
   static bool get _isSupportedPlatform {
     if (kIsWeb) return false;
@@ -23,44 +37,61 @@ class PinnedNoteWidgetService {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await HomeWidget.setAppGroupId(_appGroupId);
     }
-  }
-
-  static Future<int?> getPinnedNoteId() async {
-    if (!_isSupportedPlatform) return null;
-    try {
-      final raw = await HomeWidget.getWidgetData<dynamic>(pinnedNoteIdKey);
-      final parsed = _coerceId(raw);
-      if (parsed != null) {
-        // Migrate any legacy numeric storage to string storage.
-        await HomeWidget.saveWidgetData<String>(pinnedNoteIdKey, parsed.toString());
-      }
-      return parsed;
-    } catch (_) {
-      return null;
-    }
+    await _migrateLegacyPinnedItemIfNeeded();
   }
 
   static Future<bool> isPinned(int noteId) async {
-    return (await getPinnedNoteId()) == noteId;
+    return (await _getPinnedNoteId()) == noteId;
+  }
+
+  static Future<bool> isPinnedTodo(int todoId) async {
+    return (await _getPinnedTodoId()) == todoId;
   }
 
   static Future<void> pinNote(Note note) async {
     if (!_isSupportedPlatform) return;
-    await _saveSnapshot(note);
-    await _updateWidgets();
+    await HomeWidget.saveWidgetData<String>(_noteIdKey, note.id.toString());
+    await HomeWidget.saveWidgetData<String>(_noteTitleKey, _safeTitle(note.title));
+    await HomeWidget.saveWidgetData<String>(_notePreviewKey, _buildNotePreview(note.text));
+    await HomeWidget.saveWidgetData<String>(
+      _noteUpdatedAtKey,
+      DateTime.now().toUtc().toIso8601String(),
+    );
+    await _updateNoteWidget();
+  }
+
+  static Future<void> pinTodo(Todo todo) async {
+    if (!_isSupportedPlatform) return;
+    await HomeWidget.saveWidgetData<String>(_todoIdKey, todo.id.toString());
+    await HomeWidget.saveWidgetData<String>(_todoTitleKey, _safeTitle(todo.title));
+    await HomeWidget.saveWidgetData<String>(_todoPreviewKey, _buildTodoPreview(todo));
+    await HomeWidget.saveWidgetData<String>(
+      _todoUpdatedAtKey,
+      DateTime.now().toUtc().toIso8601String(),
+    );
+    await _updateTodoWidget();
   }
 
   static Future<void> clearPinnedNote() async {
     if (!_isSupportedPlatform) return;
-    await HomeWidget.saveWidgetData<String?>(pinnedNoteIdKey, null);
-    await HomeWidget.saveWidgetData<String?>(pinnedNoteTitleKey, null);
-    await HomeWidget.saveWidgetData<String?>(pinnedNotePreviewKey, null);
-    await HomeWidget.saveWidgetData<String?>(pinnedNoteUpdatedAtKey, null);
-    await _updateWidgets();
+    await HomeWidget.saveWidgetData<String?>(_noteIdKey, null);
+    await HomeWidget.saveWidgetData<String?>(_noteTitleKey, null);
+    await HomeWidget.saveWidgetData<String?>(_notePreviewKey, null);
+    await HomeWidget.saveWidgetData<String?>(_noteUpdatedAtKey, null);
+    await _updateNoteWidget();
+  }
+
+  static Future<void> clearPinnedTodo() async {
+    if (!_isSupportedPlatform) return;
+    await HomeWidget.saveWidgetData<String?>(_todoIdKey, null);
+    await HomeWidget.saveWidgetData<String?>(_todoTitleKey, null);
+    await HomeWidget.saveWidgetData<String?>(_todoPreviewKey, null);
+    await HomeWidget.saveWidgetData<String?>(_todoUpdatedAtKey, null);
+    await _updateTodoWidget();
   }
 
   static Future<void> refreshFromNotes(List<Note> notes) async {
-    final pinnedId = await getPinnedNoteId();
+    final pinnedId = await _getPinnedNoteId();
     if (pinnedId == null) return;
 
     Note? pinned;
@@ -75,38 +106,69 @@ class PinnedNoteWidgetService {
       await clearPinnedNote();
       return;
     }
-
-    await _saveSnapshot(pinned);
-    await _updateWidgets();
+    await pinNote(pinned);
   }
 
-  static Future<void> _saveSnapshot(Note note) async {
-    await HomeWidget.saveWidgetData<String>(pinnedNoteIdKey, note.id.toString());
-    await HomeWidget.saveWidgetData<String>(pinnedNoteTitleKey, _safeTitle(note));
-    await HomeWidget.saveWidgetData<String>(
-      pinnedNotePreviewKey,
-      _buildPreview(note.text),
-    );
-    await HomeWidget.saveWidgetData<String>(
-      pinnedNoteUpdatedAtKey,
-      DateTime.now().toUtc().toIso8601String(),
-    );
+  static Future<void> refreshFromTodos(List<Todo> todos) async {
+    final pinnedId = await _getPinnedTodoId();
+    if (pinnedId == null) return;
+
+    Todo? pinned;
+    for (final todo in todos) {
+      if (todo.id == pinnedId) {
+        pinned = todo;
+        break;
+      }
+    }
+
+    if (pinned == null) {
+      await clearPinnedTodo();
+      return;
+    }
+    await pinTodo(pinned);
   }
 
-  static Future<void> _updateWidgets() async {
+  static Future<void> _updateNoteWidget() async {
     await HomeWidget.updateWidget(
-      androidName: _androidWidgetName,
-      iOSName: _iosWidgetName,
+      androidName: _noteAndroidWidgetName,
+      iOSName: _noteIosWidgetName,
     );
   }
 
-  static String _safeTitle(Note note) {
-    final normalized = note.title.trim();
-    if (normalized.isEmpty) return 'Untitled note';
+  static Future<void> _updateTodoWidget() async {
+    await HomeWidget.updateWidget(
+      androidName: _todoAndroidWidgetName,
+      iOSName: _todoIosWidgetName,
+    );
+  }
+
+  static Future<int?> _getPinnedNoteId() async {
+    if (!_isSupportedPlatform) return null;
+    try {
+      final raw = await HomeWidget.getWidgetData<dynamic>(_noteIdKey);
+      return _coerceId(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<int?> _getPinnedTodoId() async {
+    if (!_isSupportedPlatform) return null;
+    try {
+      final raw = await HomeWidget.getWidgetData<dynamic>(_todoIdKey);
+      return _coerceId(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String _safeTitle(String title) {
+    final normalized = title.trim();
+    if (normalized.isEmpty) return 'Untitled';
     return normalized;
   }
 
-  static String _buildPreview(String text) {
+  static String _buildNotePreview(String text) {
     final normalized = text
         .replaceAll('\r\n', '\n')
         .split('\n')
@@ -119,11 +181,51 @@ class PinnedNoteWidgetService {
     return '${normalized.substring(0, 180).trimRight()}...';
   }
 
+  static String _buildTodoPreview(Todo todo) {
+    final lines = todo.subTasks
+        .where((subtask) => subtask.title.trim().isNotEmpty)
+        .map((subtask) => subtask.title.trim())
+        .take(3)
+        .join('\n');
+    if (lines.isNotEmpty) return lines;
+    return 'No subtasks';
+  }
+
   static int? _coerceId(dynamic raw) {
     if (raw == null) return null;
     if (raw is int) return raw;
     if (raw is num) return raw.toInt();
     if (raw is String) return int.tryParse(raw);
     return int.tryParse(raw.toString());
+  }
+
+  static Future<void> _migrateLegacyPinnedItemIfNeeded() async {
+    try {
+      final legacyType = await HomeWidget.getWidgetData<String>(_legacyPinnedItemTypeKey);
+      final legacyId = await HomeWidget.getWidgetData<dynamic>(_legacyPinnedItemIdKey);
+      final legacyTitle = await HomeWidget.getWidgetData<String>(_legacyPinnedItemTitleKey);
+      final legacyPreview = await HomeWidget.getWidgetData<String>(_legacyPinnedItemPreviewKey);
+      final id = _coerceId(legacyId);
+      if (legacyType == null || id == null) return;
+
+      if (legacyType == 'todo' && await _getPinnedTodoId() == null) {
+        await HomeWidget.saveWidgetData<String>(_todoIdKey, id.toString());
+        if (legacyTitle != null) await HomeWidget.saveWidgetData<String>(_todoTitleKey, legacyTitle);
+        if (legacyPreview != null) {
+          await HomeWidget.saveWidgetData<String>(_todoPreviewKey, legacyPreview);
+        }
+      } else if (legacyType == 'note' && await _getPinnedNoteId() == null) {
+        await HomeWidget.saveWidgetData<String>(_noteIdKey, id.toString());
+        if (legacyTitle != null) await HomeWidget.saveWidgetData<String>(_noteTitleKey, legacyTitle);
+        if (legacyPreview != null) {
+          await HomeWidget.saveWidgetData<String>(_notePreviewKey, legacyPreview);
+        }
+      }
+
+      await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemTypeKey, null);
+      await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemIdKey, null);
+      await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemTitleKey, null);
+      await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemPreviewKey, null);
+    } catch (_) {}
   }
 }

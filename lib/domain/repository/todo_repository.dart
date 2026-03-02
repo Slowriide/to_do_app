@@ -6,6 +6,7 @@ import 'package:to_do_app/domain/models/todo.dart';
 /// updating, and deleting todos and their subtasks in the data source.
 abstract class TodoRepository {
   Future<List<Todo>> getTodos();
+  Future<Todo?> getTodoById(int id);
   Future<void> addTodo(Todo newTodo);
   Future<void> updateTodo(Todo todo);
   Future<void> updateTodos(List<Todo> todos);

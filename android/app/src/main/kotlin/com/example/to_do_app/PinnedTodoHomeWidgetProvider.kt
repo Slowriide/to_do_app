@@ -9,7 +9,7 @@ import android.net.Uri
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
-class PinnedNoteHomeWidgetProvider : HomeWidgetProvider() {
+class PinnedTodoHomeWidgetProvider : HomeWidgetProvider() {
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -17,12 +17,12 @@ class PinnedNoteHomeWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences
     ) {
         appWidgetIds.forEach { appWidgetId ->
-            updateNoteWidget(context, appWidgetManager, appWidgetId, widgetData)
+            updateTodoWidget(context, appWidgetManager, appWidgetId, widgetData)
         }
     }
 }
 
-internal fun updateNoteWidget(
+internal fun updateTodoWidget(
     context: Context,
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int,
@@ -30,13 +30,13 @@ internal fun updateNoteWidget(
 ) {
     val data = try {
         WidgetSnapshot(
-            itemId = parsePinnedId(widgetData.all["pinnedNoteId"]),
-            title = (widgetData.all["pinnedNoteTitle"] as? String) ?: "Pinned note",
-            preview = (widgetData.all["pinnedNotePreview"] as? String)
-                ?: "Tap a note and pin it to this widget."
+            itemId = parsePinnedId(widgetData.all["pinnedTodoId"]),
+            title = (widgetData.all["pinnedTodoTitle"] as? String) ?: "Pinned todo",
+            preview = (widgetData.all["pinnedTodoPreview"] as? String)
+                ?: "Tap a todo and pin it to this widget."
         )
     } catch (_: Throwable) {
-        WidgetSnapshot(null, "Pinned note", "Tap a note and pin it to this widget.")
+        WidgetSnapshot(null, "Pinned todo", "Tap a todo and pin it to this widget.")
     }
 
     val views = RemoteViews(context.packageName, R.layout.pinned_note_widget)
@@ -46,7 +46,7 @@ internal fun updateNoteWidget(
     val intent = if ((data.itemId ?: -1L) > 0L) {
         Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("todoapp://note/${data.itemId}"),
+            Uri.parse("todoapp://todo/${data.itemId}"),
             context,
             MainActivity::class.java
         )
@@ -62,22 +62,3 @@ internal fun updateNoteWidget(
 
     appWidgetManager.updateAppWidget(appWidgetId, views)
 }
-
-internal fun parsePinnedId(raw: Any?): Long? {
-    if (raw == null) return null
-    return when (raw) {
-        is Int -> raw.toLong()
-        is Long -> raw
-        is Float -> raw.toLong()
-        is Double -> raw.toLong()
-        is String -> raw.toLongOrNull()
-        is Number -> raw.toLong()
-        else -> raw.toString().toLongOrNull()
-    }
-}
-
-internal data class WidgetSnapshot(
-    val itemId: Long?,
-    val title: String,
-    val preview: String
-)

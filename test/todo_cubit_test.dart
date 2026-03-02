@@ -31,6 +31,14 @@ class FakeTodoRepository implements TodoRepository {
   Future<List<Todo>> getTodos() async => List<Todo>.from(_todos);
 
   @override
+  Future<Todo?> getTodoById(int id) async {
+    for (final todo in _todos) {
+      if (todo.id == id) return todo;
+    }
+    return null;
+  }
+
+  @override
   Future<void> updateSubTask(Todo subtask) async {}
 
   @override

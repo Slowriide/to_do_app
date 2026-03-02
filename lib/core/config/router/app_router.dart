@@ -58,14 +58,17 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/:id(\\d+)',
       builder: (context, state) {
-        final noteId = int.tryParse(state.pathParameters['id'] ?? '');
-        if (noteId == null) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
           return const _RouteDataErrorPage(
-            title: 'Invalid Note Link',
-            message: 'The requested note id is invalid.',
+            title: 'Invalid Link',
+            message: 'The requested item id is invalid.',
           );
         }
-        return _NoteByIdLoaderPage(noteId: noteId);
+        if (state.uri.host == 'todo') {
+          return _TodoByIdLoaderPage(todoId: id);
+        }
+        return _NoteByIdLoaderPage(noteId: id);
       },
     ),
     GoRoute(
@@ -101,6 +104,20 @@ final appRouter = GoRouter(
         }
         final todo = extra;
         return EditTodo(todo: todo);
+      },
+    ),
+    GoRoute(
+      path: '/todo/:id',
+      builder: (context, state) {
+        final rawId = state.pathParameters['id'];
+        final todoId = int.tryParse(rawId ?? '');
+        if (todoId == null) {
+          return const _RouteDataErrorPage(
+            title: 'Invalid Todo Link',
+            message: 'The requested todo id is invalid.',
+          );
+        }
+        return _TodoByIdLoaderPage(todoId: todoId);
       },
     ),
     GoRoute(
@@ -181,6 +198,43 @@ class _NoteByIdLoaderPage extends StatelessWidget {
         }
 
         return EditNotePage(note: note);
+      },
+    );
+  }
+}
+
+class _TodoByIdLoaderPage extends StatelessWidget {
+  final int todoId;
+  const _TodoByIdLoaderPage({required this.todoId});
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = context.read<TodoRepository>();
+    return FutureBuilder<Todo?>(
+      future: repo.getTodoById(todoId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const _RouteDataErrorPage(
+            title: 'Could not load todo',
+            message: 'Something went wrong while loading this todo.',
+          );
+        }
+
+        final todo = snapshot.data;
+        if (todo == null) {
+          return const _RouteDataErrorPage(
+            title: 'Todo Not Found',
+            message: 'This todo does not exist anymore.',
+          );
+        }
+
+        return EditTodo(todo: todo);
       },
     );
   }
