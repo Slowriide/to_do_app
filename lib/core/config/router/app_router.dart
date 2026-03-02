@@ -12,6 +12,31 @@ import 'package:to_do_app/presentation/pages.dart';
 /// The app router configuration for the ToDo application using GoRouter.
 final appRouter = GoRouter(
   initialLocation: '/home',
+  errorBuilder: (context, state) {
+    return _RouteDataErrorPage(
+      title: 'Navigation Error',
+      message: state.error?.toString() ??
+          'The requested route could not be opened.',
+    );
+  },
+  redirect: (context, state) {
+    final uri = state.uri;
+    if (uri.scheme != 'todoapp') return null;
+
+    if (uri.host == 'home' || uri.host.isEmpty) {
+      return '/home';
+    }
+
+    if (uri.host == 'note' && uri.pathSegments.length == 1) {
+      return '/note/${uri.pathSegments.first}';
+    }
+
+    if (uri.host == 'todo' && uri.pathSegments.length == 1) {
+      return '/todo/${uri.pathSegments.first}';
+    }
+
+    return '/home';
+  },
   routes: [
     GoRoute(
       path: '/home',
@@ -53,22 +78,6 @@ final appRouter = GoRouter(
           );
         }
         return _NoteByIdLoaderPage(noteId: noteId);
-      },
-    ),
-    GoRoute(
-      path: '/:id(\\d+)',
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const _RouteDataErrorPage(
-            title: 'Invalid Link',
-            message: 'The requested item id is invalid.',
-          );
-        }
-        if (state.uri.host == 'todo') {
-          return _TodoByIdLoaderPage(todoId: id);
-        }
-        return _NoteByIdLoaderPage(noteId: id);
       },
     ),
     GoRoute(

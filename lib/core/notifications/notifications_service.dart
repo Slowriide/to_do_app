@@ -20,6 +20,22 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
   }
 
   /// Initializes the notification service and configures timezone and permissions.
@@ -31,12 +47,17 @@ class NotificationService {
     await _requestPermissions();
     tz.initializeTimeZones();
 
-    final androidInitSettings =
+    const androidInitSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
+    const darwinInitSettings = DarwinInitializationSettings();
 
     final timeZone = await FlutterTimezone.getLocalTimezone();
 
-    final initSettings = InitializationSettings(android: androidInitSettings);
+    const initSettings = InitializationSettings(
+      android: androidInitSettings,
+      iOS: darwinInitSettings,
+      macOS: darwinInitSettings,
+    );
 
     tz.setLocalLocation(tz.getLocation(timeZone.identifier));
 
@@ -47,7 +68,7 @@ class NotificationService {
 
   /// Builds the default [NotificationDetails] for Android.
   NotificationDetails notificationDetails() {
-    return NotificationDetails(
+    return const NotificationDetails(
       android: AndroidNotificationDetails(
         'reminder_channel',
         'Reminders',
@@ -55,6 +76,8 @@ class NotificationService {
         priority: Priority.high,
         ticker: 'ticker',
       ),
+      iOS: DarwinNotificationDetails(),
+      macOS: DarwinNotificationDetails(),
     );
   }
 

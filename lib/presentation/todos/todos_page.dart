@@ -12,9 +12,21 @@ import 'package:to_do_app/presentation/todos/todos_view.dart';
 /// ensuring that the search state stays in sync with the full list of ToDos.
 ///
 /// Embeds [TodosView] as the main UI to display and manage ToDos.
-class TodoPage extends StatelessWidget {
+class TodoPage extends StatefulWidget {
   final TodoRepository repository;
   const TodoPage({super.key, required this.repository});
+
+  @override
+  State<TodoPage> createState() => _TodoPageState();
+}
+
+class _TodoPageState extends State<TodoPage> {
+  @override
+  void initState() {
+    super.initState();
+    final currentTodos = context.read<TodoCubit>().state.todos;
+    context.read<TodoSearchCubit>().updateTodos(currentTodos);
+  }
 
   @override
   Widget build(BuildContext context) {
