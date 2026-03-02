@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -143,10 +143,22 @@ class BackupServiceImpl extends BackupService {
       }
 
       if (mode == ImportMode.merge) {
-        await _assertNoMergeIdConflicts(
+        final remapPlan = await _buildMergeRemapPlan(
           folders: folders,
           notes: notes,
           todoNodes: todoNodes,
+        );
+        _applyMergeRemap(
+          folders: folders,
+          notes: notes,
+          todoNodes: todoNodes,
+          plan: remapPlan,
+        );
+        debugPrint(
+          'Backup merge remap summary: '
+          'folders=${remapPlan.remappedFolderCount}, '
+          'notes=${remapPlan.remappedNoteCount}, '
+          'todos=${remapPlan.remappedTodoCount}',
         );
       }
 
@@ -175,47 +187,148 @@ class BackupServiceImpl extends BackupService {
     }
   }
 
-  Future<void> _assertNoMergeIdConflicts({
+  Future<_MergeRemapPlan> _buildMergeRemapPlan({
     required List<FolderIsar> folders,
     required List<NoteIsar> notes,
     required List<_TodoNode> todoNodes,
   }) async {
-    final incomingFolderIds = folders.map((f) => f.id).toSet();
-    final incomingNoteIds = notes.map((n) => n.id).toSet();
-    final incomingTodoIds = <int>{};
+    final existingFolderIds =
+        (await db.folderIsars.where().idProperty().findAll()).toSet();
+    final existingNoteIds =
+        (await db.noteIsars.where().idProperty().findAll()).toSet();
+    final existingTodoIds =
+        (await db.todoIsars.where().idProperty().findAll()).toSet();
 
-    void collect(_TodoNode node) {
+    final folderIdMap = _buildIdMap(
+      incomingIds: folders.map((f) => f.id),
+      existingIds: existingFolderIds,
+    );
+    final noteIdMap = _buildIdMap(
+      incomingIds: notes.map((n) => n.id),
+      existingIds: existingNoteIds,
+    );
+
+    final incomingTodoIds = <int>{};
+    void collectIncomingTodoIds(_TodoNode node) {
       incomingTodoIds.add(node.todo.id);
       for (final child in node.children) {
-        collect(child);
+        collectIncomingTodoIds(child);
       }
     }
 
     for (final root in todoNodes) {
-      collect(root);
+      collectIncomingTodoIds(root);
     }
 
-    final existingFolders =
-        await db.folderIsars.getAll(incomingFolderIds.toList(growable: false));
-    final existingNotes =
-        await db.noteIsars.getAll(incomingNoteIds.toList(growable: false));
-    final existingTodos =
-        await db.todoIsars.getAll(incomingTodoIds.toList(growable: false));
-
-    final folderConflicts =
-        existingFolders.whereType<FolderIsar>().map((f) => f.id).toList();
-    final noteConflicts = existingNotes.whereType<NoteIsar>().map((n) => n.id).toList();
-    final todoConflicts = existingTodos.whereType<TodoIsar>().map((t) => t.id).toList();
-
-    if (folderConflicts.isEmpty && noteConflicts.isEmpty && todoConflicts.isEmpty) {
-      return;
-    }
-
-    throw BackupImportException(
-      'Merge import blocked due to existing IDs. '
-      'Folders: ${folderConflicts.length}, Notes: ${noteConflicts.length}, Todos: ${todoConflicts.length}. '
-      'Use replace mode or export from this device first and merge externally.',
+    final todoIdMap = _buildIdMap(
+      incomingIds: incomingTodoIds,
+      existingIds: existingTodoIds,
     );
+
+    final validFolderIdsAfterImport = <int>{
+      ...existingFolderIds,
+      ...folderIdMap.values,
+    };
+
+    return _MergeRemapPlan(
+      folderIdMap: folderIdMap,
+      noteIdMap: noteIdMap,
+      todoIdMap: todoIdMap,
+      validFolderIdsAfterImport: validFolderIdsAfterImport,
+    );
+  }
+
+  Map<int, int> _buildIdMap({
+    required Iterable<int> incomingIds,
+    required Set<int> existingIds,
+  }) {
+    final map = <int, int>{};
+    final used = <int>{...existingIds};
+
+    for (final incomingId in incomingIds) {
+      if (used.add(incomingId)) {
+        map[incomingId] = incomingId;
+        continue;
+      }
+      final remapped = _nextAvailableId(used);
+      map[incomingId] = remapped;
+    }
+
+    return map;
+  }
+
+  int _nextAvailableId(Set<int> used) {
+    var candidate = 1;
+    if (used.isNotEmpty) {
+      candidate = used.reduce((a, b) => a > b ? a : b) + 1;
+    }
+    while (!used.add(candidate)) {
+      candidate++;
+    }
+    return candidate;
+  }
+
+  void _applyMergeRemap({
+    required List<FolderIsar> folders,
+    required List<NoteIsar> notes,
+    required List<_TodoNode> todoNodes,
+    required _MergeRemapPlan plan,
+  }) {
+    for (final folder in folders) {
+      final oldId = folder.id;
+      folder.id = plan.folderIdMap[oldId] ?? oldId;
+      final originalParentId = folder.parentId;
+      if (originalParentId == null) {
+        folder.parentId = null;
+      } else {
+        folder.parentId = plan.folderIdMap[originalParentId];
+      }
+    }
+
+    for (final note in notes) {
+      final oldId = note.id;
+      note.id = plan.noteIdMap[oldId] ?? oldId;
+      note.folderIds = _remapFolderRefs(
+        folderIds: note.folderIds,
+        folderIdMap: plan.folderIdMap,
+        validFolderIdsAfterImport: plan.validFolderIdsAfterImport,
+      );
+    }
+
+    void remapTodoTree(_TodoNode node) {
+      final todo = node.todo;
+      final oldId = todo.id;
+      todo.id = plan.todoIdMap[oldId] ?? oldId;
+      todo.folderIds = _remapFolderRefs(
+        folderIds: todo.folderIds,
+        folderIdMap: plan.folderIdMap,
+        validFolderIdsAfterImport: plan.validFolderIdsAfterImport,
+      );
+      for (final child in node.children) {
+        remapTodoTree(child);
+      }
+    }
+
+    for (final root in todoNodes) {
+      remapTodoTree(root);
+    }
+  }
+
+  List<int> _remapFolderRefs({
+    required List<int> folderIds,
+    required Map<int, int> folderIdMap,
+    required Set<int> validFolderIdsAfterImport,
+  }) {
+    final remapped = <int>[];
+    final seen = <int>{};
+    for (final folderId in folderIds) {
+      final mapped = folderIdMap[folderId] ?? folderId;
+      if (!validFolderIdsAfterImport.contains(mapped)) continue;
+      if (seen.add(mapped)) {
+        remapped.add(mapped);
+      }
+    }
+    return remapped;
   }
 
   Future<void> _upsertTodoTree(List<_TodoNode> roots) async {
@@ -762,6 +875,27 @@ class _TodoNode {
     required this.todo,
     required this.children,
   });
+}
+
+class _MergeRemapPlan {
+  final Map<int, int> folderIdMap;
+  final Map<int, int> noteIdMap;
+  final Map<int, int> todoIdMap;
+  final Set<int> validFolderIdsAfterImport;
+
+  const _MergeRemapPlan({
+    required this.folderIdMap,
+    required this.noteIdMap,
+    required this.todoIdMap,
+    required this.validFolderIdsAfterImport,
+  });
+
+  int get remappedFolderCount =>
+      folderIdMap.entries.where((entry) => entry.key != entry.value).length;
+  int get remappedNoteCount =>
+      noteIdMap.entries.where((entry) => entry.key != entry.value).length;
+  int get remappedTodoCount =>
+      todoIdMap.entries.where((entry) => entry.key != entry.value).length;
 }
 
 String _stableHash8(String input) {
