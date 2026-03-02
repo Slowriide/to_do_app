@@ -42,6 +42,33 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: '/note/:id',
+      builder: (context, state) {
+        final rawId = state.pathParameters['id'];
+        final noteId = int.tryParse(rawId ?? '');
+        if (noteId == null) {
+          return const _RouteDataErrorPage(
+            title: 'Invalid Note Link',
+            message: 'The requested note id is invalid.',
+          );
+        }
+        return _NoteByIdLoaderPage(noteId: noteId);
+      },
+    ),
+    GoRoute(
+      path: '/:id(\\d+)',
+      builder: (context, state) {
+        final noteId = int.tryParse(state.pathParameters['id'] ?? '');
+        if (noteId == null) {
+          return const _RouteDataErrorPage(
+            title: 'Invalid Note Link',
+            message: 'The requested note id is invalid.',
+          );
+        }
+        return _NoteByIdLoaderPage(noteId: noteId);
+      },
+    ),
+    GoRoute(
       path: '/archived-notes',
       builder: (context, state) => const ArchivedNotePage(),
     ),
@@ -118,6 +145,43 @@ class _RouteDataErrorPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NoteByIdLoaderPage extends StatelessWidget {
+  final int noteId;
+  const _NoteByIdLoaderPage({required this.noteId});
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = context.read<NoteRepository>();
+    return FutureBuilder<Note?>(
+      future: repo.getNoteById(noteId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const _RouteDataErrorPage(
+            title: 'Could not load note',
+            message: 'Something went wrong while loading this note.',
+          );
+        }
+
+        final note = snapshot.data;
+        if (note == null) {
+          return const _RouteDataErrorPage(
+            title: 'Note Not Found',
+            message: 'This note does not exist anymore.',
+          );
+        }
+
+        return EditNotePage(note: note);
+      },
     );
   }
 }

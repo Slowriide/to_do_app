@@ -14,6 +14,7 @@ class EditorPageScaffold extends StatelessWidget {
   final IconData actionIcon;
   final Widget? floatingActionButton;
   final FloatingActionButtonLocation? floatingActionButtonLocation;
+  final List<Widget>? appBarActions;
 
   const EditorPageScaffold({
     super.key,
@@ -30,6 +31,7 @@ class EditorPageScaffold extends StatelessWidget {
     this.actionIcon = Icons.save_rounded,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
+    this.appBarActions,
   });
 
   @override
@@ -47,6 +49,7 @@ class EditorPageScaffold extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
           ),
         ),
+        actions: appBarActions,
       ),
       body: SafeArea(
         top: false,

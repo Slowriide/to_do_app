@@ -12,6 +12,7 @@ import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
@@ -28,6 +29,7 @@ class EditNotePage extends StatefulWidget {
 
 class _EditNotePageState extends State<EditNotePage> {
   bool _alreadySaved = false;
+  bool _isPinnedToHomeWidget = false;
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _imagePicker = ImagePicker();
   late final GlobalKey<quill.EditorState> _contentEditorKey;
@@ -59,6 +61,13 @@ class _EditNotePageState extends State<EditNotePage> {
     _sketchStorage = createNoteSketchStorageService();
     _selectedDateReminder = widget.note.reminder;
     _selectedFolderIds = widget.note.folderIds.toSet();
+    _loadPinnedWidgetState();
+  }
+
+  Future<void> _loadPinnedWidgetState() async {
+    final isPinned = await PinnedNoteWidgetService.isPinned(widget.note.id);
+    if (!mounted) return;
+    setState(() => _isPinnedToHomeWidget = isPinned);
   }
 
   Future<void> _showEditOrDeleteDialog() async {
@@ -274,6 +283,31 @@ class _EditNotePageState extends State<EditNotePage> {
     context.go('/home');
   }
 
+  Future<void> _togglePinToHomeWidget() async {
+    if (_isPinnedToHomeWidget) {
+      await PinnedNoteWidgetService.clearPinnedNote();
+      if (!mounted) return;
+      setState(() => _isPinnedToHomeWidget = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Removed pinned note from home widget')),
+      );
+      return;
+    }
+
+    final snapshot = widget.note.copyWith(
+      title: NoteRichTextCodec.extractPlainText(_titleController.document),
+      text: NoteRichTextCodec.extractPlainText(_contentController.document),
+      reminder: _selectedDateReminder,
+      folderIds: _selectedFolderIds.toList(),
+    );
+    await PinnedNoteWidgetService.pinNote(snapshot);
+    if (!mounted) return;
+    setState(() => _isPinnedToHomeWidget = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pinned note to home widget')),
+    );
+  }
+
   Future<void> _pickFolder() async {
     final selected = await showNoteFolderPickerModal(
       context: context,
@@ -330,6 +364,21 @@ class _EditNotePageState extends State<EditNotePage> {
             pickDateReminderDate();
           }
         },
+        appBarActions: [
+          Tooltip(
+            message: _isPinnedToHomeWidget
+                ? 'Unpin from Home Widget'
+                : 'Pin to Home Widget',
+            child: IconButton(
+              onPressed: _togglePinToHomeWidget,
+              icon: Icon(
+                _isPinnedToHomeWidget
+                    ? Icons.push_pin
+                    : Icons.push_pin_outlined,
+              ),
+            ),
+          ),
+        ],
         onBackTap: _saveAndGoHome,
         actionLabel: 'Save Note',
         onActionTap: _saveAndGoHome,

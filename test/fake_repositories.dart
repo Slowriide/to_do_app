@@ -25,6 +25,14 @@ class FakeNoteRepository implements NoteRepository {
   Future<List<Note>> getNotes() async => List<Note>.from(_notes);
 
   @override
+  Future<Note?> getNoteById(int id) async {
+    for (final note in _notes) {
+      if (note.id == id) return note;
+    }
+    return null;
+  }
+
+  @override
   Future<void> updateNote(Note note) async {
     final index = _notes.indexWhere((item) => item.id == note.id);
     if (index < 0) {

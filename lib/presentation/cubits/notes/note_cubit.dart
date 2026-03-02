@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/core/storage/note_sketch_storage_service.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
@@ -39,6 +40,9 @@ class NoteCubit extends Cubit<NoteState> {
         );
 
       emit(NoteState.success(sortedNotes));
+      try {
+        await PinnedNoteWidgetService.refreshFromNotes(sortedNotes);
+      } catch (_) {}
     } catch (e) {
       emit(NoteState.error('Failed to load notes', state.notes));
     }

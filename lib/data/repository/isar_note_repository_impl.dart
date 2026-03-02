@@ -34,6 +34,12 @@ class IsarNoteRepositoryImpl implements NoteRepository {
   }
 
   @override
+  Future<Note?> getNoteById(int id) async {
+    final note = await db.noteIsars.get(id);
+    return note?.toDomain();
+  }
+
+  @override
   Future<void> updateNote(Note note) {
     //convert note in isartodo
     final noteIsar = NoteIsar.fromDomain(note);

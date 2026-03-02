@@ -6,6 +6,7 @@ import 'package:to_do_app/domain/models/note.dart';
 /// updating, and deleting notes in the data source.
 abstract class NoteRepository {
   Future<List<Note>> getNotes();
+  Future<Note?> getNoteById(int id);
 
   Future<void> addNote(Note newNote);
 

@@ -6,6 +6,7 @@ import 'package:to_do_app/core/config/local_storage/local_storage.dart';
 import 'package:to_do_app/core/config/router/app_router.dart';
 import 'package:to_do_app/core/config/theme/app_theme.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
+import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/domain/repository/folder_repository.dart';
@@ -32,6 +33,7 @@ void main() async {
 
   // Initialize notification service.
   await NotificationService().init();
+  await PinnedNoteWidgetService.initialize();
 
   final repositories = await createAppRepositories();
 
