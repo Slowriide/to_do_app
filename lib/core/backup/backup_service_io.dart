@@ -142,6 +142,14 @@ class BackupServiceImpl extends BackupService {
         ));
       }
 
+      if (mode == ImportMode.merge) {
+        await _assertNoMergeIdConflicts(
+          folders: folders,
+          notes: notes,
+          todoNodes: todoNodes,
+        );
+      }
+
       await db.writeTxn(() async {
         if (mode == ImportMode.replace) {
           await db.noteIsars.clear();
@@ -165,6 +173,49 @@ class BackupServiceImpl extends BackupService {
     } catch (e) {
       throw BackupImportException('Failed to import backup: $e');
     }
+  }
+
+  Future<void> _assertNoMergeIdConflicts({
+    required List<FolderIsar> folders,
+    required List<NoteIsar> notes,
+    required List<_TodoNode> todoNodes,
+  }) async {
+    final incomingFolderIds = folders.map((f) => f.id).toSet();
+    final incomingNoteIds = notes.map((n) => n.id).toSet();
+    final incomingTodoIds = <int>{};
+
+    void collect(_TodoNode node) {
+      incomingTodoIds.add(node.todo.id);
+      for (final child in node.children) {
+        collect(child);
+      }
+    }
+
+    for (final root in todoNodes) {
+      collect(root);
+    }
+
+    final existingFolders =
+        await db.folderIsars.getAll(incomingFolderIds.toList(growable: false));
+    final existingNotes =
+        await db.noteIsars.getAll(incomingNoteIds.toList(growable: false));
+    final existingTodos =
+        await db.todoIsars.getAll(incomingTodoIds.toList(growable: false));
+
+    final folderConflicts =
+        existingFolders.whereType<FolderIsar>().map((f) => f.id).toList();
+    final noteConflicts = existingNotes.whereType<NoteIsar>().map((n) => n.id).toList();
+    final todoConflicts = existingTodos.whereType<TodoIsar>().map((t) => t.id).toList();
+
+    if (folderConflicts.isEmpty && noteConflicts.isEmpty && todoConflicts.isEmpty) {
+      return;
+    }
+
+    throw BackupImportException(
+      'Merge import blocked due to existing IDs. '
+      'Folders: ${folderConflicts.length}, Notes: ${noteConflicts.length}, Todos: ${todoConflicts.length}. '
+      'Use replace mode or export from this device first and merge externally.',
+    );
   }
 
   Future<void> _upsertTodoTree(List<_TodoNode> roots) async {
