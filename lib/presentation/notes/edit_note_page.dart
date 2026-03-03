@@ -11,7 +11,6 @@ import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/common/utils/quill_auto_linker.dart';
-import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
@@ -259,19 +258,6 @@ class _EditNotePageState extends State<EditNotePage> {
       reminder: reminderToSave,
       folderIds: _selectedFolderIds.toList(),
     );
-    if (widget.note.reminder != null) {
-      await NotificationService().cancelNotification(widget.note.id);
-    }
-
-    if (reminderToSave != null) {
-      await NotificationService().showNotification(
-        id: widget.note.id,
-        title: updatedNote.title,
-        body: updatedNote.text,
-        scheduledDate: reminderToSave,
-      );
-    }
-
     await noteCubit.updateNote(updatedNote);
   }
 

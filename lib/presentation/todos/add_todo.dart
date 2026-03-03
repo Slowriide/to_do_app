@@ -10,7 +10,6 @@ import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
-import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/todo.dart';
@@ -151,14 +150,6 @@ class _AddTodoState extends State<AddTodo> {
           order: index,
         );
       }).toList();
-
-      if (_reminderDate != null) {
-        await NotificationService().showNotification(
-          id: uniqueId,
-          title: title,
-          scheduledDate: _reminderDate!,
-        );
-      }
 
       if (_reminderDate != null) {
         await todoCubit.addTodo(

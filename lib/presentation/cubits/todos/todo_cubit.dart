@@ -31,18 +31,7 @@ class TodoCubit extends Cubit<TodoState> {
     emit(TodoState.loading(state.todos));
     try {
       final todosList = await repository.getTodos();
-
-      final sortedTodos = [...todosList]..sort(
-          (a, b) {
-            if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
-            return a.isPinned ? -1 : 1;
-          },
-        );
-
-      emit(TodoState.success(sortedTodos));
-      try {
-        await PinnedNoteWidgetService.refreshFromTodos(sortedTodos);
-      } catch (_) {}
+      await _emitSortedTodos(todosList);
     } catch (e) {
       emit(TodoState.error('Failed to load todos', state.todos));
     }
@@ -75,7 +64,8 @@ class TodoCubit extends Cubit<TodoState> {
       folderIds: folderIds,
     );
     await repository.addTodo(newTodo);
-    await loadTodos();
+    await _syncReminder(newTodo);
+    await _emitSortedTodos([...state.todos, newTodo]);
   }
 
   /// Deletes the given todo and cancels its notification.
@@ -83,8 +73,10 @@ class TodoCubit extends Cubit<TodoState> {
   /// Then reloads the todos list.
   Future<void> deleteTodo(Todo todo) async {
     await repository.deleteTodo(todo);
-    await loadTodos();
     await NotificationService().cancelNotification(todo.id);
+    await _emitSortedTodos(
+      state.todos.where((item) => item.id != todo.id).toList(),
+    );
   }
 
   /// Updates the given todo and reloads the list.
@@ -92,14 +84,8 @@ class TodoCubit extends Cubit<TodoState> {
   /// If the todo has a reminder, schedules a notification.
   Future<void> updateTodo(Todo todo) async {
     await repository.updateTodo(todo);
-    await loadTodos();
-    if (todo.reminder != null) {
-      await NotificationService().showNotification(
-        id: todo.id,
-        title: todo.title,
-        scheduledDate: todo.reminder!,
-      );
-    }
+    await _syncReminder(todo);
+    await _replaceLocalTodo(todo);
   }
 
   /// Updates a list of todos and reloads the list.
@@ -108,21 +94,18 @@ class TodoCubit extends Cubit<TodoState> {
   Future<void> updateTodos(List<Todo> todos) async {
     await repository.updateTodos(todos);
     for (final todo in todos) {
-      if (todo.reminder == null) continue;
-      await NotificationService().showNotification(
-        id: todo.id,
-        title: todo.title,
-        scheduledDate: todo.reminder!,
-      );
+      await _syncReminder(todo);
     }
-    await loadTodos();
+    final byId = {for (final todo in todos) todo.id: todo};
+    final merged = state.todos.map((todo) => byId[todo.id] ?? todo).toList();
+    await _emitSortedTodos(merged);
   }
 
   /// Toggles completion state of a todo, updates it, and reloads the list.
   Future<void> toggleCompletion(Todo todo) async {
     final updatedTodo = todo.toggleCompletition();
     await repository.updateTodo(updatedTodo);
-    await loadTodos();
+    await _replaceLocalTodo(updatedTodo);
   }
 
   /// Deletes multiple todos and cancels their notifications.
@@ -131,7 +114,10 @@ class TodoCubit extends Cubit<TodoState> {
       await repository.deleteTodo(todo);
       await NotificationService().cancelNotification(todo.id);
     }
-    await loadTodos();
+    final idsToDelete = todosToDelete.map((todo) => todo.id).toSet();
+    await _emitSortedTodos(
+      state.todos.where((todo) => !idsToDelete.contains(todo.id)).toList(),
+    );
   }
 
   /// Updates a subtask and reloads the list.
@@ -246,5 +232,36 @@ class TodoCubit extends Cubit<TodoState> {
     };
 
     return todos.map((todo) => activeById[todo.id] ?? todo).toList();
+  }
+
+  Future<void> _syncReminder(Todo todo) async {
+    if (todo.reminder == null) {
+      await NotificationService().cancelNotification(todo.id);
+      return;
+    }
+    await NotificationService().showNotification(
+      id: todo.id,
+      title: todo.title,
+      scheduledDate: todo.reminder!,
+    );
+  }
+
+  Future<void> _replaceLocalTodo(Todo updatedTodo) async {
+    final todos = state.todos
+        .map((todo) => todo.id == updatedTodo.id ? updatedTodo : todo)
+        .toList();
+    await _emitSortedTodos(todos);
+  }
+
+  Future<void> _emitSortedTodos(List<Todo> todos) async {
+    final sortedTodos = [...todos]..sort((a, b) {
+        if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
+        return a.isPinned ? -1 : 1;
+      });
+
+    emit(TodoState.success(sortedTodos));
+    try {
+      await PinnedNoteWidgetService.refreshFromTodos(sortedTodos);
+    } catch (_) {}
   }
 }

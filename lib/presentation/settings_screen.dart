@@ -4,8 +4,10 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:to_do_app/common/widgets/my_drawer.dart';
 import 'package:to_do_app/core/backup/backup_service.dart';
 import 'package:to_do_app/core/config/theme/theme_presets.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/data/repository/isar_note_repository_impl.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
+import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
@@ -83,6 +85,8 @@ class _SettingsState extends State<Settings> {
     final folderCubit = context.read<FolderCubit>();
     final noteCubit = context.read<NoteCubit>();
     final todoCubit = context.read<TodoCubit>();
+    final noteRepository = context.read<NoteRepository>();
+    final todoRepository = context.read<TodoRepository>();
     if (backupService == null) {
       _showSnack('Backup is not available on this platform.');
       return;
@@ -101,6 +105,10 @@ class _SettingsState extends State<Settings> {
       await folderCubit.loadFolders();
       await noteCubit.loadNotes();
       await todoCubit.loadTodos();
+      await NotificationService().syncRemindersFromDatabase(
+        noteRepository: noteRepository,
+        todoRepository: todoRepository,
+      );
       _showSnack('Backup import completed.');
     } catch (e) {
       _showSnack('Import failed: $e');

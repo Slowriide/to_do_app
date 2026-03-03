@@ -36,6 +36,10 @@ void main() async {
   await PinnedNoteWidgetService.initialize();
 
   final repositories = await createAppRepositories();
+  await NotificationService().syncRemindersFromDatabase(
+    noteRepository: repositories.noteRepository,
+    todoRepository: repositories.todoRepository,
+  );
 
   // Run the app with injected repositories.
   runApp(MyApp(

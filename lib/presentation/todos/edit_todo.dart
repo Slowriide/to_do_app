@@ -10,7 +10,6 @@ import 'package:to_do_app/common/utils/quill_auto_linker.dart';
 import 'package:to_do_app/common/widgets/editor_shell.dart';
 import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/widgets/subtasks_items_view.dart';
-import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
@@ -214,18 +213,6 @@ class _EditTodoState extends State<EditTodo> {
         reminder: reminderToSave,
         folderIds: _selectedFolderIds.toList(),
       );
-      if (widget.todo.reminder != null) {
-        await NotificationService().cancelNotification(widget.todo.id);
-      }
-
-      if (reminderToSave != null) {
-        await NotificationService().showNotification(
-          id: widget.todo.id,
-          title: updatedTodo.title,
-          scheduledDate: reminderToSave,
-        );
-      }
-
       await todoCubit.updateTodo(updatedTodo);
     }
   }

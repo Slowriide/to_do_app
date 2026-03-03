@@ -30,19 +30,7 @@ class NoteCubit extends Cubit<NoteState> {
     emit(NoteState.loading(state.notes));
     try {
       final notesList = await repository.getNotes();
-
-      // Order pinned first, then by manual order.
-      final sortedNotes = [...notesList]..sort(
-          (a, b) {
-            if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
-            return a.isPinned ? -1 : 1;
-          },
-        );
-
-      emit(NoteState.success(sortedNotes));
-      try {
-        await PinnedNoteWidgetService.refreshFromNotes(sortedNotes);
-      } catch (_) {}
+      await _emitSortedNotes(notesList);
     } catch (e) {
       emit(NoteState.error('Failed to load notes', state.notes));
     }
@@ -76,8 +64,8 @@ class NoteCubit extends Cubit<NoteState> {
     );
 
     await repository.addNote(newNote);
-
-    await loadNotes();
+    await _syncReminder(newNote);
+    await _emitSortedNotes([...state.notes, newNote]);
   }
 
   /// Deletes multiple notes from the repository.
@@ -90,12 +78,13 @@ class NoteCubit extends Cubit<NoteState> {
         sketchStorage.extractOwnedSketchPathsFromDelta(note.richTextDeltaJson),
       );
       await repository.deleteNote(note);
-      if (note.reminder != null) {
-        await NotificationService().cancelNotification(note.id);
-      }
+      await NotificationService().cancelNotification(note.id);
     }
     await sketchStorage.deleteFiles(sketchPaths);
-    await loadNotes();
+    final idsToDelete = notesToDelete.map((note) => note.id).toSet();
+    await _emitSortedNotes(
+      state.notes.where((note) => !idsToDelete.contains(note.id)).toList(),
+    );
   }
 
   /// Toggles the completion status of a given note.
@@ -105,8 +94,7 @@ class NoteCubit extends Cubit<NoteState> {
     final updatedNote = note.toggleCompletion();
 
     await repository.updateNote(updatedNote);
-
-    await loadNotes();
+    await _replaceLocalNote(updatedNote);
   }
 
   /// Updates an existing note in the repository.
@@ -114,16 +102,8 @@ class NoteCubit extends Cubit<NoteState> {
   /// Reloads notes and schedules a notification if the note has a reminder.
   Future<void> updateNote(Note updateNote) async {
     await repository.updateNote(updateNote);
-    await loadNotes();
-
-    if (updateNote.reminder != null) {
-      await NotificationService().showNotification(
-        id: updateNote.id,
-        title: updateNote.title,
-        body: updateNote.text,
-        scheduledDate: updateNote.reminder!,
-      );
-    }
+    await _syncReminder(updateNote);
+    await _replaceLocalNote(updateNote);
   }
 
   /// Updates multiple notes in the repository.
@@ -132,15 +112,11 @@ class NoteCubit extends Cubit<NoteState> {
   Future<void> updateNotes(List<Note> notes) async {
     await repository.updateNotes(notes);
     for (final note in notes) {
-      if (note.reminder == null) continue;
-      await NotificationService().showNotification(
-        id: note.id,
-        title: note.title,
-        body: note.text,
-        scheduledDate: note.reminder!,
-      );
+      await _syncReminder(note);
     }
-    await loadNotes();
+    final byId = {for (final note in notes) note.id: note};
+    final merged = state.notes.map((note) => byId[note.id] ?? note).toList();
+    await _emitSortedNotes(merged);
   }
 
   /// Reorders notes based on the UI order and persists it.
@@ -248,5 +224,37 @@ class NoteCubit extends Cubit<NoteState> {
     };
 
     return notes.map((note) => activeById[note.id] ?? note).toList();
+  }
+
+  Future<void> _syncReminder(Note note) async {
+    if (note.reminder == null) {
+      await NotificationService().cancelNotification(note.id);
+      return;
+    }
+    await NotificationService().showNotification(
+      id: note.id,
+      title: note.title,
+      body: note.text,
+      scheduledDate: note.reminder!,
+    );
+  }
+
+  Future<void> _replaceLocalNote(Note updatedNote) async {
+    final notes = state.notes
+        .map((note) => note.id == updatedNote.id ? updatedNote : note)
+        .toList();
+    await _emitSortedNotes(notes);
+  }
+
+  Future<void> _emitSortedNotes(List<Note> notes) async {
+    final sortedNotes = [...notes]..sort((a, b) {
+        if (a.isPinned == b.isPinned) return a.order.compareTo(b.order);
+        return a.isPinned ? -1 : 1;
+      });
+
+    emit(NoteState.success(sortedNotes));
+    try {
+      await PinnedNoteWidgetService.refreshFromNotes(sortedNotes);
+    } catch (_) {}
   }
 }

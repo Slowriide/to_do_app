@@ -1,5 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:to_do_app/domain/repository/note_repository.dart';
+import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 
@@ -123,6 +125,36 @@ class NotificationService {
   /// Cancels a notification with the given [id], if any exists.
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id: _normalizeNotificationId(id));
+  }
+
+  /// Re-schedules future reminders from persisted notes and todos.
+  Future<void> syncRemindersFromDatabase({
+    required NoteRepository noteRepository,
+    required TodoRepository todoRepository,
+  }) async {
+    final now = DateTime.now();
+    final notes = await noteRepository.getNotes();
+    for (final note in notes) {
+      final reminder = note.reminder;
+      if (reminder == null || !reminder.isAfter(now)) continue;
+      await showNotification(
+        id: note.id,
+        title: note.title,
+        body: note.text,
+        scheduledDate: reminder,
+      );
+    }
+
+    final todos = await todoRepository.getTodos();
+    for (final todo in todos) {
+      final reminder = todo.reminder;
+      if (reminder == null || !reminder.isAfter(now)) continue;
+      await showNotification(
+        id: todo.id,
+        title: todo.title,
+        scheduledDate: reminder,
+      );
+    }
   }
 
   int _normalizeNotificationId(int rawId) {

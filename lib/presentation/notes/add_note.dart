@@ -11,7 +11,6 @@ import 'package:to_do_app/common/widgets/note_color_toolbar.dart';
 import 'package:to_do_app/common/utils/note_folder_picker_modal.dart';
 import 'package:to_do_app/common/utils/note_rich_text_codec.dart';
 import 'package:to_do_app/common/utils/quill_auto_linker.dart';
-import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/utils/id_generator.dart';
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
@@ -229,15 +228,6 @@ class _AddNoteState extends State<AddNote> {
       final richTextDeltaJson =
           NoteRichTextCodec.encodeDelta(_contentController.document);
       final uniqueId = IdGenerator.next();
-
-      if (_reminderDate != null) {
-        await NotificationService().showNotification(
-          id: uniqueId,
-          title: title,
-          body: text,
-          scheduledDate: _reminderDate!,
-        );
-      }
 
       if (_reminderDate != null) {
         await noteCubit.addNote(

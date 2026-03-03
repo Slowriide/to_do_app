@@ -16,6 +16,8 @@ import 'package:to_do_app/data/models/isar_todo.dart';
 
 class BackupServiceImpl extends BackupService {
   static const int _schemaVersion = 2;
+  static const int _maxZipBytes = 50 * 1024 * 1024;
+  static const int _maxUncompressedBytes = 200 * 1024 * 1024;
 
   final Isar db;
   final NoteSketchStorageService sketchStorage;
@@ -104,7 +106,22 @@ class BackupServiceImpl extends BackupService {
       }
 
       final bytes = await zipFile.readAsBytes();
+      if (bytes.length > _maxZipBytes) {
+        throw BackupImportException(
+          'Backup ZIP exceeds limit of ${_maxZipBytes ~/ (1024 * 1024)}MB.',
+        );
+      }
       final archive = ZipDecoder().decodeBytes(bytes, verify: true);
+      var uncompressedBytes = 0;
+      for (final entry in archive.files) {
+        if (!entry.isFile) continue;
+        uncompressedBytes += entry.size;
+        if (uncompressedBytes > _maxUncompressedBytes) {
+          throw BackupImportException(
+            'Backup content exceeds uncompressed limit of ${_maxUncompressedBytes ~/ (1024 * 1024)}MB.',
+          );
+        }
+      }
       final backupEntry = archive.files.firstWhere(
         (file) => file.name == 'backup.json' && file.isFile,
         orElse: () => throw BackupFormatException('ZIP does not contain backup.json'),
@@ -161,6 +178,12 @@ class BackupServiceImpl extends BackupService {
           'todos=${remapPlan.remappedTodoCount}',
         );
       }
+      await _validateImportedEntities(
+        mode: mode,
+        folders: folders,
+        notes: notes,
+        todoNodes: todoNodes,
+      );
 
       await db.writeTxn(() async {
         if (mode == ImportMode.replace) {
@@ -184,6 +207,116 @@ class BackupServiceImpl extends BackupService {
       rethrow;
     } catch (e) {
       throw BackupImportException('Failed to import backup: $e');
+    }
+  }
+
+  Future<void> _validateImportedEntities({
+    required ImportMode mode,
+    required List<FolderIsar> folders,
+    required List<NoteIsar> notes,
+    required List<_TodoNode> todoNodes,
+  }) async {
+    final folderIds = folders.map((folder) => folder.id).toList(growable: false);
+    final noteIds = notes.map((note) => note.id).toList(growable: false);
+    final todoIds = <int>[];
+    final todoFolderRefs = <int>[];
+
+    void collectTodos(_TodoNode node) {
+      todoIds.add(node.todo.id);
+      todoFolderRefs.addAll(node.todo.folderIds);
+      for (final child in node.children) {
+        collectTodos(child);
+      }
+    }
+
+    for (final root in todoNodes) {
+      collectTodos(root);
+    }
+
+    _ensureNoDuplicates(folderIds, entityName: 'folder');
+    _ensureNoDuplicates(noteIds, entityName: 'note');
+    _ensureNoDuplicates(todoIds, entityName: 'todo');
+
+    final validFolderIds = <int>{...folderIds};
+    if (mode == ImportMode.merge) {
+      final existingFolderIds =
+          (await db.folderIsars.where().idProperty().findAll()).toSet();
+      final duplicateFolderId = folderIds.firstWhere(
+        existingFolderIds.contains,
+        orElse: () => -1,
+      );
+      if (duplicateFolderId != -1) {
+        throw BackupImportException(
+          'Merge produced duplicate folder id=$duplicateFolderId.',
+        );
+      }
+      validFolderIds.addAll(existingFolderIds);
+    }
+
+    for (final folder in folders) {
+      final parentId = folder.parentId;
+      if (parentId == null) continue;
+      if (!validFolderIds.contains(parentId)) {
+        throw BackupImportException(
+          'Folder ${folder.id} has invalid parentId=$parentId.',
+        );
+      }
+    }
+
+    for (final note in notes) {
+      for (final folderId in note.folderIds) {
+        if (!validFolderIds.contains(folderId)) {
+          throw BackupImportException(
+            'Note ${note.id} references invalid folderId=$folderId.',
+          );
+        }
+      }
+    }
+
+    for (final folderId in todoFolderRefs) {
+      if (!validFolderIds.contains(folderId)) {
+        throw BackupImportException(
+          'Todo references invalid folderId=$folderId.',
+        );
+      }
+    }
+
+    if (mode == ImportMode.merge) {
+      final existingNoteIds =
+          (await db.noteIsars.where().idProperty().findAll()).toSet();
+      final existingTodoIds =
+          (await db.todoIsars.where().idProperty().findAll()).toSet();
+      final duplicateNoteId = noteIds.firstWhere(
+        existingNoteIds.contains,
+        orElse: () => -1,
+      );
+      if (duplicateNoteId != -1) {
+        throw BackupImportException(
+          'Merge produced duplicate note id=$duplicateNoteId.',
+        );
+      }
+      final duplicateTodoId = todoIds.firstWhere(
+        existingTodoIds.contains,
+        orElse: () => -1,
+      );
+      if (duplicateTodoId != -1) {
+        throw BackupImportException(
+          'Merge produced duplicate todo id=$duplicateTodoId.',
+        );
+      }
+    }
+  }
+
+  void _ensureNoDuplicates(
+    List<int> ids, {
+    required String entityName,
+  }) {
+    final seen = <int>{};
+    for (final id in ids) {
+      if (seen.add(id)) continue;
+      throw BackupImportException(
+        'Duplicate $entityName id detected after remap: $id.',
+      );
     }
   }
 
