@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:to_do_app/common/widgets/my_drawer.dart';
 import 'package:to_do_app/core/backup/backup_service.dart';
+import 'package:to_do_app/core/backup/import_recovery_service.dart';
 import 'package:to_do_app/core/config/theme/theme_presets.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
@@ -104,6 +105,9 @@ class _SettingsState extends State<Settings> {
     final noteRepository = context.read<NoteRepository>();
     final todoRepository = context.read<TodoRepository>();
     final notificationService = NotificationService();
+    final recoveryService = ImportRecoveryService(
+      notificationService: notificationService,
+    );
     if (backupService == null) {
       _showSnack('Backup is not available on this platform.');
       return;
@@ -117,6 +121,7 @@ class _SettingsState extends State<Settings> {
 
     try {
       _showSnack('Importing backup...');
+      await recoveryService.markImportStarted();
       await backupService.importBackup(pickedFile, mode: mode);
       if (!mounted) return;
       await _runPostImportSideEffects(
@@ -128,6 +133,7 @@ class _SettingsState extends State<Settings> {
         noteRepository: noteRepository,
         todoRepository: todoRepository,
       );
+      await recoveryService.clearImportMarker();
       _showSnack('Backup import completed.');
     } catch (e) {
       _showSnack('Import failed: $e');

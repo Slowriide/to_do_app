@@ -15,6 +15,8 @@ class LocalStorage {
   static const String _backgroundColorSourceKey = 'backgroundColorSource';
   static const String _customBackgroundHexKey = 'customBackgroundHex';
   static const String _notesViewModeKey = 'notesViewMode';
+  static const String _importInProgressKey = 'importInProgress';
+  static const String _importStartedAtEpochMsKey = 'importStartedAtEpochMs';
 
   static Future<void> configurePrefs() async {
     prefs = await SharedPreferences.getInstance();
@@ -71,5 +73,25 @@ class LocalStorage {
       return;
     }
     prefs.setString(_notesViewModeKey, 'grid');
+  }
+
+  static bool get importInProgress => prefs.getBool(_importInProgressKey) ?? false;
+
+  static int? get importStartedAtEpochMs =>
+      prefs.getInt(_importStartedAtEpochMsKey);
+
+  static Future<void> markImportInProgress({
+    int? startedAtEpochMs,
+  }) async {
+    await prefs.setBool(_importInProgressKey, true);
+    await prefs.setInt(
+      _importStartedAtEpochMsKey,
+      startedAtEpochMs ?? DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  static Future<void> clearImportInProgress() async {
+    await prefs.setBool(_importInProgressKey, false);
+    await prefs.remove(_importStartedAtEpochMsKey);
   }
 }

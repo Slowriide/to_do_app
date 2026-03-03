@@ -6,6 +6,7 @@ import 'package:to_do_app/core/config/local_storage/local_storage.dart';
 import 'package:to_do_app/core/config/router/app_router.dart';
 import 'package:to_do_app/core/config/theme/app_theme.dart';
 import 'package:to_do_app/core/backup/backup_service_base.dart';
+import 'package:to_do_app/core/backup/import_recovery_service.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
@@ -26,6 +27,29 @@ import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
 /// then injects repositories and sets up Bloc providers for state management.
 ///
 /// Also handles theme switching and routing configuration.
+Future<bool> recoverOrSyncRemindersOnStartup({
+  required NoteRepository noteRepository,
+  required TodoRepository todoRepository,
+  NotificationService? notificationService,
+  ImportRecoveryService? importRecoveryService,
+}) async {
+  final notifications = notificationService ?? NotificationService();
+  final recovery = importRecoveryService ??
+      ImportRecoveryService(notificationService: notifications);
+  final recovered = await recovery.recoverIfNeeded(
+    noteRepository: noteRepository,
+    todoRepository: todoRepository,
+  );
+  if (recovered) {
+    return true;
+  }
+  await notifications.syncRemindersFromDatabase(
+    noteRepository: noteRepository,
+    todoRepository: todoRepository,
+  );
+  return false;
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -37,7 +61,7 @@ void main() async {
   await PinnedNoteWidgetService.initialize();
 
   final repositories = await createAppRepositories();
-  await NotificationService().syncRemindersFromDatabase(
+  await recoverOrSyncRemindersOnStartup(
     noteRepository: repositories.noteRepository,
     todoRepository: repositories.todoRepository,
   );

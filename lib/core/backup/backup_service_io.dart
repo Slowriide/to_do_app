@@ -14,6 +14,19 @@ import 'package:to_do_app/data/models/isar_folder.dart';
 import 'package:to_do_app/data/models/isar_note.dart';
 import 'package:to_do_app/data/models/isar_todo.dart';
 
+enum BackupImportCheckpoint {
+  afterReplaceClear,
+  afterFoldersPutAll,
+  beforeNotesPutAll,
+  todoUpsertAfterPutAll,
+}
+
+class BackupImportHooks {
+  final void Function(BackupImportCheckpoint checkpoint)? onCheckpoint;
+
+  const BackupImportHooks({this.onCheckpoint});
+}
+
 class BackupServiceImpl extends BackupService {
   static const int _schemaVersion = 2;
   static const int _maxZipBytes = 50 * 1024 * 1024;
@@ -21,10 +34,12 @@ class BackupServiceImpl extends BackupService {
 
   final Isar db;
   final NoteSketchStorageService sketchStorage;
+  final BackupImportHooks? importHooks;
 
   BackupServiceImpl(
     this.db, {
     NoteSketchStorageService? sketchStorage,
+    this.importHooks,
   }) : sketchStorage = sketchStorage ?? createNoteSketchStorageService();
 
   @override
@@ -211,11 +226,14 @@ class BackupServiceImpl extends BackupService {
         await db.noteIsars.clear();
         await db.folderIsars.clear();
         await db.todoIsars.clear();
+        _runImportCheckpoint(BackupImportCheckpoint.afterReplaceClear);
       }
 
       if (data.folders.isNotEmpty) {
         await db.folderIsars.putAll(data.folders);
+        _runImportCheckpoint(BackupImportCheckpoint.afterFoldersPutAll);
       }
+      _runImportCheckpoint(BackupImportCheckpoint.beforeNotesPutAll);
       if (data.notes.isNotEmpty) {
         await db.noteIsars.putAll(data.notes);
       }
@@ -547,6 +565,7 @@ class BackupServiceImpl extends BackupService {
 
     final todosToPut = allNodes.map((node) => node.todo).toList(growable: false);
     await db.todoIsars.putAll(todosToPut);
+    _runImportCheckpoint(BackupImportCheckpoint.todoUpsertAfterPutAll);
 
     if (staleSubtaskIds.isNotEmpty) {
       await db.todoIsars.deleteAll(staleSubtaskIds.toList(growable: false));
@@ -1042,6 +1061,10 @@ class BackupServiceImpl extends BackupService {
 
   Uint8List _readArchiveFileBytes(ArchiveFile file) {
     return Uint8List.fromList(file.content);
+  }
+
+  void _runImportCheckpoint(BackupImportCheckpoint checkpoint) {
+    importHooks?.onCheckpoint?.call(checkpoint);
   }
 }
 
