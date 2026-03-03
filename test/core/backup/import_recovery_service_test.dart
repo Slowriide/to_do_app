@@ -33,21 +33,52 @@ void main() {
     await LocalStorage.configurePrefs();
   });
 
-  test('startup recovery runs when import marker is set and clears marker', () async {
+  test('stale import marker is auto-cleared without recovery actions', () async {
     final notificationService = _SpyNotificationService();
     final recoveryService = ImportRecoveryService(
       notificationService: notificationService,
     );
+    final now = DateTime(2026, 3, 3, 12, 0, 0);
+    final staleStartedAt = now
+        .subtract(ImportRecoveryService.staleMarkerThreshold)
+        .subtract(const Duration(minutes: 1));
 
-    await recoveryService.markImportStarted();
+    await LocalStorage.markImportInProgress(
+      startedAtEpochMs: staleStartedAt.millisecondsSinceEpoch,
+    );
+    expect(LocalStorage.importInProgress, isTrue);
+
+    final didRecover = await recoveryService.recoverIfNeeded(
+      noteRepository: FakeNoteRepository(),
+      todoRepository: FakeTodoRepository(),
+      now: now,
+    );
+
+    expect(didRecover, isFalse);
+    expect(notificationService.cancelAllCalls, 0);
+    expect(notificationService.syncCalls, 0);
+    expect(LocalStorage.importInProgress, isFalse);
+    expect(LocalStorage.importStartedAtEpochMs, isNull);
+  });
+
+  test('recent marker triggers recovery and then clears marker', () async {
+    final notificationService = _SpyNotificationService();
+    final recoveryService = ImportRecoveryService(
+      notificationService: notificationService,
+    );
+    final now = DateTime(2026, 3, 3, 12, 0, 0);
+    final recentStartedAt = now.subtract(const Duration(minutes: 5));
+
+    await LocalStorage.markImportInProgress(
+      startedAtEpochMs: recentStartedAt.millisecondsSinceEpoch,
+    );
     expect(LocalStorage.importInProgress, isTrue);
     expect(LocalStorage.importStartedAtEpochMs, isNotNull);
 
-    final didRecover = await recoverOrSyncRemindersOnStartup(
+    final didRecover = await recoveryService.recoverIfNeeded(
       noteRepository: FakeNoteRepository(),
       todoRepository: FakeTodoRepository(),
-      notificationService: notificationService,
-      importRecoveryService: recoveryService,
+      now: now,
     );
 
     expect(didRecover, isTrue);
@@ -55,5 +86,25 @@ void main() {
     expect(notificationService.syncCalls, 1);
     expect(LocalStorage.importInProgress, isFalse);
     expect(LocalStorage.importStartedAtEpochMs, isNull);
+  });
+
+  test('startup with no marker skips cancelAll and performs normal sync only', () async {
+    final notificationService = _SpyNotificationService();
+    final recoveryService = ImportRecoveryService(
+      notificationService: notificationService,
+    );
+
+    expect(LocalStorage.importInProgress, isFalse);
+    final didRecover = await recoverOrSyncRemindersOnStartup(
+      noteRepository: FakeNoteRepository(),
+      todoRepository: FakeTodoRepository(),
+      notificationService: notificationService,
+      importRecoveryService: recoveryService,
+    );
+
+    expect(didRecover, isFalse);
+    expect(notificationService.cancelAllCalls, 0);
+    expect(notificationService.syncCalls, 1);
+    expect(LocalStorage.importInProgress, isFalse);
   });
 }

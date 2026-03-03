@@ -60,6 +60,19 @@ Future<void> runPostImportSideEffectsInOrder({
   }
 }
 
+@visibleForTesting
+Future<void> runImportFlowWithMarker({
+  required Future<void> Function() markImportStarted,
+  required Future<void> Function() runImport,
+  required Future<void> Function() runPostImportSideEffects,
+  required Future<void> Function() clearImportMarker,
+}) async {
+  await markImportStarted();
+  await runImport();
+  await runPostImportSideEffects();
+  await clearImportMarker();
+}
+
 class Settings extends StatefulWidget {
   const Settings({super.key});
 
@@ -151,19 +164,23 @@ class _SettingsState extends State<Settings> {
 
     try {
       _showSnack('Importing backup...');
-      await recoveryService.markImportStarted();
-      await backupService.importBackup(pickedFile, mode: mode);
-      if (!mounted) return;
-      await _runPostImportSideEffects(
-        mode: mode,
-        folderCubit: folderCubit,
-        noteCubit: noteCubit,
-        todoCubit: todoCubit,
-        notificationService: notificationService,
-        noteRepository: noteRepository,
-        todoRepository: todoRepository,
+      await runImportFlowWithMarker(
+        markImportStarted: recoveryService.markImportStarted,
+        runImport: () => backupService.importBackup(pickedFile, mode: mode),
+        runPostImportSideEffects: () async {
+          if (!mounted) return;
+          await _runPostImportSideEffects(
+            mode: mode,
+            folderCubit: folderCubit,
+            noteCubit: noteCubit,
+            todoCubit: todoCubit,
+            notificationService: notificationService,
+            noteRepository: noteRepository,
+            todoRepository: todoRepository,
+          );
+        },
+        clearImportMarker: recoveryService.clearImportMarker,
       );
-      await recoveryService.clearImportMarker();
       _showSnack('Backup import completed.');
     } catch (e) {
       _showSnack('Import failed: $e');
