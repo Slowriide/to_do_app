@@ -30,6 +30,36 @@ Future<void> resyncNotificationsAfterImport({
   );
 }
 
+@visibleForTesting
+Future<void> runPostImportSideEffectsInOrder({
+  required Future<void> Function() loadFolders,
+  required Future<void> Function() loadNotes,
+  required Future<void> Function() loadTodos,
+  required Future<void> Function() resyncNotifications,
+  required void Function(String message) logError,
+}) async {
+  try {
+    await loadFolders();
+  } catch (e, st) {
+    logError('settings/import post-commit folder refresh failed: $e\n$st');
+  }
+  try {
+    await loadNotes();
+  } catch (e, st) {
+    logError('settings/import post-commit note refresh failed: $e\n$st');
+  }
+  try {
+    await loadTodos();
+  } catch (e, st) {
+    logError('settings/import post-commit todo refresh failed: $e\n$st');
+  }
+  try {
+    await resyncNotifications();
+  } catch (e, st) {
+    logError('settings/import post-commit reminder resync failed: $e\n$st');
+  }
+}
+
 class Settings extends StatefulWidget {
   const Settings({super.key});
 
@@ -149,33 +179,18 @@ class _SettingsState extends State<Settings> {
     required NoteRepository noteRepository,
     required TodoRepository todoRepository,
   }) async {
-    try {
-      await folderCubit.loadFolders();
-    } catch (e, st) {
-      debugPrint('settings/import post-commit folder refresh failed: $e\n$st');
-    }
-    try {
-      await noteCubit.loadNotes();
-    } catch (e, st) {
-      debugPrint('settings/import post-commit note refresh failed: $e\n$st');
-    }
-    try {
-      await todoCubit.loadTodos();
-    } catch (e, st) {
-      debugPrint('settings/import post-commit todo refresh failed: $e\n$st');
-    }
-    try {
-      await resyncNotificationsAfterImport(
+    await runPostImportSideEffectsInOrder(
+      loadFolders: folderCubit.loadFolders,
+      loadNotes: noteCubit.loadNotes,
+      loadTodos: todoCubit.loadTodos,
+      resyncNotifications: () => resyncNotificationsAfterImport(
         mode: mode,
         notificationService: notificationService,
         noteRepository: noteRepository,
         todoRepository: todoRepository,
-      );
-    } catch (e, st) {
-      debugPrint(
-        'settings/import post-commit reminder resync failed: $e\n$st',
-      );
-    }
+      ),
+      logError: debugPrint,
+    );
   }
 
   String _toHexColor(Color color) {
