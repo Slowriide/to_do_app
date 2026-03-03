@@ -127,6 +127,11 @@ class NotificationService {
     await _notificationsPlugin.cancel(id: _normalizeNotificationId(id));
   }
 
+  /// Cancels all scheduled and shown notifications for this app.
+  Future<void> cancelAll() async {
+    await _notificationsPlugin.cancelAll();
+  }
+
   /// Re-schedules future reminders from persisted notes and todos.
   Future<void> syncRemindersFromDatabase({
     required NoteRepository noteRepository,

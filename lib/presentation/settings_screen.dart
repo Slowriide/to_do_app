@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:to_do_app/common/widgets/my_drawer.dart';
@@ -12,6 +13,22 @@ import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+
+@visibleForTesting
+Future<void> resyncNotificationsAfterImport({
+  required ImportMode mode,
+  required NotificationService notificationService,
+  required NoteRepository noteRepository,
+  required TodoRepository todoRepository,
+}) async {
+  if (mode == ImportMode.replace) {
+    await notificationService.cancelAll();
+  }
+  await notificationService.syncRemindersFromDatabase(
+    noteRepository: noteRepository,
+    todoRepository: todoRepository,
+  );
+}
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -87,6 +104,7 @@ class _SettingsState extends State<Settings> {
     final todoCubit = context.read<TodoCubit>();
     final noteRepository = context.read<NoteRepository>();
     final todoRepository = context.read<TodoRepository>();
+    final notificationService = NotificationService();
     if (backupService == null) {
       _showSnack('Backup is not available on this platform.');
       return;
@@ -105,7 +123,9 @@ class _SettingsState extends State<Settings> {
       await folderCubit.loadFolders();
       await noteCubit.loadNotes();
       await todoCubit.loadTodos();
-      await NotificationService().syncRemindersFromDatabase(
+      await resyncNotificationsAfterImport(
+        mode: mode,
+        notificationService: notificationService,
         noteRepository: noteRepository,
         todoRepository: todoRepository,
       );

@@ -113,6 +113,21 @@ Map<String, dynamic> _buildMergePayload() {
   };
 }
 
+Map<String, dynamic> _buildCyclePayload(List<Map<String, dynamic>> folders) {
+  return <String, dynamic>{
+    'metadata': <String, dynamic>{
+      'schemaVersion': 2,
+      'exportedAt': DateTime.now().toUtc().toIso8601String(),
+      'appVersion': '1.0.0+1',
+      'platform': 'test',
+      'includeMedia': false,
+    },
+    'folders': folders,
+    'notes': const <Map<String, dynamic>>[],
+    'todos': const <Map<String, dynamic>>[],
+  };
+}
+
 Future<void> _seedExisting(Isar db) async {
   await db.writeTxn(() async {
     await db.folderIsars.put(
@@ -259,5 +274,64 @@ void main() {
 
     expect(importedRoot.folderIds.toSet(), {importedParent!.id, importedChild!.id});
     expect(child.folderIds.toSet(), {importedChild.id});
+  });
+
+  test('import fails when folder cycle A->B->A is detected', () async {
+    final zip = await _writeBackupZip(
+      tempDir,
+      _buildCyclePayload(<Map<String, dynamic>>[
+        <String, dynamic>{
+          'id': 100,
+          'name': 'A',
+          'parentId': 101,
+          'order': 0,
+          'createdAt': DateTime.utc(2026, 1, 1).toIso8601String(),
+        },
+        <String, dynamic>{
+          'id': 101,
+          'name': 'B',
+          'parentId': 100,
+          'order': 1,
+          'createdAt': DateTime.utc(2026, 1, 1).toIso8601String(),
+        },
+      ]),
+    );
+
+    await expectLater(
+      () => service.importBackup(zip, mode: ImportMode.replace),
+      throwsA(
+        isA<BackupImportException>().having(
+          (e) => e.message,
+          'message',
+          contains('Folder cycle detected'),
+        ),
+      ),
+    );
+  });
+
+  test('import fails when folder self-cycle A->A is detected', () async {
+    final zip = await _writeBackupZip(
+      tempDir,
+      _buildCyclePayload(<Map<String, dynamic>>[
+        <String, dynamic>{
+          'id': 200,
+          'name': 'A',
+          'parentId': 200,
+          'order': 0,
+          'createdAt': DateTime.utc(2026, 1, 1).toIso8601String(),
+        },
+      ]),
+    );
+
+    await expectLater(
+      () => service.importBackup(zip, mode: ImportMode.replace),
+      throwsA(
+        isA<BackupImportException>().having(
+          (e) => e.message,
+          'message',
+          contains('Folder cycle detected'),
+        ),
+      ),
+    );
   });
 }

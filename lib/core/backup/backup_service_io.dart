@@ -262,6 +262,7 @@ class BackupServiceImpl extends BackupService {
         );
       }
     }
+    _ensureNoFolderCycles(folders);
 
     for (final note in notes) {
       for (final folderId in note.folderIds) {
@@ -317,6 +318,35 @@ class BackupServiceImpl extends BackupService {
       throw BackupImportException(
         'Duplicate $entityName id detected after remap: $id.',
       );
+    }
+  }
+
+  void _ensureNoFolderCycles(List<FolderIsar> folders) {
+    final parentById = <int, int?>{
+      for (final folder in folders) folder.id: folder.parentId,
+    };
+    final visitState = <int, int>{};
+
+    bool detectCycle(int folderId) {
+      final currentState = visitState[folderId] ?? 0;
+      if (currentState == 1) return true;
+      if (currentState == 2) return false;
+
+      visitState[folderId] = 1;
+      final parentId = parentById[folderId];
+      if (parentId != null && parentById.containsKey(parentId)) {
+        if (detectCycle(parentId)) return true;
+      }
+      visitState[folderId] = 2;
+      return false;
+    }
+
+    for (final folderId in parentById.keys) {
+      if (detectCycle(folderId)) {
+        throw BackupImportException(
+          'Folder cycle detected in backup data involving folder id=$folderId.',
+        );
+      }
     }
   }
 
