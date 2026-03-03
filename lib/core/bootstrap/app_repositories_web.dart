@@ -226,5 +226,6 @@ Future<AppRepositories> createAppRepositories() async {
     noteRepository: InMemoryNoteRepository(),
     todoRepository: InMemoryTodoRepository(),
     folderRepository: InMemoryFolderRepository(),
+    backupService: null,
   );
 }

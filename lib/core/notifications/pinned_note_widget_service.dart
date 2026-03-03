@@ -147,7 +147,8 @@ class PinnedNoteWidgetService {
     try {
       final raw = await HomeWidget.getWidgetData<dynamic>(_noteIdKey);
       return _coerceId(raw);
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('widget/getPinnedNoteId failed: $e\n$st');
       return null;
     }
   }
@@ -157,7 +158,8 @@ class PinnedNoteWidgetService {
     try {
       final raw = await HomeWidget.getWidgetData<dynamic>(_todoIdKey);
       return _coerceId(raw);
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('widget/getPinnedTodoId failed: $e\n$st');
       return null;
     }
   }
@@ -226,6 +228,8 @@ class PinnedNoteWidgetService {
       await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemIdKey, null);
       await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemTitleKey, null);
       await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemPreviewKey, null);
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('widget/legacy-migration failed: $e\n$st');
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:to_do_app/core/bootstrap/app_repositories.dart';
 import 'package:to_do_app/core/config/local_storage/local_storage.dart';
 import 'package:to_do_app/core/config/router/app_router.dart';
 import 'package:to_do_app/core/config/theme/app_theme.dart';
+import 'package:to_do_app/core/backup/backup_service_base.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
@@ -46,6 +47,7 @@ void main() async {
     noteRepo: repositories.noteRepository,
     todoRepo: repositories.todoRepository,
     folderRepo: repositories.folderRepository,
+    backupService: repositories.backupService as BackupService?,
   ));
 }
 
@@ -54,11 +56,13 @@ class MyApp extends StatelessWidget {
   final NoteRepository noteRepo;
   final TodoRepository todoRepo;
   final FolderRepository folderRepo;
+  final BackupService? backupService;
   const MyApp({
     super.key,
     required this.noteRepo,
     required this.todoRepo,
     required this.folderRepo,
+    this.backupService,
   });
 
   @override
@@ -68,6 +72,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider.value(value: noteRepo),
         RepositoryProvider.value(value: todoRepo),
         RepositoryProvider.value(value: folderRepo),
+        RepositoryProvider<BackupService?>.value(value: backupService),
       ],
       child: MultiBlocProvider(
         providers: [

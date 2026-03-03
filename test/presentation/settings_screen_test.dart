@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:to_do_app/core/backup/backup_service_base.dart';
 import 'package:to_do_app/core/config/local_storage/local_storage.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_filter_cubit.dart';
@@ -23,13 +24,16 @@ Future<ThemeCubit> _pumpSettings(WidgetTester tester) async {
       GoRoute(
         path: '/settings',
         builder: (context, state) {
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider<ThemeCubit>.value(value: themeCubit),
-              BlocProvider<FolderCubit>.value(value: folderCubit),
-              BlocProvider(create: (_) => FolderFilterCubit()),
-            ],
-            child: const Settings(),
+          return RepositoryProvider<BackupService?>.value(
+            value: null,
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<ThemeCubit>.value(value: themeCubit),
+                BlocProvider<FolderCubit>.value(value: folderCubit),
+                BlocProvider(create: (_) => FolderFilterCubit()),
+              ],
+              child: const Settings(),
+            ),
           );
         },
       ),

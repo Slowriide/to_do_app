@@ -6,7 +6,6 @@ import 'package:to_do_app/common/widgets/my_drawer.dart';
 import 'package:to_do_app/core/backup/backup_service.dart';
 import 'package:to_do_app/core/config/theme/theme_presets.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
-import 'package:to_do_app/data/repository/isar_note_repository_impl.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/folders/folder_cubit.dart';
@@ -39,11 +38,11 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   BackupService? _resolveBackupService() {
-    final noteRepository = context.read<NoteRepository>();
-    if (noteRepository is IsarNoteRepositoryImpl) {
-      return createBackupService(noteRepository.db);
+    try {
+      return RepositoryProvider.of<BackupService?>(context, listen: false);
+    } catch (_) {
+      return null;
     }
-    return null;
   }
 
   void _showSnack(String message) {

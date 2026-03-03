@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:to_do_app/core/backup/backup_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:to_do_app/core/bootstrap/app_repositories_base.dart';
 import 'package:to_do_app/data/models/isar_note.dart';
@@ -19,5 +20,6 @@ Future<AppRepositories> createAppRepositories() async {
     noteRepository: IsarNoteRepositoryImpl(isar),
     todoRepository: IsarTodoRepositoryImpl(isar),
     folderRepository: IsarFolderRepositoryImpl(isar),
+    backupService: createBackupService(isar),
   );
 }

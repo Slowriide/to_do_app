@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
@@ -262,6 +263,8 @@ class TodoCubit extends Cubit<TodoState> {
     emit(TodoState.success(sortedTodos));
     try {
       await PinnedNoteWidgetService.refreshFromTodos(sortedTodos);
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('todos/widget-refresh failed: $e\n$st');
+    }
   }
 }

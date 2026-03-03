@@ -893,7 +893,8 @@ class BackupServiceImpl extends BackupService {
         }
       }
       return ops;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('backup/decodeDelta failed: $e\n$st');
       return null;
     }
   }

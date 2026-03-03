@@ -6,10 +6,12 @@ class AppRepositories {
   final NoteRepository noteRepository;
   final TodoRepository todoRepository;
   final FolderRepository folderRepository;
+  final Object? backupService;
 
   const AppRepositories({
     required this.noteRepository,
     required this.todoRepository,
     required this.folderRepository,
+    this.backupService,
   });
 }

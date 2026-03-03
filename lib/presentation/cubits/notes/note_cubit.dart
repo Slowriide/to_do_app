@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/notifications/pinned_note_widget_service.dart';
@@ -255,6 +256,8 @@ class NoteCubit extends Cubit<NoteState> {
     emit(NoteState.success(sortedNotes));
     try {
       await PinnedNoteWidgetService.refreshFromNotes(sortedNotes);
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('notes/widget-refresh failed: $e\n$st');
+    }
   }
 }
