@@ -4,6 +4,12 @@ import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 
+enum ImportRecoveryResult {
+  none,
+  recovered,
+  staleCleared,
+}
+
 class ImportRecoveryService {
   static const Duration staleMarkerThreshold = Duration(minutes: 30);
 
@@ -21,13 +27,13 @@ class ImportRecoveryService {
     await LocalStorage.clearImportInProgress();
   }
 
-  Future<bool> recoverIfNeeded({
+  Future<ImportRecoveryResult> recoverIfNeeded({
     required NoteRepository noteRepository,
     required TodoRepository todoRepository,
     DateTime? now,
   }) async {
     if (!LocalStorage.importInProgress) {
-      return false;
+      return ImportRecoveryResult.none;
     }
     final startedAtEpochMs = LocalStorage.importStartedAtEpochMs;
     final currentTime = now ?? DateTime.now();
@@ -40,7 +46,7 @@ class ImportRecoveryService {
           '(age=${age.inMinutes}m > ${staleMarkerThreshold.inMinutes}m).',
         );
         await clearImportMarker();
-        return false;
+        return ImportRecoveryResult.staleCleared;
       }
     }
 
@@ -50,6 +56,6 @@ class ImportRecoveryService {
       todoRepository: todoRepository,
     );
     await clearImportMarker();
-    return true;
+    return ImportRecoveryResult.recovered;
   }
 }

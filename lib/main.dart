@@ -27,7 +27,7 @@ import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
 /// then injects repositories and sets up Bloc providers for state management.
 ///
 /// Also handles theme switching and routing configuration.
-Future<bool> recoverOrSyncRemindersOnStartup({
+Future<ImportRecoveryResult> recoverOrSyncRemindersOnStartup({
   required NoteRepository noteRepository,
   required TodoRepository todoRepository,
   NotificationService? notificationService,
@@ -36,18 +36,18 @@ Future<bool> recoverOrSyncRemindersOnStartup({
   final notifications = notificationService ?? NotificationService();
   final recovery = importRecoveryService ??
       ImportRecoveryService(notificationService: notifications);
-  final recovered = await recovery.recoverIfNeeded(
+  final recoveryResult = await recovery.recoverIfNeeded(
     noteRepository: noteRepository,
     todoRepository: todoRepository,
   );
-  if (recovered) {
-    return true;
+  if (recoveryResult != ImportRecoveryResult.none) {
+    return recoveryResult;
   }
   await notifications.syncRemindersFromDatabase(
     noteRepository: noteRepository,
     todoRepository: todoRepository,
   );
-  return false;
+  return ImportRecoveryResult.none;
 }
 
 void main() async {

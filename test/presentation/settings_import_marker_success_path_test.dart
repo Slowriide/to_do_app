@@ -73,14 +73,14 @@ void main() {
       expect(notificationService.cancelAllCalls, 0);
       expect(notificationService.syncCalls, 1);
 
-      final recovered = await recoverOrSyncRemindersOnStartup(
+      final recoveryResult = await recoverOrSyncRemindersOnStartup(
         noteRepository: noteRepository,
         todoRepository: todoRepository,
         notificationService: notificationService,
         importRecoveryService: recoveryService,
       );
 
-      expect(recovered, isFalse);
+      expect(recoveryResult, ImportRecoveryResult.none);
       expect(notificationService.cancelAllCalls, 0);
       expect(notificationService.syncCalls, 2);
     },

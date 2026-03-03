@@ -48,13 +48,13 @@ void main() {
     );
     expect(LocalStorage.importInProgress, isTrue);
 
-    final didRecover = await recoveryService.recoverIfNeeded(
+    final result = await recoveryService.recoverIfNeeded(
       noteRepository: FakeNoteRepository(),
       todoRepository: FakeTodoRepository(),
       now: now,
     );
 
-    expect(didRecover, isFalse);
+    expect(result, ImportRecoveryResult.staleCleared);
     expect(notificationService.cancelAllCalls, 0);
     expect(notificationService.syncCalls, 0);
     expect(LocalStorage.importInProgress, isFalse);
@@ -75,13 +75,13 @@ void main() {
     expect(LocalStorage.importInProgress, isTrue);
     expect(LocalStorage.importStartedAtEpochMs, isNotNull);
 
-    final didRecover = await recoveryService.recoverIfNeeded(
+    final result = await recoveryService.recoverIfNeeded(
       noteRepository: FakeNoteRepository(),
       todoRepository: FakeTodoRepository(),
       now: now,
     );
 
-    expect(didRecover, isTrue);
+    expect(result, ImportRecoveryResult.recovered);
     expect(notificationService.cancelAllCalls, 1);
     expect(notificationService.syncCalls, 1);
     expect(LocalStorage.importInProgress, isFalse);
@@ -95,14 +95,14 @@ void main() {
     );
 
     expect(LocalStorage.importInProgress, isFalse);
-    final didRecover = await recoverOrSyncRemindersOnStartup(
+    final result = await recoverOrSyncRemindersOnStartup(
       noteRepository: FakeNoteRepository(),
       todoRepository: FakeTodoRepository(),
       notificationService: notificationService,
       importRecoveryService: recoveryService,
     );
 
-    expect(didRecover, isFalse);
+    expect(result, ImportRecoveryResult.none);
     expect(notificationService.cancelAllCalls, 0);
     expect(notificationService.syncCalls, 1);
     expect(LocalStorage.importInProgress, isFalse);

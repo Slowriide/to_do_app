@@ -187,14 +187,14 @@ void main() {
       );
       expect(LocalStorage.importInProgress, isTrue);
 
-      final recovered = await recoverOrSyncRemindersOnStartup(
+      final recoveryResult = await recoverOrSyncRemindersOnStartup(
         noteRepository: FakeNoteRepository(),
         todoRepository: FakeTodoRepository(),
         notificationService: notificationService,
         importRecoveryService: recoveryService,
       );
 
-      expect(recovered, isTrue);
+      expect(recoveryResult, ImportRecoveryResult.recovered);
       expect(notificationService.cancelAllCalls, 1);
       expect(notificationService.syncCalls, 1);
       expect(LocalStorage.importInProgress, isFalse);
@@ -220,14 +220,14 @@ void main() {
       );
       expect(LocalStorage.importInProgress, isTrue);
 
-      final recovered = await recoverOrSyncRemindersOnStartup(
+      final recoveryResult = await recoverOrSyncRemindersOnStartup(
         noteRepository: FakeNoteRepository(),
         todoRepository: FakeTodoRepository(),
         notificationService: notificationService,
         importRecoveryService: recoveryService,
       );
 
-      expect(recovered, isTrue);
+      expect(recoveryResult, ImportRecoveryResult.recovered);
       expect(notificationService.cancelAllCalls, 1);
       expect(notificationService.syncCalls, 1);
       expect(LocalStorage.importInProgress, isFalse);
