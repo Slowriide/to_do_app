@@ -185,22 +185,14 @@ class BackupServiceImpl extends BackupService {
         todoNodes: todoNodes,
       );
 
-      await db.writeTxn(() async {
-        if (mode == ImportMode.replace) {
-          await db.noteIsars.clear();
-          await db.folderIsars.clear();
-          await db.todoIsars.clear();
-        }
-
-        if (folders.isNotEmpty) {
-          await db.folderIsars.putAll(folders);
-        }
-        if (notes.isNotEmpty) {
-          await db.noteIsars.putAll(notes);
-        }
-
-        await _upsertTodoTree(todoNodes);
-      });
+      await _applyImportToDatabase(
+        mode: mode,
+        data: _ImportData(
+          folders: folders,
+          notes: notes,
+          todoNodes: todoNodes,
+        ),
+      );
     } on BackupFormatException {
       rethrow;
     } on BackupImportException {
@@ -208,6 +200,28 @@ class BackupServiceImpl extends BackupService {
     } catch (e) {
       throw BackupImportException('Failed to import backup: $e');
     }
+  }
+
+  Future<void> _applyImportToDatabase({
+    required ImportMode mode,
+    required _ImportData data,
+  }) async {
+    await db.writeTxn(() async {
+      if (mode == ImportMode.replace) {
+        await db.noteIsars.clear();
+        await db.folderIsars.clear();
+        await db.todoIsars.clear();
+      }
+
+      if (data.folders.isNotEmpty) {
+        await db.folderIsars.putAll(data.folders);
+      }
+      if (data.notes.isNotEmpty) {
+        await db.noteIsars.putAll(data.notes);
+      }
+
+      await _upsertTodoTree(data.todoNodes);
+    });
   }
 
   Future<void> _validateImportedEntities({
@@ -1038,6 +1052,18 @@ class _TodoNode {
   _TodoNode({
     required this.todo,
     required this.children,
+  });
+}
+
+class _ImportData {
+  final List<FolderIsar> folders;
+  final List<NoteIsar> notes;
+  final List<_TodoNode> todoNodes;
+
+  const _ImportData({
+    required this.folders,
+    required this.notes,
+    required this.todoNodes,
   });
 }
 

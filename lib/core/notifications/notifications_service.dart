@@ -127,6 +127,46 @@ class NotificationService {
     await _notificationsPlugin.cancel(id: _normalizeNotificationId(id));
   }
 
+  int notificationIdForNote(int id) => _normalizeNotificationId((id * 2));
+
+  int notificationIdForTodo(int id) => _normalizeNotificationId((id * 2) + 1);
+
+  Future<void> scheduleNoteReminder({
+    required int noteId,
+    required String title,
+    String? body,
+    required DateTime scheduledDate,
+  }) async {
+    await showNotification(
+      id: notificationIdForNote(noteId),
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+    );
+  }
+
+  Future<void> scheduleTodoReminder({
+    required int todoId,
+    required String title,
+    String? body,
+    required DateTime scheduledDate,
+  }) async {
+    await showNotification(
+      id: notificationIdForTodo(todoId),
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+    );
+  }
+
+  Future<void> cancelNoteReminder(int noteId) async {
+    await cancelNotification(notificationIdForNote(noteId));
+  }
+
+  Future<void> cancelTodoReminder(int todoId) async {
+    await cancelNotification(notificationIdForTodo(todoId));
+  }
+
   /// Cancels all scheduled and shown notifications for this app.
   Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
@@ -142,8 +182,8 @@ class NotificationService {
     for (final note in notes) {
       final reminder = note.reminder;
       if (reminder == null || !reminder.isAfter(now)) continue;
-      await showNotification(
-        id: note.id,
+      await scheduleNoteReminder(
+        noteId: note.id,
         title: note.title,
         body: note.text,
         scheduledDate: reminder,
@@ -154,8 +194,8 @@ class NotificationService {
     for (final todo in todos) {
       final reminder = todo.reminder;
       if (reminder == null || !reminder.isAfter(now)) continue;
-      await showNotification(
-        id: todo.id,
+      await scheduleTodoReminder(
+        todoId: todo.id,
         title: todo.title,
         scheduledDate: reminder,
       );

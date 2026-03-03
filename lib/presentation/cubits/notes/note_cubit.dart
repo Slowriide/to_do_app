@@ -79,7 +79,7 @@ class NoteCubit extends Cubit<NoteState> {
         sketchStorage.extractOwnedSketchPathsFromDelta(note.richTextDeltaJson),
       );
       await repository.deleteNote(note);
-      await NotificationService().cancelNotification(note.id);
+      await NotificationService().cancelNoteReminder(note.id);
     }
     await sketchStorage.deleteFiles(sketchPaths);
     final idsToDelete = notesToDelete.map((note) => note.id).toSet();
@@ -229,11 +229,11 @@ class NoteCubit extends Cubit<NoteState> {
 
   Future<void> _syncReminder(Note note) async {
     if (note.reminder == null) {
-      await NotificationService().cancelNotification(note.id);
+      await NotificationService().cancelNoteReminder(note.id);
       return;
     }
-    await NotificationService().showNotification(
-      id: note.id,
+    await NotificationService().scheduleNoteReminder(
+      noteId: note.id,
       title: note.title,
       body: note.text,
       scheduledDate: note.reminder!,

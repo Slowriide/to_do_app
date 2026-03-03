@@ -74,7 +74,7 @@ class TodoCubit extends Cubit<TodoState> {
   /// Then reloads the todos list.
   Future<void> deleteTodo(Todo todo) async {
     await repository.deleteTodo(todo);
-    await NotificationService().cancelNotification(todo.id);
+    await NotificationService().cancelTodoReminder(todo.id);
     await _emitSortedTodos(
       state.todos.where((item) => item.id != todo.id).toList(),
     );
@@ -113,7 +113,7 @@ class TodoCubit extends Cubit<TodoState> {
   Future<void> deleteMultiples(List<Todo> todosToDelete) async {
     for (final todo in todosToDelete) {
       await repository.deleteTodo(todo);
-      await NotificationService().cancelNotification(todo.id);
+      await NotificationService().cancelTodoReminder(todo.id);
     }
     final idsToDelete = todosToDelete.map((todo) => todo.id).toSet();
     await _emitSortedTodos(
@@ -237,11 +237,11 @@ class TodoCubit extends Cubit<TodoState> {
 
   Future<void> _syncReminder(Todo todo) async {
     if (todo.reminder == null) {
-      await NotificationService().cancelNotification(todo.id);
+      await NotificationService().cancelTodoReminder(todo.id);
       return;
     }
-    await NotificationService().showNotification(
-      id: todo.id,
+    await NotificationService().scheduleTodoReminder(
+      todoId: todo.id,
       title: todo.title,
       scheduledDate: todo.reminder!,
     );

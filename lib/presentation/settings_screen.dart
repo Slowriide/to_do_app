@@ -119,11 +119,11 @@ class _SettingsState extends State<Settings> {
       _showSnack('Importing backup...');
       await backupService.importBackup(pickedFile, mode: mode);
       if (!mounted) return;
-      await folderCubit.loadFolders();
-      await noteCubit.loadNotes();
-      await todoCubit.loadTodos();
-      await resyncNotificationsAfterImport(
+      await _runPostImportSideEffects(
         mode: mode,
+        folderCubit: folderCubit,
+        noteCubit: noteCubit,
+        todoCubit: todoCubit,
         notificationService: notificationService,
         noteRepository: noteRepository,
         todoRepository: todoRepository,
@@ -131,6 +131,44 @@ class _SettingsState extends State<Settings> {
       _showSnack('Backup import completed.');
     } catch (e) {
       _showSnack('Import failed: $e');
+    }
+  }
+
+  Future<void> _runPostImportSideEffects({
+    required ImportMode mode,
+    required FolderCubit folderCubit,
+    required NoteCubit noteCubit,
+    required TodoCubit todoCubit,
+    required NotificationService notificationService,
+    required NoteRepository noteRepository,
+    required TodoRepository todoRepository,
+  }) async {
+    try {
+      await folderCubit.loadFolders();
+    } catch (e, st) {
+      debugPrint('settings/import post-commit folder refresh failed: $e\n$st');
+    }
+    try {
+      await noteCubit.loadNotes();
+    } catch (e, st) {
+      debugPrint('settings/import post-commit note refresh failed: $e\n$st');
+    }
+    try {
+      await todoCubit.loadTodos();
+    } catch (e, st) {
+      debugPrint('settings/import post-commit todo refresh failed: $e\n$st');
+    }
+    try {
+      await resyncNotificationsAfterImport(
+        mode: mode,
+        notificationService: notificationService,
+        noteRepository: noteRepository,
+        todoRepository: todoRepository,
+      );
+    } catch (e, st) {
+      debugPrint(
+        'settings/import post-commit reminder resync failed: $e\n$st',
+      );
     }
   }
 
