@@ -36,18 +36,23 @@ class ImportRecoveryService {
       return ImportRecoveryResult.none;
     }
     final startedAtEpochMs = LocalStorage.importStartedAtEpochMs;
+    if (startedAtEpochMs == null) {
+      debugPrint(
+        'Import recovery: cleared stale import marker (missing timestamp).',
+      );
+      await clearImportMarker();
+      return ImportRecoveryResult.staleCleared;
+    }
     final currentTime = now ?? DateTime.now();
-    if (startedAtEpochMs != null) {
-      final startedAt = DateTime.fromMillisecondsSinceEpoch(startedAtEpochMs);
-      final age = currentTime.difference(startedAt);
-      if (age > staleMarkerThreshold) {
-        debugPrint(
-          'Import recovery: cleared stale import marker '
-          '(age=${age.inMinutes}m > ${staleMarkerThreshold.inMinutes}m).',
-        );
-        await clearImportMarker();
-        return ImportRecoveryResult.staleCleared;
-      }
+    final startedAt = DateTime.fromMillisecondsSinceEpoch(startedAtEpochMs);
+    final age = currentTime.difference(startedAt);
+    if (age > staleMarkerThreshold) {
+      debugPrint(
+        'Import recovery: cleared stale import marker '
+        '(age=${age.inMinutes}m > ${staleMarkerThreshold.inMinutes}m).',
+      );
+      await clearImportMarker();
+      return ImportRecoveryResult.staleCleared;
     }
 
     await notificationService.cancelAll();

@@ -109,4 +109,32 @@ void main() {
     expect(notificationService.syncCalls, 1);
     expect(LocalStorage.importInProgress, isFalse);
   });
+
+  test('missing timestamp is treated as staleCleared with soft recovery on startup', () async {
+    final notificationService = _SpyNotificationService();
+    final recoveryService = ImportRecoveryService(
+      notificationService: notificationService,
+    );
+
+    await LocalStorage.markImportInProgress(
+      startedAtEpochMs: DateTime(2026, 3, 4, 10, 0, 0).millisecondsSinceEpoch,
+    );
+    await LocalStorage.prefs.remove('importStartedAtEpochMs');
+    expect(LocalStorage.importInProgress, isTrue);
+    expect(LocalStorage.importStartedAtEpochMs, isNull);
+
+    final result = await recoverOrSyncRemindersOnStartup(
+      noteRepository: FakeNoteRepository(),
+      todoRepository: FakeTodoRepository(),
+      notificationService: notificationService,
+      importRecoveryService: recoveryService,
+      now: DateTime(2026, 3, 4, 12, 0, 0),
+    );
+
+    expect(result, ImportRecoveryResult.staleCleared);
+    expect(notificationService.cancelAllCalls, 0);
+    expect(notificationService.syncCalls, 1);
+    expect(LocalStorage.importInProgress, isFalse);
+    expect(LocalStorage.importStartedAtEpochMs, isNull);
+  });
 }
