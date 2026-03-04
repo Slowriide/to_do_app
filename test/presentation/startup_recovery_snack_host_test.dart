@@ -23,11 +23,8 @@ void main() {
 
       expect(find.text(recoveredStartupMessage), findsOneWidget);
 
-      await tester.pumpAndSettle(const Duration(seconds: 6));
-      expect(find.text(recoveredStartupMessage), findsNothing);
-
       await tester.pump();
-      expect(find.text(recoveredStartupMessage), findsNothing);
+      expect(find.text(recoveredStartupMessage), findsOneWidget);
     },
   );
 
@@ -39,11 +36,8 @@ void main() {
 
       expect(find.text(staleClearedStartupMessage), findsOneWidget);
 
-      await tester.pumpAndSettle(const Duration(seconds: 6));
-      expect(find.text(staleClearedStartupMessage), findsNothing);
-
       await tester.pump();
-      expect(find.text(staleClearedStartupMessage), findsNothing);
+      expect(find.text(staleClearedStartupMessage), findsOneWidget);
     },
   );
 

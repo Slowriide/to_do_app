@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/models/todo.dart';
@@ -49,6 +50,22 @@ Future<void> _settle() async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('home_widget');
+
+  setUpAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'getWidgetData') return null;
+      if (call.method == 'saveWidgetData') return true;
+      if (call.method == 'updateWidget') return true;
+      return null;
+    });
+  });
+
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
 
   test('NoteCubit reminder lifecycle schedules and cancels namespaced IDs', () async {
     final notifications = _SpyNotificationService();
