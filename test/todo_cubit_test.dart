@@ -3,6 +3,7 @@ import 'package:to_do_app/domain/models/todo.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_state.dart';
+import 'test_utils/plugin_mocks.dart';
 
 class FakeTodoRepository implements TodoRepository {
   FakeTodoRepository(this._todos);
@@ -61,6 +62,7 @@ Future<void> _settle() async {
 }
 
 void main() {
+  setUpHomeWidgetMocks();
   test('loads todos sorted with pinned first then by order', () async {
     final repo = FakeTodoRepository([
       Todo(

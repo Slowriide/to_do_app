@@ -13,6 +13,7 @@ import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
+import 'package:to_do_app/common/widgets/empty_state_panel.dart';
 import 'package:to_do_app/common/widgets/todo_item.dart';
 import 'package:to_do_app/presentation/todos/todos_view.dart';
 
@@ -160,7 +161,7 @@ void main() {
     await tester.enterText(find.byType(TextField).first, 'xyz');
     await tester.pumpAndSettle();
 
-    expect(find.text('No matches found'), findsOneWidget);
+    expect(find.byType(NoResultsState), findsOneWidget);
 
     await tester.tap(find.text('Clear search'));
     await tester.pumpAndSettle();
@@ -203,7 +204,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('No matches found'), findsOneWidget);
+    expect(find.byType(NoResultsState), findsOneWidget);
 
     await tester.tap(find.text('Show all folders'));
     await tester.pumpAndSettle();

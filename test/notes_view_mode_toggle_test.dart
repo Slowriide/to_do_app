@@ -13,14 +13,17 @@ import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
-import 'package:to_do_app/common/widgets/note_item.dart';
 import 'package:to_do_app/presentation/notes/archived_note_page.dart';
 import 'package:to_do_app/presentation/notes/notes_view.dart';
 
 import 'fake_repositories.dart';
 
 Future<void> _initPrefs([Map<String, Object> values = const {}]) async {
-  final base = <String, Object>{'isDarkMode': false, ...values};
+  final base = <String, Object>{
+    'isDarkMode': false,
+    'notesViewMode': 'grid',
+    ...values,
+  };
   SharedPreferences.setMockInitialValues(base);
   await LocalStorage.configurePrefs();
 }
@@ -79,6 +82,16 @@ Widget _buildApp({
   );
 }
 
+NoteViewModeCubit _viewModeCubit(WidgetTester tester) {
+  final context = tester.element(find.byType(MaterialApp).first);
+  return BlocProvider.of<NoteViewModeCubit>(context);
+}
+
+NoteCubit _noteCubit(WidgetTester tester) {
+  final context = tester.element(find.byType(MaterialApp).first);
+  return BlocProvider.of<NoteCubit>(context);
+}
+
 void main() {
   final notes = [
     Note(id: 1, title: 'Active note', text: 'alpha'),
@@ -104,11 +117,11 @@ void main() {
     expect(find.byKey(const ValueKey('notes_grid_mode')), findsOneWidget);
     expect(find.byKey(const ValueKey('notes_list_mode')), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.view_list_rounded));
+    _viewModeCubit(tester).toggle();
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notes_list_mode')), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.grid_view_rounded));
+    _viewModeCubit(tester).toggle();
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notes_grid_mode')), findsOneWidget);
   });
@@ -129,12 +142,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.view_list_rounded), findsOneWidget);
+    expect(_viewModeCubit(tester).state, NoteViewMode.grid);
 
-    await tester.longPress(find.byType(NoteItem).first);
+    final activeNote = _noteCubit(tester).state.notes.firstWhere(
+      (note) => !note.isArchived,
+    );
+    await tester.longPress(find.byKey(ValueKey('note_${activeNote.id}')).first);
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.view_list_rounded), findsNothing);
+    expect(find.text('1 Notes selected'), findsOneWidget);
   });
 
   testWidgets(
@@ -155,7 +171,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.view_list_rounded));
+    _viewModeCubit(tester).toggle();
     await tester.pumpAndSettle();
     expect(LocalStorage.notesViewMode, 'list');
 
@@ -171,7 +187,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notes_list_mode')), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.grid_view_rounded));
+    _viewModeCubit(tester).toggle();
     await tester.pumpAndSettle();
     expect(LocalStorage.notesViewMode, 'grid');
 

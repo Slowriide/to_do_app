@@ -7,6 +7,7 @@ import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
+import 'test_utils/plugin_mocks.dart';
 
 class FakeNoteRepository implements NoteRepository {
   FakeNoteRepository(this._notes);
@@ -81,6 +82,7 @@ Future<void> _settle() async {
 }
 
 void main() {
+  setUpHomeWidgetMocks();
   final notifications = _NoopNotificationService();
 
   test('loads notes sorted with pinned first then by order', () async {

@@ -728,6 +728,7 @@ Widget _debugStartupMarkerSection(BuildContext context) {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('importInProgress');
     await prefs.remove('importStartedAtEpochMs');
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('DEBUG: marker = NONE (cleared)')),
     );
@@ -740,6 +741,7 @@ Widget _debugStartupMarkerSection(BuildContext context) {
         .subtract(const Duration(minutes: 2))
         .millisecondsSinceEpoch;
     await prefs.setInt('importStartedAtEpochMs', ts);
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('DEBUG: marker = RECENT (2 min ago)')),
     );
@@ -752,6 +754,7 @@ Widget _debugStartupMarkerSection(BuildContext context) {
         .subtract(const Duration(minutes: 40))
         .millisecondsSinceEpoch;
     await prefs.setInt('importStartedAtEpochMs', ts);
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('DEBUG: marker = STALE (40 min ago)')),
     );
@@ -761,6 +764,7 @@ Widget _debugStartupMarkerSection(BuildContext context) {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('importInProgress', true);
     await prefs.remove('importStartedAtEpochMs');
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('DEBUG: marker = MISSING TIMESTAMP')),
     );
@@ -770,6 +774,7 @@ Widget _debugStartupMarkerSection(BuildContext context) {
     final prefs = await SharedPreferences.getInstance();
     final inProgress = prefs.getBool('importInProgress');
     final startedAt = prefs.getInt('importStartedAtEpochMs');
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text('DEBUG: inProgress=$inProgress startedAt=$startedAt')),

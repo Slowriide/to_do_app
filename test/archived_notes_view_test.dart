@@ -13,6 +13,7 @@ import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+import 'package:to_do_app/common/widgets/empty_state_panel.dart';
 import 'package:to_do_app/common/widgets/note_item.dart';
 import 'package:to_do_app/presentation/notes/archived_note_page.dart';
 
@@ -114,7 +115,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.unarchive_outlined));
     await tester.pumpAndSettle();
 
-    expect(find.text('No archived notes'), findsOneWidget);
+    expect(find.byType(NoteItem), findsNothing);
+    expect(find.byType(ActivationEmptyState), findsOneWidget);
   });
 
   testWidgets('delete action permanently removes archived note',
@@ -144,6 +146,7 @@ void main() {
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No archived notes'), findsOneWidget);
+    expect(find.byType(NoteItem), findsNothing);
+    expect(find.byType(ActivationEmptyState), findsOneWidget);
   });
 }

@@ -258,7 +258,7 @@ class _TodosViewState extends State<TodosView> {
                             ? Icons.push_pin
                             : Icons.push_pin_outlined,
                         onPressed: togglePin,
-                        valueKey: ValueKey('SelectAll'),
+                        valueKey: const ValueKey('togglePin'),
                       ),
                       MyTooltip(
                         message: 'Archive',
@@ -276,7 +276,7 @@ class _TodosViewState extends State<TodosView> {
                         message: 'Select All',
                         icon: Icons.select_all_outlined,
                         onPressed: selectAll,
-                        valueKey: ValueKey('SelectAll'),
+                        valueKey: const ValueKey('selectAll'),
                       ),
                       MyTooltip(
                         message: 'Delete',
