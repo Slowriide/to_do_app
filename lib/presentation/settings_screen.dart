@@ -14,6 +14,8 @@ import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 @visibleForTesting
 Future<void> resyncNotificationsAfterImport({
   required ImportMode mode,
@@ -562,7 +564,8 @@ class _SettingsState extends State<Settings> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Backup & Restore', style: theme.textTheme.bodyLarge),
+                      Text('Backup & Restore',
+                          style: theme.textTheme.bodyLarge),
                       const SizedBox(height: 8),
                       Text(
                         'Export notes, folders, todos and owned sketch media into a ZIP backup. '
@@ -593,6 +596,7 @@ class _SettingsState extends State<Settings> {
                           ),
                         ],
                       ),
+                      if (kDebugMode) _debugStartupMarkerSection(context),
                     ],
                   ),
                 ),
@@ -715,4 +719,91 @@ class _PresetSwatch extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _debugStartupMarkerSection(BuildContext context) {
+  if (!kDebugMode) return const SizedBox.shrink();
+
+  Future<void> setNone() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('importInProgress');
+    await prefs.remove('importStartedAtEpochMs');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('DEBUG: marker = NONE (cleared)')),
+    );
+  }
+
+  Future<void> setRecent() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('importInProgress', true);
+    final ts = DateTime.now()
+        .subtract(const Duration(minutes: 2))
+        .millisecondsSinceEpoch;
+    await prefs.setInt('importStartedAtEpochMs', ts);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('DEBUG: marker = RECENT (2 min ago)')),
+    );
+  }
+
+  Future<void> setStale() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('importInProgress', true);
+    final ts = DateTime.now()
+        .subtract(const Duration(minutes: 40))
+        .millisecondsSinceEpoch;
+    await prefs.setInt('importStartedAtEpochMs', ts);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('DEBUG: marker = STALE (40 min ago)')),
+    );
+  }
+
+  Future<void> setMissingTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('importInProgress', true);
+    await prefs.remove('importStartedAtEpochMs');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('DEBUG: marker = MISSING TIMESTAMP')),
+    );
+  }
+
+  Future<void> showCurrent() async {
+    final prefs = await SharedPreferences.getInstance();
+    final inProgress = prefs.getBool('importInProgress');
+    final startedAt = prefs.getInt('importStartedAtEpochMs');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text('DEBUG: inProgress=$inProgress startedAt=$startedAt')),
+    );
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Divider(),
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Text('DEBUG: Startup Import Marker'),
+      ),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          OutlinedButton(onPressed: setNone, child: const Text('Marker: NONE')),
+          OutlinedButton(
+              onPressed: setRecent, child: const Text('Marker: RECENT')),
+          OutlinedButton(
+              onPressed: setStale, child: const Text('Marker: STALE')),
+          OutlinedButton(
+              onPressed: setMissingTimestamp,
+              child: const Text('Marker: NO TS')),
+          TextButton(onPressed: showCurrent, child: const Text('Show current')),
+        ],
+      ),
+      const SizedBox(height: 12),
+      const Text(
+        'Now FORCE CLOSE the app (see steps below), then open it from the icon.',
+        style: TextStyle(fontSize: 12),
+      ),
+    ],
+  );
 }

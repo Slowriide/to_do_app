@@ -66,7 +66,7 @@ void main() async {
   await PinnedNoteWidgetService.initialize();
 
   final repositories = await createAppRepositories();
-  await recoverOrSyncRemindersOnStartup(
+  final startupRecoveryResult = await recoverOrSyncRemindersOnStartup(
     noteRepository: repositories.noteRepository,
     todoRepository: repositories.todoRepository,
   );
@@ -77,6 +77,7 @@ void main() async {
     todoRepo: repositories.todoRepository,
     folderRepo: repositories.folderRepository,
     backupService: repositories.backupService as BackupService?,
+    startupRecoveryResult: startupRecoveryResult,
   ));
 }
 
@@ -86,12 +87,14 @@ class MyApp extends StatelessWidget {
   final TodoRepository todoRepo;
   final FolderRepository folderRepo;
   final BackupService? backupService;
+  final ImportRecoveryResult startupRecoveryResult;
   const MyApp({
     super.key,
     required this.noteRepo,
     required this.todoRepo,
     required this.folderRepo,
     this.backupService,
+    this.startupRecoveryResult = ImportRecoveryResult.none,
   });
 
   @override
@@ -135,6 +138,10 @@ class MyApp extends StatelessWidget {
               theme: themeData,
               title: 'ToDo App',
               debugShowCheckedModeBanner: false,
+              builder: (context, child) => _StartupRecoverySnackHost(
+                result: startupRecoveryResult,
+                child: child ?? const SizedBox.shrink(),
+              ),
               localizationsDelegates:
                   FlutterQuillLocalizations.localizationsDelegates,
               supportedLocales: FlutterQuillLocalizations.supportedLocales,
@@ -143,5 +150,51 @@ class MyApp extends StatelessWidget {
         }),
       ),
     );
+  }
+}
+
+class _StartupRecoverySnackHost extends StatefulWidget {
+  final ImportRecoveryResult result;
+  final Widget child;
+
+  const _StartupRecoverySnackHost({
+    required this.result,
+    required this.child,
+  });
+
+  @override
+  State<_StartupRecoverySnackHost> createState() =>
+      _StartupRecoverySnackHostState();
+}
+
+class _StartupRecoverySnackHostState extends State<_StartupRecoverySnackHost> {
+  bool _didShowStartupSnack = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _didShowStartupSnack) return;
+
+      String? message;
+      if (widget.result == ImportRecoveryResult.recovered) {
+        message =
+            'The app detected an incomplete backup import and recovered reminders.';
+      } else if (widget.result == ImportRecoveryResult.staleCleared) {
+        message =
+            'A previous import attempt was detected. Reminder state was verified.';
+      }
+      if (message == null) return;
+
+      _didShowStartupSnack = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
