@@ -241,14 +241,15 @@ class TodoCubit extends Cubit<TodoState> {
   }
 
   Future<void> _syncReminder(Todo todo) async {
-    if (todo.reminder == null) {
+    final reminder = todo.reminder;
+    if (reminder == null || !reminder.isAfter(DateTime.now())) {
       await notificationService.cancelTodoReminder(todo.id);
       return;
     }
     await notificationService.scheduleTodoReminder(
       todoId: todo.id,
       title: todo.title,
-      scheduledDate: todo.reminder!,
+      scheduledDate: reminder,
     );
   }
 

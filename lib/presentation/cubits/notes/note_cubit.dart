@@ -231,7 +231,8 @@ class NoteCubit extends Cubit<NoteState> {
   }
 
   Future<void> _syncReminder(Note note) async {
-    if (note.reminder == null) {
+    final reminder = note.reminder;
+    if (reminder == null || !reminder.isAfter(DateTime.now())) {
       await notificationService.cancelNoteReminder(note.id);
       return;
     }
@@ -239,7 +240,7 @@ class NoteCubit extends Cubit<NoteState> {
       noteId: note.id,
       title: note.title,
       body: note.text,
-      scheduledDate: note.reminder!,
+      scheduledDate: reminder,
     );
   }
 

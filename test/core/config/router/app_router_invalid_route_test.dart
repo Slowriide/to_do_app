@@ -76,4 +76,20 @@ void main() {
 
     expect(find.text('Invalid Note Route Data'), findsOneWidget);
   });
+
+  testWidgets('note loader shows not found page when repository returns null', (tester) async {
+    await tester.pumpWidget(_buildTestApp());
+    appRouter.go('/note/9999');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Note Not Found'), findsOneWidget);
+  });
+
+  testWidgets('todo loader shows not found page when repository returns null', (tester) async {
+    await tester.pumpWidget(_buildTestApp());
+    appRouter.go('/todo/9999');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Todo Not Found'), findsOneWidget);
+  });
 }
