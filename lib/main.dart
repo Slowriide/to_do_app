@@ -20,6 +20,7 @@ import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
+import 'package:to_do_app/presentation/startup_recovery_snack_host.dart';
 
 /// Entry point of the application.
 ///
@@ -138,7 +139,7 @@ class MyApp extends StatelessWidget {
               theme: themeData,
               title: 'ToDo App',
               debugShowCheckedModeBanner: false,
-              builder: (context, child) => _StartupRecoverySnackHost(
+              builder: (context, child) => StartupRecoverySnackHost(
                 result: startupRecoveryResult,
                 child: child ?? const SizedBox.shrink(),
               ),
@@ -150,51 +151,5 @@ class MyApp extends StatelessWidget {
         }),
       ),
     );
-  }
-}
-
-class _StartupRecoverySnackHost extends StatefulWidget {
-  final ImportRecoveryResult result;
-  final Widget child;
-
-  const _StartupRecoverySnackHost({
-    required this.result,
-    required this.child,
-  });
-
-  @override
-  State<_StartupRecoverySnackHost> createState() =>
-      _StartupRecoverySnackHostState();
-}
-
-class _StartupRecoverySnackHostState extends State<_StartupRecoverySnackHost> {
-  bool _didShowStartupSnack = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _didShowStartupSnack) return;
-
-      String? message;
-      if (widget.result == ImportRecoveryResult.recovered) {
-        message =
-            'The app detected an incomplete backup import and recovered reminders.';
-      } else if (widget.result == ImportRecoveryResult.staleCleared) {
-        message =
-            'A previous import attempt was detected. Reminder state was verified.';
-      }
-      if (message == null) return;
-
-      _didShowStartupSnack = true;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
   }
 }
