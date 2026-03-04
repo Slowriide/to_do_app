@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -50,7 +48,7 @@ class _MyDrawerState extends State<MyDrawer> {
               onDestinationSelected: (index) async {
                 Navigator.of(context).pop();
                 await Future.delayed(const Duration(milliseconds: 250));
-                if (!mounted) return;
+                if (!context.mounted) return;
                 switch (index) {
                   case 0:
                     context.go('/home');
@@ -295,10 +293,12 @@ class _MyDrawerState extends State<MyDrawer> {
       ),
     );
     if (value == null) return;
+    if (!mounted) return;
     final error = await context
         .read<FolderCubit>()
         .createFolder(value, parentId: parentId);
-    if (error != null && mounted) {
+    if (!mounted) return;
+    if (error != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error)));
     }
@@ -370,9 +370,11 @@ class _MyDrawerState extends State<MyDrawer> {
       ),
     );
     if (value == null) return;
+    if (!mounted) return;
     final error =
         await context.read<FolderCubit>().renameFolder(folder.id, value);
-    if (error != null && mounted) {
+    if (!mounted) return;
+    if (error != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error)));
     }
@@ -380,6 +382,7 @@ class _MyDrawerState extends State<MyDrawer> {
 
   Future<void> _moveFolder(Folder folder) async {
     final parentId = await _pickParentFolderId(folder);
+    if (!mounted) return;
     if (parentId == null || parentId == _MoveCanceled.value) return;
     final targetParentId = parentId == _MoveToRoot.value ? null : parentId;
 
@@ -387,7 +390,8 @@ class _MyDrawerState extends State<MyDrawer> {
           folderId: folder.id,
           newParentId: targetParentId,
         );
-    if (error != null && mounted) {
+    if (!mounted) return;
+    if (error != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error)));
     }
@@ -447,8 +451,13 @@ class _MyDrawerState extends State<MyDrawer> {
   }
 
   Future<void> _deleteFolder(Folder folder) async {
-    final descendants =
-        await context.read<FolderCubit>().getDescendantIds(folder.id);
+    final folderCubit = context.read<FolderCubit>();
+    final noteCubit = context.read<NoteCubit>();
+    final todoCubit = context.read<TodoCubit>();
+    final folderFilterCubit = context.read<FolderFilterCubit>();
+
+    final descendants = await folderCubit.getDescendantIds(folder.id);
+    if (!mounted) return;
     final allIds = <int>{folder.id, ...descendants};
 
     final confirm = await showDialog<bool>(
@@ -472,16 +481,18 @@ class _MyDrawerState extends State<MyDrawer> {
       ),
     );
     if (confirm != true) return;
+    if (!mounted) return;
 
-    await context.read<FolderCubit>().deleteFolder(folder.id);
-    await context.read<NoteCubit>().loadNotes();
-    await context.read<TodoCubit>().loadTodos();
+    await folderCubit.deleteFolder(folder.id);
+    await noteCubit.loadNotes();
+    await todoCubit.loadTodos();
+    if (!mounted) return;
 
-    final filter = context.read<FolderFilterCubit>().state;
+    final filter = folderFilterCubit.state;
     if (filter.type == FolderFilterType.custom &&
         filter.folderId != null &&
         allIds.contains(filter.folderId)) {
-      context.read<FolderFilterCubit>().setAll();
+      folderFilterCubit.setAll();
     }
   }
 
