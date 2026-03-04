@@ -33,7 +33,7 @@ void main() {
     await LocalStorage.configurePrefs();
   });
 
-  test('stale import marker is auto-cleared without recovery actions', () async {
+  test('startup stale marker branch performs soft recovery and clears marker', () async {
     final notificationService = _SpyNotificationService();
     final recoveryService = ImportRecoveryService(
       notificationService: notificationService,
@@ -48,15 +48,17 @@ void main() {
     );
     expect(LocalStorage.importInProgress, isTrue);
 
-    final result = await recoveryService.recoverIfNeeded(
+    final result = await recoverOrSyncRemindersOnStartup(
       noteRepository: FakeNoteRepository(),
       todoRepository: FakeTodoRepository(),
+      notificationService: notificationService,
+      importRecoveryService: recoveryService,
       now: now,
     );
 
     expect(result, ImportRecoveryResult.staleCleared);
     expect(notificationService.cancelAllCalls, 0);
-    expect(notificationService.syncCalls, 0);
+    expect(notificationService.syncCalls, 1);
     expect(LocalStorage.importInProgress, isFalse);
     expect(LocalStorage.importStartedAtEpochMs, isNull);
   });

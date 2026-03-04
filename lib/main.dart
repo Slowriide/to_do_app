@@ -32,6 +32,7 @@ Future<ImportRecoveryResult> recoverOrSyncRemindersOnStartup({
   required TodoRepository todoRepository,
   NotificationService? notificationService,
   ImportRecoveryService? importRecoveryService,
+  DateTime? now,
 }) async {
   final notifications = notificationService ?? NotificationService();
   final recovery = importRecoveryService ??
@@ -39,14 +40,18 @@ Future<ImportRecoveryResult> recoverOrSyncRemindersOnStartup({
   final recoveryResult = await recovery.recoverIfNeeded(
     noteRepository: noteRepository,
     todoRepository: todoRepository,
+    now: now,
   );
-  if (recoveryResult != ImportRecoveryResult.none) {
+  if (recoveryResult == ImportRecoveryResult.recovered) {
     return recoveryResult;
   }
   await notifications.syncRemindersFromDatabase(
     noteRepository: noteRepository,
     todoRepository: todoRepository,
   );
+  if (recoveryResult == ImportRecoveryResult.staleCleared) {
+    return ImportRecoveryResult.staleCleared;
+  }
   return ImportRecoveryResult.none;
 }
 
