@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 
 abstract class NoteSketchStorageService {
   static final RegExp _ownedPathPattern =
@@ -36,7 +37,8 @@ abstract class NoteSketchStorageService {
         if (isOwnedSketchPath(image)) extracted.add(image);
       }
       return extracted;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('sketch-storage/extract-owned-paths failed: $e\n$st');
       return {};
     }
   }

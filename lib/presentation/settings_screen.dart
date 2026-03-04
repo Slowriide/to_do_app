@@ -84,7 +84,8 @@ class _SettingsState extends State<Settings> {
   BackupService? _resolveBackupService() {
     try {
       return RepositoryProvider.of<BackupService?>(context, listen: false);
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('settings/resolve-backup-service failed: $e\n$st');
       return null;
     }
   }

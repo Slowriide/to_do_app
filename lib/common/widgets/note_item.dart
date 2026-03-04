@@ -233,7 +233,8 @@ class _NoteItemState extends State<NoteItem> {
       final date = DateTime.fromMicrosecondsSinceEpoch(id);
       if (date.year < 2000 || date.year > 2100) return null;
       return date;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('note-item/created-at-from-id failed: $e\n$st');
       return null;
     }
   }

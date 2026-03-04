@@ -17,11 +17,14 @@ import 'package:to_do_app/presentation/cubits/notes/note_state.dart';
 class NoteCubit extends Cubit<NoteState> {
   final NoteRepository repository;
   final NoteSketchStorageService sketchStorage;
+  final NotificationService notificationService;
 
   NoteCubit(
     this.repository, {
     NoteSketchStorageService? sketchStorage,
+    NotificationService? notificationService,
   })  : sketchStorage = sketchStorage ?? createNoteSketchStorageService(),
+        notificationService = notificationService ?? NotificationService(),
         super(const NoteState.loading()) {
     loadNotes();
   }
@@ -79,7 +82,7 @@ class NoteCubit extends Cubit<NoteState> {
         sketchStorage.extractOwnedSketchPathsFromDelta(note.richTextDeltaJson),
       );
       await repository.deleteNote(note);
-      await NotificationService().cancelNoteReminder(note.id);
+      await notificationService.cancelNoteReminder(note.id);
     }
     await sketchStorage.deleteFiles(sketchPaths);
     final idsToDelete = notesToDelete.map((note) => note.id).toSet();
@@ -229,10 +232,10 @@ class NoteCubit extends Cubit<NoteState> {
 
   Future<void> _syncReminder(Note note) async {
     if (note.reminder == null) {
-      await NotificationService().cancelNoteReminder(note.id);
+      await notificationService.cancelNoteReminder(note.id);
       return;
     }
-    await NotificationService().scheduleNoteReminder(
+    await notificationService.scheduleNoteReminder(
       noteId: note.id,
       title: note.title,
       body: note.text,

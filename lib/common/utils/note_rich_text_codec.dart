@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:to_do_app/common/utils/local_file_exists.dart';
 import 'package:to_do_app/domain/models/note.dart';
@@ -33,7 +34,8 @@ class NoteRichTextCodec {
           final sanitized = _sanitizeDelta(decoded);
           return quill.Document.fromJson(sanitized);
         }
-      } catch (_) {
+      } catch (e, st) {
+        debugPrint('rich-text/decode-note-document failed: $e\n$st');
         // Fallback to plain text decoding for malformed rich text payloads.
       }
     }
