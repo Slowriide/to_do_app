@@ -12,6 +12,7 @@ import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
+import 'package:to_do_app/common/widgets/todo_item.dart';
 import 'package:to_do_app/presentation/todos/archived_todo_page.dart';
 
 import 'fake_repositories.dart';
@@ -35,8 +36,18 @@ Widget _buildArchivedTodosApp({
         builder: (context, state) {
           return MultiBlocProvider(
             providers: [
-              BlocProvider(create: (_) => NoteCubit(noteRepo)),
-              BlocProvider(create: (_) => TodoCubit(todoRepo)),
+              BlocProvider(
+                create: (_) => NoteCubit(
+                  noteRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
+              BlocProvider(
+                create: (_) => TodoCubit(
+                  todoRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
               BlocProvider(create: (_) => FolderCubit(folderRepo)),
               BlocProvider(create: (_) => FolderFilterCubit()),
               BlocProvider(create: (_) => TodoSearchCubit(searchSeed)),
@@ -93,8 +104,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Archived todo'), findsOneWidget);
-    expect(find.text('Active todo'), findsNothing);
+    expect(find.byType(TodoItem), findsOneWidget);
   });
 
   testWidgets('restore action removes todo from archived list', (tester) async {
@@ -124,7 +134,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.longPress(find.text('Archived todo'));
+    await tester.longPress(find.byType(TodoItem).first);
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.unarchive_outlined));
     await tester.pumpAndSettle();

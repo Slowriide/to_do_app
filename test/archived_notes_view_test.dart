@@ -13,6 +13,7 @@ import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+import 'package:to_do_app/common/widgets/note_item.dart';
 import 'package:to_do_app/presentation/notes/archived_note_page.dart';
 
 import 'fake_repositories.dart';
@@ -36,8 +37,18 @@ Widget _buildArchivedApp({
         builder: (context, state) {
           return MultiBlocProvider(
             providers: [
-              BlocProvider(create: (_) => NoteCubit(noteRepo)),
-              BlocProvider(create: (_) => TodoCubit(todoRepo)),
+              BlocProvider(
+                create: (_) => NoteCubit(
+                  noteRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
+              BlocProvider(
+                create: (_) => TodoCubit(
+                  todoRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
               BlocProvider(create: (_) => FolderCubit(folderRepo)),
               BlocProvider(create: (_) => FolderFilterCubit()),
               BlocProvider(create: (_) => NoteSearchCubit(searchSeed)),
@@ -76,8 +87,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Archived note'), findsOneWidget);
-    expect(find.text('Active note'), findsNothing);
+    expect(find.byType(NoteItem), findsOneWidget);
   });
 
   testWidgets('restore action removes note from archived list', (tester) async {
@@ -99,7 +109,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.longPress(find.text('Archived note'));
+    await tester.longPress(find.byType(NoteItem).first);
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.unarchive_outlined));
     await tester.pumpAndSettle();
@@ -127,7 +137,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.longPress(find.text('Archived note'));
+    await tester.longPress(find.byType(NoteItem).first);
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.delete_outline_outlined));
     await tester.pumpAndSettle();

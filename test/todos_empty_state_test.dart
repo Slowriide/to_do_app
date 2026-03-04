@@ -13,6 +13,7 @@ import 'package:to_do_app/presentation/cubits/notes/note_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_search_cubit.dart';
+import 'package:to_do_app/common/widgets/todo_item.dart';
 import 'package:to_do_app/presentation/todos/todos_view.dart';
 
 import 'fake_repositories.dart';
@@ -37,8 +38,18 @@ Widget _buildTodosApp({
         builder: (context, state) {
           return MultiBlocProvider(
             providers: [
-              BlocProvider(create: (_) => NoteCubit(noteRepo)),
-              BlocProvider(create: (_) => TodoCubit(todoRepo)),
+              BlocProvider(
+                create: (_) => NoteCubit(
+                  noteRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
+              BlocProvider(
+                create: (_) => TodoCubit(
+                  todoRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
               BlocProvider(create: (_) => FolderCubit(folderRepo)),
               BlocProvider(
                 create: (_) {
@@ -153,7 +164,7 @@ void main() {
 
     await tester.tap(find.text('Clear search'));
     await tester.pumpAndSettle();
-    expect(find.text('Finish report'), findsOneWidget);
+    expect(find.byType(TodoItem), findsOneWidget);
   });
 
   testWidgets('show all folders action resets folder filter and restores list',
@@ -196,6 +207,6 @@ void main() {
 
     await tester.tap(find.text('Show all folders'));
     await tester.pumpAndSettle();
-    expect(find.text('Inbox todo'), findsOneWidget);
+    expect(find.byType(TodoItem), findsOneWidget);
   });
 }

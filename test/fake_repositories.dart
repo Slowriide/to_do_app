@@ -1,9 +1,37 @@
 import 'package:to_do_app/domain/models/folder.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/models/todo.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/domain/repository/folder_repository.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
 import 'package:to_do_app/domain/repository/todo_repository.dart';
+
+class NoopNotificationService extends NotificationService {
+  @override
+  Future<void> scheduleNoteReminder({
+    required int noteId,
+    required String title,
+    String? body,
+    required DateTime scheduledDate,
+  }) async {}
+
+  @override
+  Future<void> scheduleTodoReminder({
+    required int todoId,
+    required String title,
+    String? body,
+    required DateTime scheduledDate,
+  }) async {}
+
+  @override
+  Future<void> cancelNoteReminder(int noteId) async {}
+
+  @override
+  Future<void> cancelTodoReminder(int todoId) async {}
+
+  @override
+  Future<void> cancelAll() async {}
+}
 
 class FakeNoteRepository implements NoteRepository {
   FakeNoteRepository({List<Note>? initial}) : _notes = [...?initial];

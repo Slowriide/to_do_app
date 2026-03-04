@@ -13,7 +13,8 @@ import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
-import 'package:to_do_app/presentation/notes/archived_notes_view.dart';
+import 'package:to_do_app/common/widgets/note_item.dart';
+import 'package:to_do_app/presentation/notes/archived_note_page.dart';
 import 'package:to_do_app/presentation/notes/notes_view.dart';
 
 import 'fake_repositories.dart';
@@ -37,7 +38,7 @@ Widget _buildApp({
       GoRoute(path: '/home', builder: (context, state) => const NotesView()),
       GoRoute(
         path: '/archived-notes',
-        builder: (context, state) => const ArchivedNotesView(),
+        builder: (context, state) => const ArchivedNotePage(),
       ),
       GoRoute(
         path: '/editNote',
@@ -53,8 +54,18 @@ Widget _buildApp({
   final themeData = AppTheme(isDarkMode: false).getTheme();
   return MultiBlocProvider(
     providers: [
-      BlocProvider(create: (_) => NoteCubit(noteRepo)),
-      BlocProvider(create: (_) => TodoCubit(todoRepo)),
+      BlocProvider(
+        create: (_) => NoteCubit(
+          noteRepo,
+          notificationService: NoopNotificationService(),
+        ),
+      ),
+      BlocProvider(
+        create: (_) => TodoCubit(
+          todoRepo,
+          notificationService: NoopNotificationService(),
+        ),
+      ),
       BlocProvider(create: (_) => FolderCubit(folderRepo)),
       BlocProvider(create: (_) => FolderFilterCubit()),
       BlocProvider(create: (_) => NoteSearchCubit(searchSeed)),
@@ -93,11 +104,11 @@ void main() {
     expect(find.byKey(const ValueKey('notes_grid_mode')), findsOneWidget);
     expect(find.byKey(const ValueKey('notes_list_mode')), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('toggleViewMode')));
+    await tester.tap(find.byIcon(Icons.view_list_rounded));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notes_list_mode')), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('toggleViewMode')));
+    await tester.tap(find.byIcon(Icons.grid_view_rounded));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notes_grid_mode')), findsOneWidget);
   });
@@ -118,12 +129,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('toggleViewMode')), findsOneWidget);
+    expect(find.byIcon(Icons.view_list_rounded), findsOneWidget);
 
-    await tester.longPress(find.text('Active note'));
+    await tester.longPress(find.byType(NoteItem).first);
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('toggleViewMode')), findsNothing);
+    expect(find.byIcon(Icons.view_list_rounded), findsNothing);
   });
 
   testWidgets(
@@ -144,7 +155,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('toggleViewMode')));
+    await tester.tap(find.byIcon(Icons.view_list_rounded));
     await tester.pumpAndSettle();
     expect(LocalStorage.notesViewMode, 'list');
 
@@ -160,7 +171,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notes_list_mode')), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('toggleViewMode')));
+    await tester.tap(find.byIcon(Icons.grid_view_rounded));
     await tester.pumpAndSettle();
     expect(LocalStorage.notesViewMode, 'grid');
 

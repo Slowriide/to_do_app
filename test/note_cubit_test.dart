@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:to_do_app/core/notifications/notifications_service.dart';
 import 'package:to_do_app/core/storage/note_sketch_storage_service_base.dart';
 import 'package:to_do_app/domain/models/note.dart';
 import 'package:to_do_app/domain/repository/note_repository.dart';
@@ -61,12 +62,27 @@ class FakeSketchStorageService extends NoteSketchStorageService {
   Future<String> savePng(Uint8List bytes) async => 'saved.png';
 }
 
+class _NoopNotificationService extends NotificationService {
+  @override
+  Future<void> scheduleNoteReminder({
+    required int noteId,
+    required String title,
+    String? body,
+    required DateTime scheduledDate,
+  }) async {}
+
+  @override
+  Future<void> cancelNoteReminder(int noteId) async {}
+}
+
 Future<void> _settle() async {
   await Future<void>.delayed(Duration.zero);
   await Future<void>.delayed(Duration.zero);
 }
 
 void main() {
+  final notifications = _NoopNotificationService();
+
   test('loads notes sorted with pinned first then by order', () async {
     final repo = FakeNoteRepository([
       Note(id: 1, title: 'b', text: 'b', order: 2, isPinned: false),
@@ -74,7 +90,7 @@ void main() {
       Note(id: 3, title: 'c', text: 'c', order: 1, isPinned: false),
       Note(id: 4, title: 'd', text: 'd', order: 0, isPinned: true),
     ]);
-    final cubit = NoteCubit(repo);
+    final cubit = NoteCubit(repo, notificationService: notifications);
 
     await _settle();
 
@@ -89,7 +105,7 @@ void main() {
       Note(id: 2, title: 'b', text: 'b', order: 1, isPinned: false),
       Note(id: 3, title: 'c', text: 'c', order: 2, isPinned: false),
     ]);
-    final cubit = NoteCubit(repo);
+    final cubit = NoteCubit(repo, notificationService: notifications);
     await _settle();
 
     await cubit.reorderNotes([
@@ -111,7 +127,7 @@ void main() {
       Note(id: 2, title: 'u', text: 'u', order: 0, isPinned: false),
       Note(id: 3, title: 'u2', text: 'u2', order: 1, isPinned: false),
     ]);
-    final cubit = NoteCubit(repo);
+    final cubit = NoteCubit(repo, notificationService: notifications);
     await _settle();
 
     final before = cubit.state.notes.map((n) => n.id).toList();
@@ -127,7 +143,7 @@ void main() {
       Note(id: 1, title: 'a', text: 'a', order: 0, isPinned: true),
       Note(id: 2, title: 'b', text: 'b', order: 1),
     ]);
-    final cubit = NoteCubit(repo);
+    final cubit = NoteCubit(repo, notificationService: notifications);
     await _settle();
 
     await cubit.archiveNotes([cubit.state.notes.first]);
@@ -144,7 +160,7 @@ void main() {
       Note(id: 2, title: 'b', text: 'b', order: 1, isPinned: false),
       Note(id: 3, title: 'c', text: 'c', order: 2, isPinned: false),
     ]);
-    final cubit = NoteCubit(repo);
+    final cubit = NoteCubit(repo, notificationService: notifications);
     await _settle();
 
     final middle = cubit.state.notes.firstWhere((n) => n.id == 2);
@@ -162,7 +178,7 @@ void main() {
       Note(id: 1, title: 'a', text: 'a', order: 0, isArchived: true),
       Note(id: 2, title: 'b', text: 'b', order: 1),
     ]);
-    final cubit = NoteCubit(repo);
+    final cubit = NoteCubit(repo, notificationService: notifications);
     await _settle();
 
     final archived = cubit.state.notes.where((n) => n.isArchived).toList();
@@ -175,7 +191,7 @@ void main() {
 
   test('addNote stores plain and rich text payload', () async {
     final repo = FakeNoteRepository([]);
-    final cubit = NoteCubit(repo);
+    final cubit = NoteCubit(repo, notificationService: notifications);
     await _settle();
 
     await cubit.addNote(
@@ -211,7 +227,11 @@ void main() {
       ),
     ]);
     final storage = FakeSketchStorageService();
-    final cubit = NoteCubit(repo, sketchStorage: storage);
+    final cubit = NoteCubit(
+      repo,
+      sketchStorage: storage,
+      notificationService: notifications,
+    );
     await _settle();
 
     await cubit.deleteNotes([...cubit.state.notes]);

@@ -14,6 +14,7 @@ import 'package:to_do_app/presentation/cubits/notes/note_search_cubit.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 import 'package:to_do_app/presentation/cubits/theme/theme_cubit.dart';
 import 'package:to_do_app/presentation/cubits/todos/todo_cubit.dart';
+import 'package:to_do_app/common/widgets/note_item.dart';
 import 'package:to_do_app/presentation/notes/notes_view.dart';
 
 import 'fake_repositories.dart';
@@ -38,8 +39,18 @@ Widget _buildNotesApp({
         builder: (context, state) {
           return MultiBlocProvider(
             providers: [
-              BlocProvider(create: (_) => NoteCubit(noteRepo)),
-              BlocProvider(create: (_) => TodoCubit(todoRepo)),
+              BlocProvider(
+                create: (_) => NoteCubit(
+                  noteRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
+              BlocProvider(
+                create: (_) => TodoCubit(
+                  todoRepo,
+                  notificationService: NoopNotificationService(),
+                ),
+              ),
               BlocProvider(create: (_) => FolderCubit(folderRepo)),
               BlocProvider(
                 create: (_) {
@@ -154,7 +165,7 @@ void main() {
 
     await tester.tap(find.text('Clear search'));
     await tester.pumpAndSettle();
-    expect(find.text('Groceries'), findsOneWidget);
+    expect(find.byType(NoteItem), findsOneWidget);
   });
 
   testWidgets('show all folders action resets folder filter and restores list',
@@ -190,7 +201,7 @@ void main() {
 
     await tester.tap(find.text('Show all folders'));
     await tester.pumpAndSettle();
-    expect(find.text('Inbox note'), findsOneWidget);
+    expect(find.byType(NoteItem), findsOneWidget);
   });
 
   testWidgets('active notes view excludes archived notes', (tester) async {

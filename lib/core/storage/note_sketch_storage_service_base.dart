@@ -13,8 +13,10 @@ abstract class NoteSketchStorageService {
   bool isOwnedSketchPath(String path) {
     final normalized = path.trim();
     if (normalized.isEmpty) return false;
+    final hasWindowsDrivePrefix =
+        RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(normalized);
     final uri = Uri.tryParse(normalized);
-    if (uri != null && uri.hasScheme) return false;
+    if (uri != null && uri.hasScheme && !hasWindowsDrivePrefix) return false;
     return _ownedPathPattern.hasMatch(normalized);
   }
 
@@ -29,9 +31,9 @@ abstract class NoteSketchStorageService {
 
       final extracted = <String>{};
       for (final op in decoded) {
-        if (op is! Map<String, dynamic>) continue;
+        if (op is! Map) continue;
         final insert = op['insert'];
-        if (insert is! Map<String, dynamic>) continue;
+        if (insert is! Map) continue;
         final image = insert['image'];
         if (image is! String) continue;
         if (isOwnedSketchPath(image)) extracted.add(image);
