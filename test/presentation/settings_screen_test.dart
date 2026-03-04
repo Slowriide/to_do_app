@@ -52,7 +52,7 @@ void main() {
     expect(find.text('Appearance'), findsOneWidget);
     expect(find.text('Mode'), findsOneWidget);
     expect(find.text('Color Presets'), findsOneWidget);
-    expect(find.text('Custom Accent (HEX)'), findsOneWidget);
+    expect(find.text('Custom Accent'), findsOneWidget);
     expect(find.text('Ocean Blue'), findsOneWidget);
     expect(find.text('Forest Green'), findsOneWidget);
     expect(find.text('Sunset Orange'), findsOneWidget);
@@ -70,24 +70,23 @@ void main() {
     expect(themeCubit.state.activeColorSource, ThemeColorSource.preset);
   });
 
-  testWidgets('valid custom hex applies custom theme', (tester) async {
+  testWidgets('valid custom hex applies custom theme state', (tester) async {
     final themeCubit = await _pumpSettings(tester);
 
-    await tester.enterText(find.byType(TextField), '1a73e8');
-    await tester.tap(find.text('Apply'));
-    await tester.pumpAndSettle();
+    final applied = themeCubit.setCustomColorHex('1a73e8');
 
+    expect(applied, isTrue);
     expect(themeCubit.state.customColorHex, '#1A73E8');
     expect(themeCubit.state.activeColorSource, ThemeColorSource.custom);
   });
 
-  testWidgets('invalid custom hex shows inline error', (tester) async {
-    await _pumpSettings(tester);
+  testWidgets('invalid custom hex is rejected by theme state', (tester) async {
+    final themeCubit = await _pumpSettings(tester);
 
-    await tester.enterText(find.byType(TextField), 'ZZZZZZ');
-    await tester.tap(find.text('Apply'));
-    await tester.pumpAndSettle();
+    final applied = themeCubit.setCustomColorHex('ZZZZZZ');
 
-    expect(find.text('Use a valid hex color like #1A73E8.'), findsOneWidget);
+    expect(applied, isFalse);
+    expect(themeCubit.state.activeColorSource, ThemeColorSource.preset);
+    expect(themeCubit.state.customColorHex, isNull);
   });
 }

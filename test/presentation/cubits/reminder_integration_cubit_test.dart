@@ -48,6 +48,8 @@ Future<void> _settle() async {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('NoteCubit reminder lifecycle schedules and cancels namespaced IDs', () async {
     final notifications = _SpyNotificationService();
     final cubit = NoteCubit(
