@@ -8,7 +8,7 @@ class PinnedNoteWidgetService {
   static const String _noteIosWidgetName = 'PinnedNoteHomeWidget';
   static const String _todoAndroidWidgetName = 'PinnedTodoHomeWidgetProvider';
   static const String _todoIosWidgetName = 'PinnedTodoHomeWidget';
-  static const String _appGroupId = 'group.com.example.to_do_app';
+  static const String _appGroupId = 'group.com.thiagogobbi.dailynotes';
 
   static const String _noteIdKey = 'pinnedNoteId';
   static const String _noteTitleKey = 'pinnedNoteTitle';
@@ -248,3 +248,4 @@ class PinnedNoteWidgetService {
     }
   }
 }
+

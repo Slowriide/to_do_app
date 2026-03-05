@@ -1,4 +1,4 @@
-package com.example.to_do_app
+package com.thiagogobbi.dailynotes
 
 import android.app.AlarmManager
 import android.content.Context
@@ -22,3 +22,4 @@ class MainActivity : FlutterActivity() {
         }
     }
 }
+

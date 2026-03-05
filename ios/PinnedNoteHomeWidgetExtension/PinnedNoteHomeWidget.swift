@@ -1,7 +1,7 @@
 import SwiftUI
 import WidgetKit
 
-private let appGroupId = "group.com.example.to_do_app"
+private let appGroupId = "group.com.thiagogobbi.dailynotes"
 
 struct PinnedItemEntry: TimelineEntry {
     let date: Date
@@ -138,3 +138,4 @@ struct PinnedTodoHomeWidget: Widget {
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
+
