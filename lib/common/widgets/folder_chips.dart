@@ -29,6 +29,10 @@ class FolderChips extends StatelessWidget {
                   children: [
                     ChoiceChip(
                       label: const Text('All'),
+                      labelPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
                       showCheckmark: false,
                       selectedColor:
                           colors.primaryContainer.withValues(alpha: 0.55),
@@ -40,6 +44,7 @@ class FolderChips extends StatelessWidget {
                             ? colors.onPrimaryContainer
                             : colors.onSurface,
                         fontWeight: FontWeight.w600,
+                        height: 1,
                       ),
                       selected: filter.type == FolderFilterType.all,
                       onSelected: (_) =>
@@ -51,6 +56,10 @@ class FolderChips extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
                           label: Text(folder.name),
+                          labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 0,
+                          ),
                           showCheckmark: false,
                           selectedColor:
                               colors.primaryContainer.withValues(alpha: 0.55),
@@ -63,6 +72,7 @@ class FolderChips extends StatelessWidget {
                                 ? colors.onPrimaryContainer
                                 : colors.onSurface,
                             fontWeight: FontWeight.w600,
+                            height: 1,
                           ),
                           selected: filter.type == FolderFilterType.custom &&
                               filter.folderId == folder.id,
