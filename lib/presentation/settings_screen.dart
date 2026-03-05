@@ -335,27 +335,31 @@ class _SettingsState extends State<Settings> {
                     children: [
                       Text('Mode', style: theme.textTheme.bodyLarge),
                       const SizedBox(height: 10),
-                      SegmentedButton<bool>(
-                        segments: const [
-                          ButtonSegment<bool>(
-                            value: false,
-                            icon: Icon(Icons.light_mode_outlined),
-                            label: Text('Light'),
-                          ),
-                          ButtonSegment<bool>(
-                            value: true,
-                            icon: Icon(Icons.dark_mode_outlined),
-                            label: Text('Dark'),
-                          ),
-                        ],
-                        selected: {state.isDarkmode},
-                        onSelectionChanged: (selection) {
-                          if (selection.first) {
-                            context.read<ThemeCubit>().setDarkMode();
-                          } else {
-                            context.read<ThemeCubit>().setLightMode();
-                          }
-                        },
+                      SizedBox(
+                        width: double.infinity,
+                        child: SegmentedButton<bool>(
+                          expandedInsets: EdgeInsets.zero,
+                          segments: const [
+                            ButtonSegment<bool>(
+                              value: false,
+                              icon: Icon(Icons.light_mode_outlined),
+                              label: Text('Light'),
+                            ),
+                            ButtonSegment<bool>(
+                              value: true,
+                              icon: Icon(Icons.dark_mode_outlined),
+                              label: Text('Dark'),
+                            ),
+                          ],
+                          selected: {state.isDarkmode},
+                          onSelectionChanged: (selection) {
+                            if (selection.first) {
+                              context.read<ThemeCubit>().setDarkMode();
+                            } else {
+                              context.read<ThemeCubit>().setLightMode();
+                            }
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -370,22 +374,26 @@ class _SettingsState extends State<Settings> {
                     children: [
                       Text('Color Presets', style: theme.textTheme.bodyLarge),
                       const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
+                      Column(
                         children: [
                           for (final preset in themePresets)
-                            _PresetSwatch(
-                              label: preset.displayName,
-                              color: preset.seedColor,
-                              selected: state.activeColorSource ==
-                                      ThemeColorSource.preset &&
-                                  state.presetId == preset.id,
-                              onTap: () {
-                                context
-                                    .read<ThemeCubit>()
-                                    .selectPreset(preset.id);
-                              },
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: _PresetSwatch(
+                                  label: preset.displayName,
+                                  color: preset.seedColor,
+                                  selected: state.activeColorSource ==
+                                          ThemeColorSource.preset &&
+                                      state.presetId == preset.id,
+                                  onTap: () {
+                                    context
+                                        .read<ThemeCubit>()
+                                        .selectPreset(preset.id);
+                                  },
+                                ),
+                              ),
                             ),
                         ],
                       ),
@@ -432,6 +440,8 @@ class _SettingsState extends State<Settings> {
                               state.customColorHex ??
                                   'No custom color selected',
                               style: theme.textTheme.bodyMedium,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -684,7 +694,6 @@ class _PresetSwatch extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Ink(
-          width: 150,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
