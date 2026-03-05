@@ -435,8 +435,7 @@ class _SketchCanvasPageState extends State<SketchCanvasPage> {
                         padding: const EdgeInsets.only(right: 10),
                         child: _ColorDot(
                           color: color,
-                          selected:
-                              !isErasing &&
+                          selected: !isErasing &&
                               selectedColor.toARGB32() == color.toARGB32(),
                           onTap: () {
                             _lastSelectedColor = color;

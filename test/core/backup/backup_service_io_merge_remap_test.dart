@@ -217,7 +217,8 @@ void main() {
     }
   });
 
-  test('merge import remaps colliding note/todo/folder IDs without overwrite', () async {
+  test('merge import remaps colliding note/todo/folder IDs without overwrite',
+      () async {
     if (!isarCoreReady) return;
     final zip = await _writeBackupZip(tempDir, _buildMergePayload());
 
@@ -242,18 +243,23 @@ void main() {
     expect(importedRootTodo!.id, isNot(1));
   });
 
-  test('merge import preserves folder hierarchy with remapped parent IDs', () async {
+  test('merge import preserves folder hierarchy with remapped parent IDs',
+      () async {
     if (!isarCoreReady) return;
     final zip = await _writeBackupZip(tempDir, _buildMergePayload());
 
     await service.importBackup(zip, mode: ImportMode.merge);
 
-    final importedParent =
-        await isar.folderIsars.filter().nameEqualTo('import-parent').findFirst();
+    final importedParent = await isar.folderIsars
+        .filter()
+        .nameEqualTo('import-parent')
+        .findFirst();
     final importedChild =
         await isar.folderIsars.filter().nameEqualTo('import-child').findFirst();
-    final importedOrphan =
-        await isar.folderIsars.filter().nameEqualTo('import-orphan').findFirst();
+    final importedOrphan = await isar.folderIsars
+        .filter()
+        .nameEqualTo('import-orphan')
+        .findFirst();
 
     expect(importedParent, isNotNull);
     expect(importedChild, isNotNull);
@@ -270,7 +276,8 @@ void main() {
     );
   });
 
-  test('merge import keeps todo subtree linked correctly after remap', () async {
+  test('merge import keeps todo subtree linked correctly after remap',
+      () async {
     if (!isarCoreReady) return;
     final zip = await _writeBackupZip(tempDir, _buildMergePayload());
 
@@ -286,12 +293,15 @@ void main() {
     expect(child.title, 'import-child-task');
     expect(child.id, isNot(3));
 
-    final importedParent =
-        await isar.folderIsars.filter().nameEqualTo('import-parent').findFirst();
+    final importedParent = await isar.folderIsars
+        .filter()
+        .nameEqualTo('import-parent')
+        .findFirst();
     final importedChild =
         await isar.folderIsars.filter().nameEqualTo('import-child').findFirst();
 
-    expect(importedRoot.folderIds.toSet(), {importedParent!.id, importedChild!.id});
+    expect(importedRoot.folderIds.toSet(),
+        {importedParent!.id, importedChild!.id});
     expect(child.folderIds.toSet(), {importedChild.id});
   });
 

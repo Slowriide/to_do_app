@@ -145,8 +145,8 @@ void main() {
     expect(_viewModeCubit(tester).state, NoteViewMode.grid);
 
     final activeNote = _noteCubit(tester).state.notes.firstWhere(
-      (note) => !note.isArchived,
-    );
+          (note) => !note.isArchived,
+        );
     await tester.longPress(find.byKey(ValueKey('note_${activeNote.id}')).first);
     await tester.pumpAndSettle();
 

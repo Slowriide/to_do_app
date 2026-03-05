@@ -53,7 +53,8 @@ void main() {
     appRouter.go('/home');
   });
 
-  testWidgets('invalid note deeplink id shows route error page', (tester) async {
+  testWidgets('invalid note deeplink id shows route error page',
+      (tester) async {
     await tester.pumpWidget(_buildTestApp());
     appRouter.go('/note/not-a-number');
     await tester.pumpAndSettle();
@@ -61,7 +62,8 @@ void main() {
     expect(find.text('Invalid Note Link'), findsOneWidget);
   });
 
-  testWidgets('invalid todo deeplink id shows route error page', (tester) async {
+  testWidgets('invalid todo deeplink id shows route error page',
+      (tester) async {
     await tester.pumpWidget(_buildTestApp());
     appRouter.go('/todo/not-a-number');
     await tester.pumpAndSettle();
@@ -69,7 +71,8 @@ void main() {
     expect(find.text('Invalid Todo Link'), findsOneWidget);
   });
 
-  testWidgets('editNote without extra shows invalid route data page', (tester) async {
+  testWidgets('editNote without extra shows invalid route data page',
+      (tester) async {
     await tester.pumpWidget(_buildTestApp());
     appRouter.go('/editNote');
     await tester.pumpAndSettle();
@@ -77,7 +80,8 @@ void main() {
     expect(find.text('Invalid Note Route Data'), findsOneWidget);
   });
 
-  testWidgets('note loader shows not found page when repository returns null', (tester) async {
+  testWidgets('note loader shows not found page when repository returns null',
+      (tester) async {
     await tester.pumpWidget(_buildTestApp());
     appRouter.go('/note/9999');
     await tester.pumpAndSettle();
@@ -85,7 +89,8 @@ void main() {
     expect(find.text('Note Not Found'), findsOneWidget);
   });
 
-  testWidgets('todo loader shows not found page when repository returns null', (tester) async {
+  testWidgets('todo loader shows not found page when repository returns null',
+      (tester) async {
     await tester.pumpWidget(_buildTestApp());
     appRouter.go('/todo/9999');
     await tester.pumpAndSettle();

@@ -8,7 +8,8 @@ import 'package:to_do_app/core/storage/note_sketch_storage_service_base.dart';
 class NoteSketchStorageServiceImpl extends NoteSketchStorageService {
   Future<Directory> _sketchDirectory() async {
     final docs = await getApplicationDocumentsDirectory();
-    final directory = Directory('${docs.path}${Platform.pathSeparator}note_sketches');
+    final directory =
+        Directory('${docs.path}${Platform.pathSeparator}note_sketches');
     if (!directory.existsSync()) {
       await directory.create(recursive: true);
     }
@@ -20,8 +21,7 @@ class NoteSketchStorageServiceImpl extends NoteSketchStorageService {
     final dir = await _sketchDirectory();
     final fileName =
         'sketch_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1 << 20)}.png';
-    final file =
-        File('${dir.path}${Platform.pathSeparator}$fileName');
+    final file = File('${dir.path}${Platform.pathSeparator}$fileName');
     await file.writeAsBytes(bytes, flush: true);
     return file.path;
   }

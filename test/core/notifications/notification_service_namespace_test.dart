@@ -83,12 +83,15 @@ class _SpyNotificationService extends NotificationService {
 }
 
 void main() {
-  test('notification IDs for note and todo do not collide for same entity id', () {
+  test('notification IDs for note and todo do not collide for same entity id',
+      () {
     final service = NotificationService();
-    expect(service.notificationIdForNote(10), isNot(service.notificationIdForTodo(10)));
+    expect(service.notificationIdForNote(10),
+        isNot(service.notificationIdForTodo(10)));
   });
 
-  test('database reminder sync schedules note and todo with different IDs', () async {
+  test('database reminder sync schedules note and todo with different IDs',
+      () async {
     final now = DateTime.now();
     final service = _SpyNotificationService();
 

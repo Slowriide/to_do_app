@@ -221,8 +221,7 @@ class _NoteItemState extends State<NoteItem> {
     if (createdAt == null) return null;
 
     final localizations = MaterialLocalizations.of(context);
-    final use24h =
-        MediaQuery.maybeOf(context)?.alwaysUse24HourFormat ?? false;
+    final use24h = MediaQuery.maybeOf(context)?.alwaysUse24HourFormat ?? false;
     final date = localizations.formatShortDate(createdAt);
     final time = localizations.formatTimeOfDay(
       TimeOfDay.fromDateTime(createdAt),

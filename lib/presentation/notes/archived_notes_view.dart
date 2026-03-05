@@ -194,8 +194,7 @@ class _ArchivedNotesViewState extends State<ArchivedNotesView> {
                   icon: viewMode == NoteViewMode.grid
                       ? Icons.view_list_rounded
                       : Icons.grid_view_rounded,
-                  onPressed: () =>
-                      context.read<NoteViewModeCubit>().toggle(),
+                  onPressed: () => context.read<NoteViewModeCubit>().toggle(),
                   valueKey: const ValueKey('toggleViewMode'),
                 ),
         )

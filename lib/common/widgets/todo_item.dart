@@ -200,12 +200,12 @@ class _TodoItemState extends State<TodoItem> {
                                     ),
                                     child: IgnorePointer(
                                       child: quill.QuillEditor(
-                                        controller: _subtaskControllers[
-                                                subtask.id]!
-                                            .controller,
-                                        focusNode: _subtaskControllers[
-                                                subtask.id]!
-                                            .focusNode,
+                                        controller:
+                                            _subtaskControllers[subtask.id]!
+                                                .controller,
+                                        focusNode:
+                                            _subtaskControllers[subtask.id]!
+                                                .focusNode,
                                         scrollController:
                                             _subtaskControllers[subtask.id]!
                                                 .scrollController,
@@ -243,8 +243,7 @@ class _TodoItemState extends State<TodoItem> {
     if (createdAt == null) return null;
 
     final localizations = MaterialLocalizations.of(context);
-    final use24h =
-        MediaQuery.maybeOf(context)?.alwaysUse24HourFormat ?? false;
+    final use24h = MediaQuery.maybeOf(context)?.alwaysUse24HourFormat ?? false;
     final date = localizations.formatShortDate(createdAt);
     final time = localizations.formatTimeOfDay(
       TimeOfDay.fromDateTime(createdAt),

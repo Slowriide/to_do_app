@@ -53,7 +53,8 @@ class BackupServiceImpl extends BackupService {
 
       final notes = await db.noteIsars.where().findAll();
       final folders = await db.folderIsars.where().findAll();
-      final rootTodos = await db.todoIsars.filter().isSubtaskEqualTo(false).findAll();
+      final rootTodos =
+          await db.todoIsars.filter().isSubtaskEqualTo(false).findAll();
       for (final todo in rootTodos) {
         await _loadTodoTree(todo);
       }
@@ -90,7 +91,8 @@ class BackupServiceImpl extends BackupService {
 
       final archive = Archive();
       final backupBytes = utf8.encode(jsonEncode(backupPayload));
-      archive.addFile(ArchiveFile('backup.json', backupBytes.length, backupBytes));
+      archive
+          .addFile(ArchiveFile('backup.json', backupBytes.length, backupBytes));
 
       if (includeMedia && absoluteToRelative.isNotEmpty) {
         await _appendMediaFilesToArchive(
@@ -139,7 +141,8 @@ class BackupServiceImpl extends BackupService {
       }
       final backupEntry = archive.files.firstWhere(
         (file) => file.name == 'backup.json' && file.isFile,
-        orElse: () => throw BackupFormatException('ZIP does not contain backup.json'),
+        orElse: () =>
+            throw BackupFormatException('ZIP does not contain backup.json'),
       );
 
       final backupJsonString = utf8.decode(_readArchiveFileBytes(backupEntry));
@@ -248,7 +251,8 @@ class BackupServiceImpl extends BackupService {
     required List<NoteIsar> notes,
     required List<_TodoNode> todoNodes,
   }) async {
-    final folderIds = folders.map((folder) => folder.id).toList(growable: false);
+    final folderIds =
+        folders.map((folder) => folder.id).toList(growable: false);
     final noteIds = notes.map((note) => note.id).toList(growable: false);
     final todoIds = <int>[];
     final todoFolderRefs = <int>[];
@@ -552,10 +556,12 @@ class BackupServiceImpl extends BackupService {
     final incomingIds = allNodes.map((node) => node.todo.id).toSet();
     final staleSubtaskIds = <int>{};
 
-    final existing = await db.todoIsars.getAll(incomingIds.toList(growable: false));
+    final existing =
+        await db.todoIsars.getAll(incomingIds.toList(growable: false));
     for (final todo in existing.whereType<TodoIsar>()) {
       await todo.subtasks.load();
-      final expectedChildren = childIdsByParent[todo.id]?.toSet() ?? const <int>{};
+      final expectedChildren =
+          childIdsByParent[todo.id]?.toSet() ?? const <int>{};
       for (final sub in todo.subtasks) {
         if (!expectedChildren.contains(sub.id)) {
           staleSubtaskIds.add(sub.id);
@@ -563,7 +569,8 @@ class BackupServiceImpl extends BackupService {
       }
     }
 
-    final todosToPut = allNodes.map((node) => node.todo).toList(growable: false);
+    final todosToPut =
+        allNodes.map((node) => node.todo).toList(growable: false);
     await db.todoIsars.putAll(todosToPut);
     _runImportCheckpoint(BackupImportCheckpoint.todoUpsertAfterPutAll);
 
@@ -680,7 +687,8 @@ class BackupServiceImpl extends BackupService {
     return NoteIsar()
       ..id = _readInt(raw, 'id')
       ..title = _readString(raw, 'title')
-      ..titleRichTextDeltaJson = _readNullableString(raw, 'titleRichTextDeltaJson')
+      ..titleRichTextDeltaJson =
+          _readNullableString(raw, 'titleRichTextDeltaJson')
       ..text = _readString(raw, 'text')
       ..richTextDeltaJson = rewrittenDelta
       ..isCompleted = _readBool(raw, 'isCompleted')
@@ -711,7 +719,8 @@ class BackupServiceImpl extends BackupService {
     final todo = TodoIsar()
       ..id = id
       ..title = _readString(raw, 'title')
-      ..titleRichTextDeltaJson = _readNullableString(raw, 'titleRichTextDeltaJson')
+      ..titleRichTextDeltaJson =
+          _readNullableString(raw, 'titleRichTextDeltaJson')
       ..isCompleted = _readBool(raw, 'isCompleted')
       ..isSubtask = _readBool(raw, 'isSubtask')
       ..order = _readInt(raw, 'order')
@@ -772,7 +781,8 @@ class BackupServiceImpl extends BackupService {
     }
   }
 
-  Future<Map<String, String>> _extractMediaFilesFromArchive(Archive archive) async {
+  Future<Map<String, String>> _extractMediaFilesFromArchive(
+      Archive archive) async {
     final sketchDir = await _sketchDirectory();
     final relativeToAbsolute = <String, String>{};
 
@@ -818,7 +828,8 @@ class BackupServiceImpl extends BackupService {
 
     final decodedOps = _decodeDelta(richTextDeltaJson);
     if (decodedOps == null) {
-      return _encodeDelta(_sanitizeDeltaOps(const [], removeRelativeMedia: false));
+      return _encodeDelta(
+          _sanitizeDeltaOps(const [], removeRelativeMedia: false));
     }
 
     final rewritten = <Map<String, dynamic>>[];
@@ -836,7 +847,8 @@ class BackupServiceImpl extends BackupService {
       rewritten.add(current);
     }
 
-    return _encodeDelta(_sanitizeDeltaOps(rewritten, removeRelativeMedia: false));
+    return _encodeDelta(
+        _sanitizeDeltaOps(rewritten, removeRelativeMedia: false));
   }
 
   String? _rewriteDeltaImagesRelativeToAbsolute(
@@ -849,7 +861,8 @@ class BackupServiceImpl extends BackupService {
 
     final decodedOps = _decodeDelta(richTextDeltaJson);
     if (decodedOps == null) {
-      return _encodeDelta(_sanitizeDeltaOps(const [], removeRelativeMedia: true));
+      return _encodeDelta(
+          _sanitizeDeltaOps(const [], removeRelativeMedia: true));
     }
 
     final rewritten = <Map<String, dynamic>>[];
@@ -870,7 +883,8 @@ class BackupServiceImpl extends BackupService {
       rewritten.add(current);
     }
 
-    return _encodeDelta(_sanitizeDeltaOps(rewritten, removeRelativeMedia: true));
+    return _encodeDelta(
+        _sanitizeDeltaOps(rewritten, removeRelativeMedia: true));
   }
 
   List<Map<String, dynamic>> _sanitizeDeltaOps(
@@ -973,9 +987,8 @@ class BackupServiceImpl extends BackupService {
   String? _normalizeMediaRelativePath(String path) {
     final normalized = path.trim().replaceAll('\\', '/');
     if (normalized.isEmpty) return null;
-    final withoutDot = normalized.startsWith('./')
-        ? normalized.substring(2)
-        : normalized;
+    final withoutDot =
+        normalized.startsWith('./') ? normalized.substring(2) : normalized;
     final withoutLeadingSlash =
         withoutDot.startsWith('/') ? withoutDot.substring(1) : withoutDot;
     if (withoutLeadingSlash.startsWith('media/')) {
@@ -1052,7 +1065,8 @@ class BackupServiceImpl extends BackupService {
     final output = <int>[];
     for (final item in value) {
       if (item is! int) {
-        throw BackupFormatException('Field "$field" must contain integers only.');
+        throw BackupFormatException(
+            'Field "$field" must contain integers only.');
       }
       output.add(item);
     }

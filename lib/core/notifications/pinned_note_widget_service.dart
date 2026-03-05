@@ -51,8 +51,10 @@ class PinnedNoteWidgetService {
   static Future<void> pinNote(Note note) async {
     if (!_isSupportedPlatform) return;
     await HomeWidget.saveWidgetData<String>(_noteIdKey, note.id.toString());
-    await HomeWidget.saveWidgetData<String>(_noteTitleKey, _safeTitle(note.title));
-    await HomeWidget.saveWidgetData<String>(_notePreviewKey, _buildNotePreview(note.text));
+    await HomeWidget.saveWidgetData<String>(
+        _noteTitleKey, _safeTitle(note.title));
+    await HomeWidget.saveWidgetData<String>(
+        _notePreviewKey, _buildNotePreview(note.text));
     await HomeWidget.saveWidgetData<String>(
       _noteUpdatedAtKey,
       DateTime.now().toUtc().toIso8601String(),
@@ -63,8 +65,10 @@ class PinnedNoteWidgetService {
   static Future<void> pinTodo(Todo todo) async {
     if (!_isSupportedPlatform) return;
     await HomeWidget.saveWidgetData<String>(_todoIdKey, todo.id.toString());
-    await HomeWidget.saveWidgetData<String>(_todoTitleKey, _safeTitle(todo.title));
-    await HomeWidget.saveWidgetData<String>(_todoPreviewKey, _buildTodoPreview(todo));
+    await HomeWidget.saveWidgetData<String>(
+        _todoTitleKey, _safeTitle(todo.title));
+    await HomeWidget.saveWidgetData<String>(
+        _todoPreviewKey, _buildTodoPreview(todo));
     await HomeWidget.saveWidgetData<String>(
       _todoUpdatedAtKey,
       DateTime.now().toUtc().toIso8601String(),
@@ -203,31 +207,42 @@ class PinnedNoteWidgetService {
 
   static Future<void> _migrateLegacyPinnedItemIfNeeded() async {
     try {
-      final legacyType = await HomeWidget.getWidgetData<String>(_legacyPinnedItemTypeKey);
-      final legacyId = await HomeWidget.getWidgetData<dynamic>(_legacyPinnedItemIdKey);
-      final legacyTitle = await HomeWidget.getWidgetData<String>(_legacyPinnedItemTitleKey);
-      final legacyPreview = await HomeWidget.getWidgetData<String>(_legacyPinnedItemPreviewKey);
+      final legacyType =
+          await HomeWidget.getWidgetData<String>(_legacyPinnedItemTypeKey);
+      final legacyId =
+          await HomeWidget.getWidgetData<dynamic>(_legacyPinnedItemIdKey);
+      final legacyTitle =
+          await HomeWidget.getWidgetData<String>(_legacyPinnedItemTitleKey);
+      final legacyPreview =
+          await HomeWidget.getWidgetData<String>(_legacyPinnedItemPreviewKey);
       final id = _coerceId(legacyId);
       if (legacyType == null || id == null) return;
 
       if (legacyType == 'todo' && await _getPinnedTodoId() == null) {
         await HomeWidget.saveWidgetData<String>(_todoIdKey, id.toString());
-        if (legacyTitle != null) await HomeWidget.saveWidgetData<String>(_todoTitleKey, legacyTitle);
+        if (legacyTitle != null) {
+          await HomeWidget.saveWidgetData<String>(_todoTitleKey, legacyTitle);
+        }
         if (legacyPreview != null) {
-          await HomeWidget.saveWidgetData<String>(_todoPreviewKey, legacyPreview);
+          await HomeWidget.saveWidgetData<String>(
+              _todoPreviewKey, legacyPreview);
         }
       } else if (legacyType == 'note' && await _getPinnedNoteId() == null) {
         await HomeWidget.saveWidgetData<String>(_noteIdKey, id.toString());
-        if (legacyTitle != null) await HomeWidget.saveWidgetData<String>(_noteTitleKey, legacyTitle);
+        if (legacyTitle != null) {
+          await HomeWidget.saveWidgetData<String>(_noteTitleKey, legacyTitle);
+        }
         if (legacyPreview != null) {
-          await HomeWidget.saveWidgetData<String>(_notePreviewKey, legacyPreview);
+          await HomeWidget.saveWidgetData<String>(
+              _notePreviewKey, legacyPreview);
         }
       }
 
       await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemTypeKey, null);
       await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemIdKey, null);
       await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemTitleKey, null);
-      await HomeWidget.saveWidgetData<String?>(_legacyPinnedItemPreviewKey, null);
+      await HomeWidget.saveWidgetData<String?>(
+          _legacyPinnedItemPreviewKey, null);
     } catch (e, st) {
       debugPrint('widget/legacy-migration failed: $e\n$st');
     }

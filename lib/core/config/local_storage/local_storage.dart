@@ -25,10 +25,13 @@ class LocalStorage {
   static bool get isDarkMode => prefs.getBool(_isDarkModeKey) ?? false;
   static set isDarkMode(bool value) => prefs.setBool(_isDarkModeKey, value);
 
-  static String get themePresetId => prefs.getString(_themePresetIdKey) ?? 'oceanBlue';
-  static set themePresetId(String value) => prefs.setString(_themePresetIdKey, value);
+  static String get themePresetId =>
+      prefs.getString(_themePresetIdKey) ?? 'oceanBlue';
+  static set themePresetId(String value) =>
+      prefs.setString(_themePresetIdKey, value);
 
-  static String get themeColorSource => prefs.getString(_themeColorSourceKey) ?? 'preset';
+  static String get themeColorSource =>
+      prefs.getString(_themeColorSourceKey) ?? 'preset';
   static set themeColorSource(String value) =>
       prefs.setString(_themeColorSourceKey, value);
 
@@ -75,7 +78,8 @@ class LocalStorage {
     prefs.setString(_notesViewModeKey, 'grid');
   }
 
-  static bool get importInProgress => prefs.getBool(_importInProgressKey) ?? false;
+  static bool get importInProgress =>
+      prefs.getBool(_importInProgressKey) ?? false;
 
   static int? get importStartedAtEpochMs =>
       prefs.getInt(_importStartedAtEpochMsKey);

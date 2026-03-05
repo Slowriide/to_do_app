@@ -15,8 +15,8 @@ final appRouter = GoRouter(
   errorBuilder: (context, state) {
     return _RouteDataErrorPage(
       title: 'Navigation Error',
-      message: state.error?.toString() ??
-          'The requested route could not be opened.',
+      message:
+          state.error?.toString() ?? 'The requested route could not be opened.',
     );
   },
   redirect: (context, state) {

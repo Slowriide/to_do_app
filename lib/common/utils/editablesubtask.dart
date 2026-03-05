@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 /// Model representing an editable subtask in the UI.

@@ -33,7 +33,8 @@ Future<File> _writeBackupZip(
   archive.addFile(ArchiveFile('backup.json', bytes.length, bytes));
   final encoded = ZipEncoder().encode(archive);
 
-  final zipFile = File('${tempDir.path}${Platform.pathSeparator}backup_success.zip');
+  final zipFile =
+      File('${tempDir.path}${Platform.pathSeparator}backup_success.zip');
   await zipFile.writeAsBytes(encoded, flush: true);
   return zipFile;
 }
@@ -177,7 +178,8 @@ void main() {
 
       await runImportFlowWithMarker(
         markImportStarted: recoveryService.markImportStarted,
-        runImport: () => backupService.importBackup(zip, mode: ImportMode.replace),
+        runImport: () =>
+            backupService.importBackup(zip, mode: ImportMode.replace),
         runPostImportSideEffects: () async {},
         clearImportMarker: recoveryService.clearImportMarker,
       );

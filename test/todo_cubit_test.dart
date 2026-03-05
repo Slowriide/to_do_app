@@ -132,8 +132,8 @@ void main() {
     final cubit = TodoCubit(repo);
     await _settle();
 
-    await cubit
-        .reorderTodos([cubit.state.todos[2], cubit.state.todos[0], cubit.state.todos[1]]);
+    await cubit.reorderTodos(
+        [cubit.state.todos[2], cubit.state.todos[0], cubit.state.todos[1]]);
 
     expect(repo.updateTodosCalls, 1);
     expect(repo.updateTodoCalls, 0);

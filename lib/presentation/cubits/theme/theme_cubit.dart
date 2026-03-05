@@ -7,6 +7,7 @@ import 'package:to_do_app/core/config/theme/theme_presets.dart';
 part 'theme_state.dart';
 
 enum ThemeColorSource { preset, custom }
+
 enum ThemeBackgroundSource { preset, custom }
 
 /// Cubit responsible for managing the app's theme state.
@@ -14,8 +15,7 @@ enum ThemeBackgroundSource { preset, custom }
 /// Controls whether the app is in dark mode or light mode,
 /// syncing the state with local storage via [LocalStorage].
 class ThemeCubit extends Cubit<ThemeState> {
-  ThemeCubit({bool darkMode = true})
-      : super(_buildInitialState());
+  ThemeCubit({bool darkMode = true}) : super(_buildInitialState());
 
   static ThemeState _buildInitialState() {
     final custom = _normalizeHex(LocalStorage.customThemeHex);
@@ -23,10 +23,9 @@ class ThemeCubit extends Cubit<ThemeState> {
     final customBackground = _normalizeHex(LocalStorage.customBackgroundHex);
     final backgroundSource =
         _parseBackgroundSource(LocalStorage.backgroundColorSource);
-    final effectiveSource =
-        source == ThemeColorSource.custom && custom == null
-            ? ThemeColorSource.preset
-            : source;
+    final effectiveSource = source == ThemeColorSource.custom && custom == null
+        ? ThemeColorSource.preset
+        : source;
     final effectiveBackgroundSource =
         backgroundSource == ThemeBackgroundSource.custom &&
                 customBackground == null
@@ -63,8 +62,8 @@ class ThemeCubit extends Cubit<ThemeState> {
   }
 
   static String _resolveBackgroundPresetId(String value) {
-    final exists =
-        backgroundPresets.any((backgroundPreset) => backgroundPreset.id == value);
+    final exists = backgroundPresets
+        .any((backgroundPreset) => backgroundPreset.id == value);
     if (exists) return value;
     return backgroundPresets.first.id;
   }

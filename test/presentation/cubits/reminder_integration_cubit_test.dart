@@ -50,7 +50,8 @@ Future<void> _settle() async {
 void main() {
   setUpHomeWidgetMocks();
 
-  test('NoteCubit reminder lifecycle schedules and cancels namespaced IDs', () async {
+  test('NoteCubit reminder lifecycle schedules and cancels namespaced IDs',
+      () async {
     final notifications = _SpyNotificationService();
     final cubit = NoteCubit(
       FakeNoteRepository(),
@@ -67,17 +68,27 @@ void main() {
     );
     final note = cubit.state.notes.firstWhere((n) => n.id == 10);
 
-    await cubit.updateNote(note.copyWith(reminder: reminder.add(const Duration(hours: 1))));
+    await cubit.updateNote(
+        note.copyWith(reminder: reminder.add(const Duration(hours: 1))));
     await cubit.updateNote(note.copyWith(reminder: null));
     await cubit.deleteNotes([note.copyWith(reminder: null)]);
 
     final noteNotificationId = notifications.notificationIdForNote(10);
-    expect(notifications.scheduledIds.where((id) => id == noteNotificationId).length, 2);
-    expect(notifications.canceledIds.where((id) => id == noteNotificationId).length, 2);
+    expect(
+        notifications.scheduledIds
+            .where((id) => id == noteNotificationId)
+            .length,
+        2);
+    expect(
+        notifications.canceledIds
+            .where((id) => id == noteNotificationId)
+            .length,
+        2);
     await cubit.close();
   });
 
-  test('TodoCubit reminder lifecycle schedules and cancels namespaced IDs', () async {
+  test('TodoCubit reminder lifecycle schedules and cancels namespaced IDs',
+      () async {
     final notifications = _SpyNotificationService();
     final cubit = TodoCubit(
       FakeTodoRepository(),
@@ -94,17 +105,28 @@ void main() {
     );
     final todo = cubit.state.todos.firstWhere((t) => t.id == 10);
 
-    await cubit.updateTodo(todo.copyWith(reminder: reminder.add(const Duration(hours: 1))));
+    await cubit.updateTodo(
+        todo.copyWith(reminder: reminder.add(const Duration(hours: 1))));
     await cubit.updateTodo(todo.copyWith(reminder: null));
     await cubit.deleteTodo(todo.copyWith(reminder: null));
 
     final todoNotificationId = notifications.notificationIdForTodo(10);
-    expect(notifications.scheduledIds.where((id) => id == todoNotificationId).length, 2);
-    expect(notifications.canceledIds.where((id) => id == todoNotificationId).length, 2);
+    expect(
+        notifications.scheduledIds
+            .where((id) => id == todoNotificationId)
+            .length,
+        2);
+    expect(
+        notifications.canceledIds
+            .where((id) => id == todoNotificationId)
+            .length,
+        2);
     await cubit.close();
   });
 
-  test('NoteCubit past reminder does not schedule and cancels existing reminder slot', () async {
+  test(
+      'NoteCubit past reminder does not schedule and cancels existing reminder slot',
+      () async {
     final notifications = _SpyNotificationService();
     final cubit = NoteCubit(
       FakeNoteRepository(),
@@ -120,7 +142,8 @@ void main() {
     );
 
     final noteNotificationId = notifications.notificationIdForNote(20);
-    expect(notifications.scheduledIds.where((id) => id == noteNotificationId), isEmpty);
+    expect(notifications.scheduledIds.where((id) => id == noteNotificationId),
+        isEmpty);
     expect(
       notifications.canceledIds.where((id) => id == noteNotificationId).length,
       1,
@@ -128,7 +151,9 @@ void main() {
     await cubit.close();
   });
 
-  test('TodoCubit past reminder does not schedule and cancels existing reminder slot', () async {
+  test(
+      'TodoCubit past reminder does not schedule and cancels existing reminder slot',
+      () async {
     final notifications = _SpyNotificationService();
     final cubit = TodoCubit(
       FakeTodoRepository(),
@@ -144,7 +169,8 @@ void main() {
     );
 
     final todoNotificationId = notifications.notificationIdForTodo(20);
-    expect(notifications.scheduledIds.where((id) => id == todoNotificationId), isEmpty);
+    expect(notifications.scheduledIds.where((id) => id == todoNotificationId),
+        isEmpty);
     expect(
       notifications.canceledIds.where((id) => id == todoNotificationId).length,
       1,

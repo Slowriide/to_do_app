@@ -29,7 +29,8 @@ Future<File> _writeBackupZip(
   archive.addFile(ArchiveFile('backup.json', bytes.length, bytes));
   final encoded = ZipEncoder().encode(archive);
 
-  final zipFile = File('${tempDir.path}${Platform.pathSeparator}backup_transaction.zip');
+  final zipFile =
+      File('${tempDir.path}${Platform.pathSeparator}backup_transaction.zip');
   await zipFile.writeAsBytes(encoded, flush: true);
   return zipFile;
 }

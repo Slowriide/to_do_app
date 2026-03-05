@@ -4,7 +4,8 @@ import 'package:to_do_app/core/config/local_storage/local_storage.dart';
 import 'package:to_do_app/presentation/cubits/notes/note_view_mode_cubit.dart';
 
 void main() {
-  Future<NoteViewModeCubit> createCubitWithPrefs(Map<String, Object> values) async {
+  Future<NoteViewModeCubit> createCubitWithPrefs(
+      Map<String, Object> values) async {
     SharedPreferences.setMockInitialValues(values);
     await LocalStorage.configurePrefs();
     return NoteViewModeCubit();

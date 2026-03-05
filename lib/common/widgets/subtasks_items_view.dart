@@ -110,8 +110,9 @@ class SubtaskItemsView extends StatelessWidget {
                               item.isCompleted
                                   ? Icons.check_box_rounded
                                   : Icons.check_box_outline_blank_rounded,
-                              color:
-                                  item.isCompleted ? theme.primary : theme.tertiary,
+                              color: item.isCompleted
+                                  ? theme.primary
+                                  : theme.tertiary,
                             ),
                           ),
                           Expanded(
@@ -127,7 +128,8 @@ class SubtaskItemsView extends StatelessWidget {
                                   expands: false,
                                   scrollable: false,
                                   padding: EdgeInsets.zero,
-                                  contextMenuBuilder: (context, rawEditorState) {
+                                  contextMenuBuilder:
+                                      (context, rawEditorState) {
                                     return NoteSelectionContextMenu(
                                       controller: item.controller,
                                       rawEditorState: rawEditorState,
@@ -140,8 +142,9 @@ class SubtaskItemsView extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.close_rounded),
                             tooltip: 'Delete subtask',
-                            onPressed:
-                                onDelete == null ? null : () => onDelete!(index),
+                            onPressed: onDelete == null
+                                ? null
+                                : () => onDelete!(index),
                           ),
                         ],
                       ),

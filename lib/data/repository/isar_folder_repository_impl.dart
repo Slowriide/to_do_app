@@ -31,7 +31,8 @@ class IsarFolderRepositoryImpl implements FolderRepository {
           .where((note) => note.folderIds.any(allIds.contains))
           .toList(growable: false);
       for (final note in updatedNotes) {
-        note.folderIds = note.folderIds.where((id) => !allIds.contains(id)).toList();
+        note.folderIds =
+            note.folderIds.where((id) => !allIds.contains(id)).toList();
       }
       if (updatedNotes.isNotEmpty) {
         await db.noteIsars.putAll(updatedNotes);
@@ -42,7 +43,8 @@ class IsarFolderRepositoryImpl implements FolderRepository {
           .where((todo) => todo.folderIds.any(allIds.contains))
           .toList(growable: false);
       for (final todo in updatedTodos) {
-        todo.folderIds = todo.folderIds.where((id) => !allIds.contains(id)).toList();
+        todo.folderIds =
+            todo.folderIds.where((id) => !allIds.contains(id)).toList();
       }
       if (updatedTodos.isNotEmpty) {
         await db.todoIsars.putAll(updatedTodos);
@@ -65,7 +67,8 @@ class IsarFolderRepositoryImpl implements FolderRepository {
 
     while (queue.isNotEmpty) {
       final parent = queue.removeLast();
-      final children = await db.folderIsars.filter().parentIdEqualTo(parent).findAll();
+      final children =
+          await db.folderIsars.filter().parentIdEqualTo(parent).findAll();
       for (final child in children) {
         if (descendants.add(child.id)) {
           queue.add(child.id);

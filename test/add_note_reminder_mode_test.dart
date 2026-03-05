@@ -59,7 +59,8 @@ void main() {
     expect(find.byType(DatePickerDialog), findsNothing);
   });
 
-  testWidgets('shows draw sketch action on supported platforms', (tester) async {
+  testWidgets('shows draw sketch action on supported platforms',
+      (tester) async {
     await _initPrefs();
     await tester.pumpWidget(_buildApp(autoOpenReminder: false));
     await tester.pumpAndSettle();

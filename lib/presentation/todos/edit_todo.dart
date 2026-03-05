@@ -266,7 +266,8 @@ class _EditTodoState extends State<EditTodo> {
 
     final snapshot = widget.todo.copyWith(
       title: NoteRichTextCodec.extractPlainText(_titleController.document),
-      titleRichTextDeltaJson: NoteRichTextCodec.encodeDelta(_titleController.document),
+      titleRichTextDeltaJson:
+          NoteRichTextCodec.encodeDelta(_titleController.document),
       subTasks: updatedSubtask,
       reminder: _selectedReminder,
       folderIds: _selectedFolderIds.toList(),

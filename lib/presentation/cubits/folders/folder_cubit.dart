@@ -90,10 +90,12 @@ class FolderCubit extends Cubit<List<Folder>> {
       return 'Folder name already exists in this location';
     }
 
-    final siblings =
-        state.where((folder) => folder.parentId == parentId).toList(growable: false);
-    final nextOrder =
-        siblings.isEmpty ? 0 : siblings.map((f) => f.order).reduce((a, b) => a > b ? a : b) + 1;
+    final siblings = state
+        .where((folder) => folder.parentId == parentId)
+        .toList(growable: false);
+    final nextOrder = siblings.isEmpty
+        ? 0
+        : siblings.map((f) => f.order).reduce((a, b) => a > b ? a : b) + 1;
     final id = IdGenerator.next();
     final folder = Folder(
       id: id,
@@ -142,7 +144,8 @@ class FolderCubit extends Cubit<List<Folder>> {
       }
     }
 
-    if (_isNameTaken(folder.name, parentId: newParentId, excludingId: folderId)) {
+    if (_isNameTaken(folder.name,
+        parentId: newParentId, excludingId: folderId)) {
       return 'Folder name already exists in target location';
     }
 
@@ -151,7 +154,8 @@ class FolderCubit extends Cubit<List<Folder>> {
         .toList(growable: false);
     final nextOrder = targetSiblings.isEmpty
         ? 0
-        : targetSiblings.map((f) => f.order).reduce((a, b) => a > b ? a : b) + 1;
+        : targetSiblings.map((f) => f.order).reduce((a, b) => a > b ? a : b) +
+            1;
 
     await repository.moveFolder(
       folderId: folderId,

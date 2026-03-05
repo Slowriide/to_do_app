@@ -117,8 +117,9 @@ class _TodosViewState extends State<TodosView> {
 
   Future<void> moveSelectedTodos() async {
     final todoCubit = context.read<TodoCubit>();
-    final selected =
-        todoCubit.state.todos.where((todo) => selectedTodos.contains(todo.id)).toList();
+    final selected = todoCubit.state.todos
+        .where((todo) => selectedTodos.contains(todo.id))
+        .toList();
     if (selected.isEmpty) return;
 
     final commonFolderIds = selected.skip(1).fold<Set<int>>(

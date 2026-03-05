@@ -36,7 +36,8 @@ void main() {
     await LocalStorage.configurePrefs();
   });
 
-  test('startup stale marker branch performs soft recovery and clears marker', () async {
+  test('startup stale marker branch performs soft recovery and clears marker',
+      () async {
     final notificationService = _SpyNotificationService();
     final recoveryService = ImportRecoveryService(
       notificationService: notificationService,
@@ -117,7 +118,9 @@ void main() {
     expect(LocalStorage.importInProgress, isFalse);
   });
 
-  test('missing timestamp is treated as staleCleared with soft recovery on startup', () async {
+  test(
+      'missing timestamp is treated as staleCleared with soft recovery on startup',
+      () async {
     final notificationService = _SpyNotificationService();
     final recoveryService = ImportRecoveryService(
       notificationService: notificationService,
