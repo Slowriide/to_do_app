@@ -81,7 +81,7 @@ void main() {
       );
 
       expect(recoveryResult, ImportRecoveryResult.none);
-      expect(notificationService.cancelAllCalls, 0);
+      expect(notificationService.cancelAllCalls, 1);
       expect(notificationService.syncCalls, 2);
     },
   );

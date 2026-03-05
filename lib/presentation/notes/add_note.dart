@@ -20,10 +20,12 @@ import 'package:to_do_app/presentation/notes/sketch_canvas_page.dart';
 
 class AddNote extends StatefulWidget {
   final bool autoOpenReminder;
+  final DateTime Function() nowProvider;
 
   const AddNote({
     super.key,
     this.autoOpenReminder = false,
+    this.nowProvider = DateTime.now,
   });
 
   @override
@@ -76,7 +78,7 @@ class _AddNoteState extends State<AddNote> {
   }
 
   Future<void> pickReminderDateTime() async {
-    final now = DateTime.now();
+    final now = widget.nowProvider();
 
     final date = await showDatePicker(
       context: context,
@@ -101,14 +103,23 @@ class _AddNoteState extends State<AddNote> {
 
     if (time == null) return;
 
-    setState(() {
-      _reminderDate = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
+    final selectedDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    if (!selectedDateTime.isAfter(widget.nowProvider())) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reminder time must be in the future')),
       );
+      return;
+    }
+
+    setState(() {
+      _reminderDate = selectedDateTime;
     });
   }
 

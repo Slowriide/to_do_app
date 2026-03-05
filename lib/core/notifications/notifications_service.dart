@@ -85,7 +85,7 @@ class NotificationService {
 
   /// Schedules a notification for the specified [scheduledDate].
   ///
-  /// If the date is in the past, no notification is shown.
+  /// If the date is not in the future, no notification is shown.
   Future<void> showNotification({
     required int id,
     required String title,
@@ -95,7 +95,7 @@ class NotificationService {
     final notificationId = _normalizeNotificationId(id);
     final now = DateTime.now();
 
-    if (scheduledDate.isBefore(now)) {
+    if (!scheduledDate.isAfter(now)) {
       return;
     }
     await _notificationsPlugin.cancel(id: notificationId);

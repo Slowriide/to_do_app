@@ -46,6 +46,9 @@ Future<ImportRecoveryResult> recoverOrSyncRemindersOnStartup({
   if (recoveryResult == ImportRecoveryResult.recovered) {
     return recoveryResult;
   }
+  if (recoveryResult == ImportRecoveryResult.none) {
+    await notifications.cancelAll();
+  }
   await notifications.syncRemindersFromDatabase(
     noteRepository: noteRepository,
     todoRepository: todoRepository,

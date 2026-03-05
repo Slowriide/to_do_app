@@ -12,10 +12,12 @@ import '../../fake_repositories.dart';
 class _SpyNotificationService extends NotificationService {
   int cancelAllCalls = 0;
   int syncCalls = 0;
+  final List<String> callLog = [];
 
   @override
   Future<void> cancelAll() async {
     cancelAllCalls++;
+    callLog.add('cancelAll');
   }
 
   @override
@@ -24,6 +26,7 @@ class _SpyNotificationService extends NotificationService {
     required TodoRepository todoRepository,
   }) async {
     syncCalls++;
+    callLog.add('syncRemindersFromDatabase');
   }
 }
 
@@ -90,7 +93,7 @@ void main() {
     expect(LocalStorage.importStartedAtEpochMs, isNull);
   });
 
-  test('startup with no marker skips cancelAll and performs normal sync only', () async {
+  test('startup with no marker performs cancelAll then normal sync', () async {
     final notificationService = _SpyNotificationService();
     final recoveryService = ImportRecoveryService(
       notificationService: notificationService,
@@ -105,8 +108,12 @@ void main() {
     );
 
     expect(result, ImportRecoveryResult.none);
-    expect(notificationService.cancelAllCalls, 0);
+    expect(notificationService.cancelAllCalls, 1);
     expect(notificationService.syncCalls, 1);
+    expect(
+      notificationService.callLog,
+      ['cancelAll', 'syncRemindersFromDatabase'],
+    );
     expect(LocalStorage.importInProgress, isFalse);
   });
 

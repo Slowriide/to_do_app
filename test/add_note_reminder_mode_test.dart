@@ -16,7 +16,10 @@ Future<void> _initPrefs() async {
   await LocalStorage.configurePrefs();
 }
 
-Widget _buildApp({required bool autoOpenReminder}) {
+Widget _buildApp({
+  required bool autoOpenReminder,
+  DateTime Function()? nowProvider,
+}) {
   final noteRepo = FakeNoteRepository(initial: const []);
   final folderRepo = FakeFolderRepository(initial: const []);
   final theme = AppTheme(isDarkMode: false).getTheme();
@@ -29,7 +32,10 @@ Widget _buildApp({required bool autoOpenReminder}) {
     ],
     child: MaterialApp(
       theme: theme,
-      home: AddNote(autoOpenReminder: autoOpenReminder),
+      home: AddNote(
+        autoOpenReminder: autoOpenReminder,
+        nowProvider: nowProvider ?? DateTime.now,
+      ),
     ),
   );
 }
@@ -59,5 +65,34 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.draw_outlined), findsOneWidget);
+  });
+
+  testWidgets(
+      'past time today shows SnackBar and does not enable reminder chip',
+      (tester) async {
+    await _initPrefs();
+    final fixedNow = DateTime(2026, 1, 2, 12, 0);
+    await tester.pumpWidget(
+      _buildApp(
+        autoOpenReminder: false,
+        nowProvider: () => fixedNow,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Set reminder'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK').last);
+    await tester.pumpAndSettle();
+
+    final timeInputs = find.byType(TextFormField);
+    expect(timeInputs, findsNWidgets(2));
+    await tester.enterText(timeInputs.at(0), '11');
+    await tester.enterText(timeInputs.at(1), '00');
+    await tester.tap(find.text('OK').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reminder time must be in the future'), findsOneWidget);
+    expect(find.text('Set reminder'), findsOneWidget);
   });
 }
