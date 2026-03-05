@@ -227,6 +227,67 @@ class _SettingsState extends State<Settings> {
     return Color(0xFF000000 | value);
   }
 
+  Widget _buildCustomColorValueRow({
+    required Color previewColor,
+    required String valueText,
+    required VoidCallback onPickColor,
+    required IconData buttonIcon,
+    required String buttonLabel,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final useStackedLayout = textScale >= 1.3;
+
+    final valueDetails = Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: previewColor,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: colors.tertiary.withValues(alpha: 0.35),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            valueText,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+      ],
+    );
+
+    final pickColorButton = FilledButton.icon(
+      onPressed: onPickColor,
+      icon: Icon(buttonIcon),
+      label: Text(buttonLabel),
+    );
+
+    if (useStackedLayout) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          valueDetails,
+          const SizedBox(height: 10),
+          pickColorButton,
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: valueDetails),
+        const SizedBox(width: 10),
+        pickColorButton,
+      ],
+    );
+  }
+
   Future<Color?> _openColorPickerDialog({
     required String title,
     required Color initialColor,
@@ -421,36 +482,13 @@ class _SettingsState extends State<Settings> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: currentCustomColor,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: colors.tertiary.withValues(alpha: 0.35),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              state.customColorHex ??
-                                  'No custom color selected',
-                              style: theme.textTheme.bodyMedium,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          FilledButton.icon(
-                            onPressed: () => _openAccentColorPicker(state),
-                            icon: const Icon(Icons.palette_outlined),
-                            label: const Text('Pick color'),
-                          ),
-                        ],
+                      _buildCustomColorValueRow(
+                        previewColor: currentCustomColor,
+                        valueText:
+                            state.customColorHex ?? 'No custom color selected',
+                        onPickColor: () => _openAccentColorPicker(state),
+                        buttonIcon: Icons.palette_outlined,
+                        buttonLabel: 'Pick color',
                       ),
                       const SizedBox(height: 8),
                       TextButton.icon(
@@ -524,34 +562,13 @@ class _SettingsState extends State<Settings> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: currentCustomBackground,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: colors.tertiary.withValues(alpha: 0.35),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              state.customBackgroundHex ??
-                                  'No custom background selected',
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          FilledButton.icon(
-                            onPressed: () => _openBackgroundColorPicker(state),
-                            icon: const Icon(Icons.format_paint_outlined),
-                            label: const Text('Pick color'),
-                          ),
-                        ],
+                      _buildCustomColorValueRow(
+                        previewColor: currentCustomBackground,
+                        valueText: state.customBackgroundHex ??
+                            'No custom color selected',
+                        onPickColor: () => _openBackgroundColorPicker(state),
+                        buttonIcon: Icons.format_paint_outlined,
+                        buttonLabel: 'Pick color',
                       ),
                       const SizedBox(height: 8),
                       TextButton.icon(
