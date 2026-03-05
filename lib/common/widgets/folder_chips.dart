@@ -10,6 +10,8 @@ class FolderChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final chipsHeight = (52 * textScale).clamp(52, 84).toDouble();
     return BlocBuilder<FolderCubit, List<Folder>>(
       builder: (context, folders) {
         final rootFolders = folders
@@ -21,7 +23,7 @@ class FolderChips extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(top: 10),
               child: SizedBox(
-                height: 52,
+                height: chipsHeight,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding:

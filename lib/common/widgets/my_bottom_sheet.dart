@@ -17,36 +17,45 @@ class MyBottomSheet extends StatelessWidget {
     final themeCubit = context.read<ThemeCubit>();
     final current = themeCubit.state;
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      height: 250,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(10),
+          topRight: Radius.circular(10),
+        ),
         color: theme.surface,
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             width: 40,
             height: 5,
-            margin: EdgeInsets.symmetric(vertical: 10),
+            margin: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
               color: theme.primary,
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          Text('Theme'),
-          Divider(thickness: 0.5),
-          _ThemeOptionTile(
-            title: 'Light mode',
-            selected: !current.isDarkmode,
-            onTap: () => themeCubit.setLightMode(),
-          ),
-          _ThemeOptionTile(
-            title: 'Dark mode',
-            selected: current.isDarkmode,
-            onTap: () => themeCubit.setDarkMode(),
+          const Text('Theme'),
+          const Divider(thickness: 0.5),
+          SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ThemeOptionTile(
+                  title: 'Light mode',
+                  selected: !current.isDarkmode,
+                  onTap: () => themeCubit.setLightMode(),
+                ),
+                _ThemeOptionTile(
+                  title: 'Dark mode',
+                  selected: current.isDarkmode,
+                  onTap: () => themeCubit.setDarkMode(),
+                ),
+              ],
+            ),
           ),
         ],
       ),

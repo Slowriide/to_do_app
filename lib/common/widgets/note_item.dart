@@ -108,6 +108,11 @@ class _NoteItemState extends State<NoteItem> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final titlePreviewMaxHeight =
+        (_titlePreviewMaxHeight * textScale.clamp(1.0, 1.5)).toDouble();
+    final previewMaxHeight =
+        (_previewMaxHeight * textScale.clamp(1.0, 1.5)).toDouble();
     final cardColor = _noteTint(widget.note.id, theme);
     final createdAtLabel = _formatCreatedAt(context, widget.note.id);
 
@@ -144,8 +149,8 @@ class _NoteItemState extends State<NoteItem> {
                     style: textStyle.bodyLarge ?? const TextStyle(fontSize: 16),
                     child: ClipRect(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: _titlePreviewMaxHeight,
+                        constraints: BoxConstraints(
+                          maxHeight: titlePreviewMaxHeight,
                         ),
                         child: IgnorePointer(
                           child: quill.QuillEditor(
@@ -181,8 +186,7 @@ class _NoteItemState extends State<NoteItem> {
               style: textStyle.bodyMedium ?? const TextStyle(fontSize: 15),
               child: ClipRect(
                 child: ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(maxHeight: _previewMaxHeight),
+                  constraints: BoxConstraints(maxHeight: previewMaxHeight),
                   child: IgnorePointer(
                     child: quill.QuillEditor(
                       controller: _previewController,

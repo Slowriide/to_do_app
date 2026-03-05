@@ -38,6 +38,8 @@ class EditorPageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).colorScheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final useStackedHeader = textScale >= 1.4;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -61,33 +63,60 @@ class EditorPageScaffold extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                subtitle,
-                                style: textTheme.bodySmall,
-                              ),
-                            ],
+                    if (useStackedHeader) ...[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: textTheme.titleLarge,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        ReminderStatusChip(
-                          enabled: reminderEnabled,
-                          enabledLabel: reminderEnabledLabel,
-                          disabledLabel: reminderDisabledLabel,
-                          onTap: onReminderTap,
-                        ),
-                      ],
-                    ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            style: textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: ReminderStatusChip(
+                              enabled: reminderEnabled,
+                              enabledLabel: reminderEnabledLabel,
+                              disabledLabel: reminderDisabledLabel,
+                              onTap: onReminderTap,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: textTheme.titleLarge,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  subtitle,
+                                  style: textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ReminderStatusChip(
+                            enabled: reminderEnabled,
+                            enabledLabel: reminderEnabledLabel,
+                            disabledLabel: reminderDisabledLabel,
+                            onTap: onReminderTap,
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     child,
                   ],
@@ -197,12 +226,18 @@ class ReminderStatusChip extends StatelessWidget {
                     color: chipForegroundColor,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    enabled ? enabledLabel : disabledLabel,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: chipForegroundColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 180),
+                    child: Text(
+                      enabled ? enabledLabel : disabledLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: chipForegroundColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
                   ),
                 ],
               ),
@@ -271,10 +306,8 @@ class _EditorPrimaryActionBarState extends State<EditorPrimaryActionBar> {
                     ),
                   ],
                 ),
-                child: FilledButton.icon(
+                child: FilledButton(
                   onPressed: widget.onPressed,
-                  icon: Icon(widget.icon),
-                  label: Text(widget.label),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(56),
                     backgroundColor: enabled
@@ -286,6 +319,20 @@ class _EditorPrimaryActionBarState extends State<EditorPrimaryActionBar> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(widget.icon),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          widget.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

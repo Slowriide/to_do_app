@@ -212,6 +212,8 @@ class _AddTodoState extends State<AddTodo> {
   @override
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final subtasksHeight = (340 * textScale.clamp(1.0, 1.5)).toDouble();
 
     return PopScope(
       canPop: true,
@@ -236,7 +238,14 @@ class _AddTodoState extends State<AddTodo> {
             return FloatingActionButton.extended(
               onPressed: _pickFolder,
               icon: const Icon(Icons.folder_outlined),
-              label: Text(_folderLabel(folders)),
+              label: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 170),
+                child: Text(
+                  _folderLabel(folders),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               tooltip: 'Select folder',
             );
           },
@@ -317,7 +326,7 @@ class _AddTodoState extends State<AddTodo> {
                     ),
                     const SizedBox(height: 8),
                     SizedBox(
-                      height: 340,
+                      height: subtasksHeight,
                       child: SubtaskItemsView(
                         subtasks: _editableSubtasks,
                         onToggleComplete: (index) {

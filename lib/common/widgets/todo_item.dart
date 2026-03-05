@@ -92,6 +92,11 @@ class _TodoItemState extends State<TodoItem> {
     final dragHandle = widget.dragHandle;
     final theme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final titlePreviewMaxHeight =
+        (_titlePreviewMaxHeight * textScale.clamp(1.0, 1.5)).toDouble();
+    final subtaskPreviewMaxHeight =
+        (_subtaskPreviewMaxHeight * textScale.clamp(1.0, 1.5)).toDouble();
     final cardColor = _todoTint(todo.id, theme);
     final createdAtLabel = _formatCreatedAt(context, todo.id);
 
@@ -133,8 +138,8 @@ class _TodoItemState extends State<TodoItem> {
                     style: textStyle.bodyLarge ?? const TextStyle(fontSize: 16),
                     child: ClipRect(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: _titlePreviewMaxHeight,
+                        constraints: BoxConstraints(
+                          maxHeight: titlePreviewMaxHeight,
                         ),
                         child: IgnorePointer(
                           child: quill.QuillEditor(
@@ -190,8 +195,8 @@ class _TodoItemState extends State<TodoItem> {
                                     const TextStyle(fontSize: 14),
                                 child: ClipRect(
                                   child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxHeight: _subtaskPreviewMaxHeight,
+                                    constraints: BoxConstraints(
+                                      maxHeight: subtaskPreviewMaxHeight,
                                     ),
                                     child: IgnorePointer(
                                       child: quill.QuillEditor(

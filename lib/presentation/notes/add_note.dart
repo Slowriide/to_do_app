@@ -311,7 +311,14 @@ class _AddNoteState extends State<AddNote> {
             return FloatingActionButton.extended(
               onPressed: _pickFolder,
               icon: const Icon(Icons.folder_outlined),
-              label: Text(_folderLabel(folders)),
+              label: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 170),
+                child: Text(
+                  _folderLabel(folders),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               tooltip: 'Select folder',
             );
           },
